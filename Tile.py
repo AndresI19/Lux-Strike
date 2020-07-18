@@ -39,17 +39,17 @@ class Tile():
         self.background = 0
         self.set_HexProperties()
         self.Icon = Icon(Screen,col,row)
+        self.highlighted = False
+        self.highlight = highlight(Screen)
 
-    #FIXME: Replace with row player print, do this outside of world inside of graphics.py leave alpha check
-    def check_foreground(self,MOB,Ctrl_Vars):
+    #check if the block in the foreground in front of the player is tall and needs to be transparent
+    def check_tall_block(self,MOB,Ctrl_Vars):
         dZ = self.elevation - MOB.elevation
-        if dZ > 0:
-            self.background = 1
-            Ctrl_Vars.foreground_list = [self.col,self.row]
         if dZ > 1:
-            self.Hexagon_image.set_alpha(100)
+            Ctrl_Vars.foreground_list = [self.col,self.row]
+            self.Hexagon_image.set_alpha(120)
 
-    def reset_foreground(self):
+    def reset_alpha(self):
         self.background = 0
         self.Hexagon_image.set_alpha(255)
 
@@ -115,10 +115,10 @@ class Tile():
     #presents the illusion of tile height
     def elevate(self):
         if self.elevation > 0:
-            self.Hexagon_rect.bottom -= self.Center_rect.height * (self.elevation-1)
-            self.Center_rect.bottom -= self.Center_rect.height * (self.elevation-1) - 1
-            self.Left_rect.bottom -= self.Center_rect.height * (self.elevation-1) - 1
-            self.Right_rect.bottom -= self.Center_rect.height * (self.elevation-1) - 1
+            self.Hexagon_rect.bottom -= self.Center_rect.height * (self.elevation)
+            self.Center_rect.bottom -= self.Center_rect.height * (self.elevation) -1
+            self.Left_rect.bottom -= self.Center_rect.height * (self.elevation) -2
+            self.Right_rect.bottom -= self.Center_rect.height * (self.elevation) -2 
             self.Character_Spot_Mainy -= self.Center_rect.height
 
     #move tile across screen, most likely used in a for loop
@@ -156,21 +156,21 @@ class Tile():
         else:
             self.render = False
 
-    def draw(self,perspective):
+    def draw(self):
         if self.render:
             #filling in elevation gaps with copies
-            if self.background == perspective:
-                self.Screen.blit(self.Hexagon_image, self.Hexagon_rect)
-            if perspective == 0:
-                if self.elevation >= 1:
-                    self.draw_extended_terrain()
-                elif self.elevation == 0:
-                    if self.Left_display:
-                        self.Screen.blit(self.Left_image, self.Left_rect)
-                    if self.Center_display:
-                        self.Screen.blit(self.Center_image, self.Center_rect)
-                    if self.Right_display:
-                        self.Screen.blit(self.Right_image, self.Right_rect)
+            self.Screen.blit(self.Hexagon_image, self.Hexagon_rect)
+            if self.elevation >= 1:
+                self.draw_extended_terrain()
+            elif self.elevation == 0:
+                if self.Left_display:
+                    self.Screen.blit(self.Left_image, self.Left_rect)
+                if self.Center_display:
+                    self.Screen.blit(self.Center_image, self.Center_rect)
+                if self.Right_display:
+                    self.Screen.blit(self.Right_image, self.Right_rect)
+            if self.highlighted:
+                self.highlight.draw(self.Hexagon_rect)
             
     def draw_extended_terrain(self):
         #clean up this entire thing its gross and redundent
@@ -197,14 +197,15 @@ class Tile():
 class Water(Tile):
     def __init__(self,Screen,col,row,ID,elevation):
         Tile.__init__(self,Screen,col,row,ID,elevation)
-        self.type = 'Water'
         #animation image list
-        self.Hexagon_images = [pygame.image.load('Tiles/Water/H00.png').convert(),pygame.image.load('Tiles/Water/H01.png').convert(),
-            pygame.image.load('Tiles/Water/H02.png').convert(),pygame.image.load('Tiles/Water/H03.png').convert(),
-            pygame.image.load('Tiles/Water/H04.png').convert(),pygame.image.load('Tiles/Water/H05.png').convert(),
-            pygame.image.load('Tiles/Water/H06.png').convert(),pygame.image.load('Tiles/Water/H07.png').convert()]
-        for i in range(len(self.Hexagon_images)):
-            self.Hexagon_images[i].set_colorkey((255,0,255))
+        self.Hexagon_images = []
+        for i in range(8):
+            image = pygame.image.load(
+                'Tiles/Water/H0{}.png'.format(i)
+                ).convert()
+            image.set_colorkey((255,0,255))
+            self.Hexagon_images.append(image)
+
         self.Left_image = pygame.image.load('Tiles/Water/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Water/C00.png').convert()
         self.Right_image = pygame.image.load('Tiles/Water/R00.png').convert()
@@ -217,35 +218,36 @@ class Water(Tile):
         self.frames = 104
 
         self.Icon = Icon_Water(Screen,col,row)
+
     #special draw instructions for animation
-    def draw(self,perspective):
-        if self.background == perspective:
-            self.clock()
-            if not self.render:
-                return
-            if self.Left_display:
-                self.Screen.blit(self.Left_image, self.Left_rect)
-            if self.Center_display:
-                self.Screen.blit(self.Center_image, self.Center_rect)
-            if self.Right_display:
-                self.Screen.blit(self.Right_image, self.Right_rect)
+    def draw(self):
+        self.clock()
+        if not self.render:
+            return
+        if self.Left_display:
+            self.Screen.blit(self.Left_image, self.Left_rect)
+        if self.Center_display:
+            self.Screen.blit(self.Center_image, self.Center_rect)
+        if self.Right_display:
+            self.Screen.blit(self.Right_image, self.Right_rect)
         
     def clock(self):
         if self.frame_count + 1 >= self.frames:
             self.frame_count = 0
         self.Screen.blit(self.Hexagon_images[self.frame_count//13], self.Hexagon_rect)
+        if self.highlighted:
+            self.highlight.draw(self.Hexagon_rect)
         self.frame_count += 1
 
 class Grass(Tile):
     def __init__(self,Screen,col,row,ID,elevation):
         Tile.__init__(self,Screen,col,row,ID,elevation)
-        self.type = 'Grass'
         #randomize grass environement 
-        HexagonSet = [pygame.image.load('Tiles/Grass/H00.png'),pygame.image.load('Tiles/Grass/H01.png'),
-            pygame.image.load('Tiles/Grass/H02.png'),pygame.image.load('Tiles/Grass/H03.png')]
-        Hexagon = choice(HexagonSet,1,False,[.55,.35,.05,.05])
+        Choice = choice(range(4),1,False,[.55,.35,.05,.05])
+        self.Hexagon_image = pygame.image.load(
+            'Tiles/Grass/H0{}.png'.format(Choice[0])
+            ).convert()
 
-        self.Hexagon_image = Hexagon[0].convert()
         self.Left_image = pygame.image.load('Tiles/Grass/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Grass/C00.png').convert()
         self.Right_image = pygame.image.load('Tiles/Grass/R00.png').convert()
@@ -256,7 +258,6 @@ class Grass(Tile):
 class Mountain(Tile):
     def __init__(self,Screen,col,row,ID,elevation):
         Tile.__init__(self,Screen,col,row,ID,elevation)
-        self.type = 'Mountain'
         self.Hexagon_image = pygame.image.load('Tiles/Mountain/H00.png').convert()
         self.Left_image = pygame.image.load('Tiles/Mountain/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Mountain/C00.png').convert()
@@ -265,10 +266,24 @@ class Mountain(Tile):
 
         self.Icon = Icon_Brick(Screen,col,row,1)
 
+class Beach(Tile):
+    def __init__(self,Screen,col,row,ID,elevation):
+        Tile.__init__(self,Screen,col,row,ID,elevation)
+        Choice = choice(range(4),1,False,[.75,.10,.10,.05])
+        self.Hexagon_image = pygame.image.load(
+            'Tiles/Beach/H0{}.png'.format(Choice[0])
+            ).convert()
+
+        self.Left_image = pygame.image.load('Tiles/Beach/L00.png').convert()
+        self.Center_image = pygame.image.load('Tiles/Beach/C00.png').convert()
+        self.Right_image = pygame.image.load('Tiles/Beach/R00.png').convert()
+        self.set_colorkey()
+
+        self.Icon = Icon_Sand(Screen,col,row,1)
+
 class Brick(Tile):
     def __init__(self,Screen,col,row,ID,elevation):
         Tile.__init__(self,Screen,col,row,ID,elevation)
-        self.type = 'Mountain'
         self.Hexagon_image = pygame.image.load('Tiles/Brick/H00.png').convert()
         self.Left_image = pygame.image.load('Tiles/Brick/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Brick/C00.png').convert()
@@ -280,14 +295,13 @@ class Brick(Tile):
 class Stairs(Tile):
     def __init__(self,Screen,col,row,ID,elevation):
         Tile.__init__(self,Screen,col,row,ID,elevation)
-        self.type = 'Mountain'
         self.Hexagon_image = pygame.image.load('Tiles/Brick/H01.png').convert()
         self.Left_image = pygame.image.load('Tiles/Brick/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Brick/C00.png').convert()
         self.Right_image = pygame.image.load('Tiles/Brick/R00.png').convert()
         self.set_colorkey()
 
-        self.Icon = Icon_Brick(Screen,col,row,1)
+        self.Icon = Icon_Stairs(Screen,col,row,1)
 
 #Class for the mini map icons, one per tile instance
 class Icon():
@@ -300,14 +314,15 @@ class Icon():
 
         self.col = col
         self.row = row
+        self.position()
 
+    def position(self):
         width = 15
         height = 13
-        offset = 9
+        offset = 2*width/3
 
-        #123123
         self.image_rect.bottom = self.Screen_rect.bottom - self.col * (trunc(height/2)) - 32
-        self.image_rect.left = self.row * (width + 4) + 1570
+        self.image_rect.left = self.row * (width + offset/2) + 1550
         if self.col%2 == 0:
             self.image_rect.left += offset
 
@@ -324,13 +339,57 @@ class Icon_Grass(Icon):
     def __init__(self,Screen,col,row,elevation):
         Icon.__init__(self,Screen,col,row)
         self.image = self.image = pygame.image.load(
-            'Tiles/Grass/Mini0{}.png'.format(elevation-1)).convert()
+            'Tiles/Grass/Mini0{}.png'.format(elevation)).convert()
         self.image.set_colorkey((255,0,255))
 
 class Icon_Brick(Icon):
     def __init__(self,Screen,col,row,elevation):
         Icon.__init__(self,Screen,col,row)
-        self.image = self.image = pygame.image.load(
-            'Tiles/Brick/Mini00.png'.format(elevation-1)).convert()
+        self.image = self.image = pygame.image.load('Tiles/Brick/Mini00.png').convert()
         self.image.set_colorkey((255,0,255))
 
+class Icon_Stairs(Icon):
+    def __init__(self,Screen,col,row,elevation):
+        Icon.__init__(self,Screen,col,row)
+        self.image = self.image = pygame.image.load('Tiles/Brick/Mini01.png').convert()
+        self.image.set_colorkey((255,0,255))
+
+class Icon_Player(Icon):
+    def __init__(self,Screen,col,row):
+        Icon.__init__(self,Screen,col,row)
+        self.image = self.image = pygame.image.load('Tiles/Icons/Mini01.png').convert()
+        self.image.set_colorkey((255,0,255))
+    def update_coo(self,col,row):
+        self.col = col
+        self.row = row
+        self.position()
+
+class Icon_Enemy(Icon):
+    def __init__(self,Screen,col,row):
+        Icon.__init__(self,Screen,col,row)
+        self.image = self.image = pygame.image.load('Tiles/Icons/Mini00.png').convert()
+        self.image.set_colorkey((255,0,255))
+
+    def update_coo(self,col,row):
+        self.col = col
+        self.row = row
+        self.position()
+
+class Icon_Sand(Icon):
+    def __init__(self,Screen,col,row,elevation):
+        Icon.__init__(self,Screen,col,row)
+        self.image = pygame.image.load('Tiles/Beach/Mini00.png').convert()
+        self.image.set_colorkey((255,0,255))
+
+class highlight():
+    def __init__(self,Screen):
+        self.Screen = Screen
+        self.image = pygame.image.load('HUD/Highlight.png').convert()
+        self.image.set_colorkey((255,0,255))
+        self.image_rect = self.image.get_rect()
+    def update(self,host_rect):
+        self.image_rect.bottom = host_rect.bottom
+        self.image_rect.centerx = host_rect.centerx
+    def draw(self,host_rect):
+        self.update(host_rect)
+        self.Screen.blit(self.image, self.image_rect)

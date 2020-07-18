@@ -1,8 +1,9 @@
 import pygame
+from Tile import Icon_Player
 
 #Parent class for mobile entities, the bases of the player and enemies
 class MOB():
-    def __init__(self,Screen,coordinates,Max_Parameters):
+    def __init__(self,Screen,spawn_coord):
         self.Screen = Screen
 
         #Row column information
@@ -11,30 +12,21 @@ class MOB():
         self.off_center = 1
 
         #relative grid location
+        self.D = 'SW'
         self.dy = 0
         self.dx = 0
-        self.D = '' #no functionality yet
         self.elevation = 0
 
+        #pixel coordinate information
         self.coordinates = [0,0]
-        self.spawn_row = coordinates[0]
-        self.spawn_col = coordinates[1]
+        self.spawn_row = spawn_coord[0]
+        self.spawn_col = spawn_coord[1]
 
-        self.Max_Rows = Max_Parameters[0]
-        self.Max_Columns = Max_Parameters[1]
+        self.track = []
+        self.hitstun = False
 
         self.spawn()
-
-    #external variable assignment
-    def set_direction(self,dx,dy,D):
-        self.dx = dx
-        self.dy = dy
-        self.D = D
-
-    def reset_direction(self):
-        self.dx = 0
-        self.dy = 0
-
+        
     #spawn player in start location
     def spawn(self):
         self.y = self.spawn_col
@@ -42,27 +34,86 @@ class MOB():
         if self.y%2 == 1:
             self.off_center *= -1
 
-    #Draw functions and animation loops for world entities
-    def Draw(self):
-        #self.update_coordinates(World)
-        self.Screen.blit(self.MOB_image, self.MOB_rect)
+###Movement vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    """moving on a hexagon grid is complicated, as the columns go up and contain a list of staggard rows. The way to maneuver this is to
+    give the game knowledge of the player location and call every other row staggard. Hence, if the players row value goes up (y) then the off_center value
+    is flipped. Moving up or down requires a row change of plus or minus 2. At each possible control a check_move is preformed."""
+    def set_NE(self):
+        if self.off_center == 1:
+            self.set_direction(1,1,'NE')
+        elif self.off_center == -1:
+            self.set_direction(0,1,'NE')
 
-#TODO: move this into an animation function
+    def set_N(self):
+        self.set_direction(0,2,'N')
+
+    def set_NW(self):
+        if self.off_center == 1:
+            self.set_direction(0,1,'NW')
+        elif self.off_center == -1:
+            self.set_direction(-1,1,'NW')
+
+    def set_SW(self):
+        if self.off_center == 1:
+            self.set_direction(0,-1,'SW')
+        elif self.off_center == -1:
+            self.set_direction(-1,-1,'SW')
+
+    def set_S(self):
+        self.set_direction(0,-2,'S')
+
+    def set_SE(self):
+        if self.off_center == 1:
+            self.set_direction(1,-1,'SE')
+        elif self.off_center == -1:
+            self.set_direction(0,-1,'SE')
+
+    def set_direction(self,dx,dy,D):
+        self.dx = dx
+        self.dy = dy
+        self.sprite_direction(D)
+
+    def reset_direction(self):
+        self.dx = 0
+        self.dy = 0
+
+    def move_line(self,frame):
+        if len(self.track) > 0:
+            self.MOB_rect.centerx = self.track[frame][0]
+            self.MOB_rect.bottom = self.track[frame][1]
+    
+###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
+        #To be carried out last frame
+        self.y += self.dy
+        self.x += self.dx
+        if abs(self.dy) == 1:
+            self.off_center *= -1
         coordinates = World.Terrain[self.y][self.x].get_Character_Spot()
         self.MOB_rect.centerx = coordinates[0]
         self.MOB_rect.bottom = coordinates[1]
+        self.Icon.update_coo(self.y,self.x)
+        self.reset_direction()
+        self.track = []
 
+    #Image translation
     def translate(self,x,y):
         self.MOB_rect.bottom += y
         self.MOB_rect.centerx += x
+        for i in self.track:
+            i[0] += x
+            i[1] += y
+
+    #Draw functions and animation loops for world entities
+    def Draw(self):
+        self.Screen.blit(self.MOB_image, self.MOB_rect)
 
 """Class for player character.-----------------------------------------------------------------------------"""
 class Player(MOB):
-    def __init__(self,Screen,coordinates,Max_Parameters):
-        MOB.__init__(self,Screen,coordinates,Max_Parameters)
+    def __init__(self,Screen,spawn_coord):
+        MOB.__init__(self,Screen,spawn_coord)
         self.MOB_images = []
-        self.MOB_image = pygame.image.load('Player/Player.png').convert()
+        self.MOB_image = pygame.image.load('Player/SW00.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
         self.Stats = Stats()
@@ -70,10 +121,7 @@ class Player(MOB):
 
         self.frame = 0
         self.max_frames = 0
-
-    def reset_hitstun(self): #no functionality yet
-        if self.hitstun == True:
-            self.hitstun = False
+        self.Icon = Icon_Player(self.Screen,self.y,self.x)
 
     def animation_clock(self):
         if self.frame + 1 >= self.max_frames:
@@ -86,7 +134,24 @@ class Player(MOB):
     def set_frame_rate(self):
         self.frame_rate = self.max_frames//len(self.MOB_images)
 
-#class for dynamic game statistics 
+    def sprite_direction(self,D):
+        self.D = D
+        self.MOB_image = self.MOB_image = pygame.image.load(
+            'Player/{}00.png'.format(D)
+            ).convert()
+        self.MOB_image.set_colorkey((255,0,255))
+
+    def hurt_animation(self,frame):
+        self.MOB_image = self.MOB_image = pygame.image.load(
+            'Player/{}10.png'.format(self.D)
+            ).convert()
+        self.MOB_image.set_colorkey((255,0,255))
+
+    def reset_hitstun(self): #no functionality yet
+        if self.hitstun == True:
+            self.hitstun = False
+
+#class for dynamic game statistics
 class Stats():
     def __init__(self):
         self.Health_Points = 10

@@ -1,15 +1,18 @@
 import pygame
 import pygame.font
+import text_reader
+pygame.mixer.init()
 
 #Envelope class containing all border rectangles
 class HUD():
-    def __init__(self,Settings,Screen,World,Stats):
+    def __init__(self,Settings,Screen,Ctrl_Vars,World,Player,Enemies):
         self.Screen = Screen
         self.Screen_rect = Screen.get_rect()
         self.Settings = Settings
         self.HUD_Borders = self.make_HUD_Borders()
-        self.Player_Stats = Player_Stats(Screen,Stats)
-        self.Mini_map = Mini_map(Screen,World)
+        self.Player_Stats = Player_Stats(Screen,Player.Stats)
+        self.Mini_map = Mini_map(Screen,World,Player,Enemies)
+        self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
         self.init_text(World)
 
     def init_text(self,World):
@@ -52,6 +55,7 @@ class HUD():
         self.Mini_map.draw()
         self.Player_Stats.draw()
         self.Screen.blit(self.font_image,self.font_rect)
+        #self.Dialog_box.draw()
         
 #Left
 class Player_Stats():
@@ -114,16 +118,106 @@ class HealthIcon():
         Screen.blit(self.HealthIcon,self.HealthIcon_rect)
 
 class Mini_map():
-    def __init__(self,Screen,World):
+    def __init__(self,Screen,World,Player,Enemies):
         self.Screen = Screen
         self.World = World
+        self.Player = Player
+        self.Enemies = Enemies
         self.scaling_factor = 4
 
     def draw(self):
         for col in range(len(self.World.Terrain)):
             for row in range(len(self.World.Terrain[col])):
                 self.World.Terrain[-1-col][row].Icon.draw()
+        self.Enemies.Icon_draw()
+        self.Player.Icon.draw()
 
+class Dialog_box():
+    def __init__(self,Screen,Ctrl_Vars):
+        self.Screen = Screen
+        self.Screen_rect = self.Screen.get_rect()
+        self.Ctrl_Vars = Ctrl_Vars
+        self.init_background()
+
+        self.dialog_x = self.background_rect.left + 30
+        self.dialog_y = self.background_rect.top + 10
+
+        self.character_name = ''
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",25)
+        self.font.set_bold(True)
+
+        self.frame = 0
+        self.box = []
+        self.init_dialog()
+
+    def init_background(self):
+        self.background_image = pygame.Surface(
+            (self.Screen_rect.width//2,self.Screen_rect.height//5)
+            )
+        self.background_image.convert()
+        self.background_image.fill((2,2,70))
+        self.background_image.set_alpha(185)
+        self.background_rect = self.background_image.get_rect()
+        self.background_rect.centerx = self.Screen_rect.centerx
+        self.background_rect.bottom = self.Screen_rect.bottom - 100
+
+    def init_dialog(self):
+        File = "Dialog/Dialog.txt"
+        Code = 'Tutorial0'
+        #Code = "E2P2"
+        self.dialog = text_reader.load_text(Code,File)
+        self.init_box()
+
+    def init_box(self):
+        if self.Ctrl_Vars.box_count < len(self.dialog):
+            count = self.Ctrl_Vars.box_count
+            profile = self.dialog[count][0]
+            self.character_name = profile['Character']
+            self.init_character_text()
+            self.image_path = profile['Image_Code']
+            self.portrait_side = profile['Side']
+            self.init_portraits()
+            self.box = self.dialog[count][1]
+
+    def init_character_text(self):
+        self.font_image = self.font.render(self.character_name,True,(255,255,255),None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.right = self.background_rect.right - 15
+        self.font_rect.bottom = self.background_rect.bottom - 10
+
+    def init_portraits(self):
+        self.portrait = pygame.image.load("Portraits/{}.png".format(
+            self.image_path)).convert()
+        self.portrait.set_colorkey((255,0,255))
+        self.portrait_rect = self.portrait.get_rect()
+        self.portrait_rect.centery = self.background_rect.centery
+        self.portrait_rect.centerx = (self.background_rect.centerx - (
+            int(self.portrait_side)*(self.background_rect.right - self.background_rect.centerx + 75))
+            )
+        if int(self.portrait_side) == -1:
+            self.portrait = pygame.transform.flip(self.portrait, True, False)
+
+    def draw(self):
+        if self.Ctrl_Vars.box_count < len(self.dialog):
+            self.Screen.blit(self.background_image, self.background_rect)
+            self.Screen.blit(self.font_image, self.font_rect)
+            self.text_scroll()
+            self.Screen.blit(self.portrait, self.portrait_rect)
+
+    def text_scroll(self):
+        x = self.dialog_x
+        y = self.dialog_y
+        for line in self.box:
+            for word in line:
+                word.draw(self.Screen,(x,y))
+                if word.full == False:
+                    break
+                x += word.font_rect.right
+            if not line[-1].full:
+                break
+            y += word.font_rect.bottom
+            x = self.dialog_x
+        
 #When worlds become sufficiently large this will be necessary but it would need to be accompanied by rendering function and would require defined space
 """TODO:    def translate(self,x,y):
         for col in range(len(self.World.Terrain)):

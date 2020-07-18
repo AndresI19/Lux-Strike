@@ -68,6 +68,47 @@ def seed_random_bound_int(seed,bounds,instance):
     else:
         print('Error, passed variabled must be of the tuple class')
 
+def seed_weighted_bound_int(seed,bounds,instance,weights):
+    #takes arguments seed: str, register: list, instance: int
+    """Uses the seed passed to it to make a random choice of a number between, 
+    two bounds given, different instances create different results per same seed
+    However with given weights."""
+##
+    SUM = 0
+    for i in range(len(weights)):
+        SUM += weights[i]
+    if SUM == 1:
+        if type(bounds) == tuple:
+            if len(bounds) == 2:
+                if bounds[1] > bounds[0]:
+                    if instance < len(seed):
+##
+                        length = abs(bounds[1]-bounds[0])
+                        register = []
+                        for i in range(length+1):
+                            register.append(bounds[0]+i)
+                        #------------------------------------------------------
+                        RNG = float(seed[instance:])
+                        order = pow(10,(-len(seed[instance:])))
+                        RNG = RNG*order
+                        partition = 0
+                        for i in range(len(weights)):
+                            partition += weights[i]
+                            if RNG < partition:
+                                return register[i]
+                    #------------------------------------------------------
+##
+                    else:
+                        print('Seed is too small for the instance size')
+                else:
+                    print('Second bound arguement must be larger than the first')
+            else: 
+                print('Error, tuple passed is must contain 2 elements')
+        else:
+            print('Error, passed variabled must be of the tuple class')
+    else:
+        print('Error, weights dont add to one')
+
 def generate_seed_from_seed(seed,instance):
     #shuffles the numbers around in the seed to create a different seed for operations
         final_seed = ''

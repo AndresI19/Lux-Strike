@@ -1,9 +1,10 @@
 from math import sqrt,sin,cos
 import RNG as rng
 from pygame import display
+from Menus import load_world_screen as loading_screen
 
 class Generation():
-    def __init__(self,Seed,Max_parameters, map_size,Screen):
+    def __init__(self,Seed,Max_parameters,Screen):
         #Seed for world gen!
         if type(Seed) == str:
             self.seed = Seed
@@ -11,7 +12,8 @@ class Generation():
             self.seed = rng.generate_Xdegit_seed(18)
         #set size parameters from arguments
         self.Max_Columns,self.Max_Rows = Max_parameters[0],Max_parameters[1]
-        self.map_size_x,self.map_size_y = map_size[0],map_size[1]
+        self.map_size_x = 90 * (self.Max_Columns)
+        self.map_size_y = 26 * (self.Max_Rows)
         #set max height 
         self.total_tiers = rng.seed_random_bound_int(
             self.seed, (4,6), 0)
@@ -25,8 +27,9 @@ class Generation():
         self.sample_size = 2500
 
         #experimental
-        """self.Loading_screen = loading_screen(Screen,self.sample_size,self.total_tiers,
-            self.Max_Rows,self.Max_Columns)"""
+        N = (self.sample_size * self.total_tiers)/2
+        self.Loading_screen = loading_screen(Screen,N)
+
         #start -----------
         self.generate_master_grid()
         #------------------
@@ -60,14 +63,16 @@ class Generation():
         for col in range(len(Grids[0])):
             for row in range(len(Grids[0][0])):
                 SUM = 0
-
-                tier = 0
-                #Plains terrain
+                tile = self.master_grid[col][row]
+                #Plains/Beach terrain
                 for tier in range(len(Grids)):
                     if not Grids[0][col][row].ID == 0:
-                        self.master_grid[col][row].ID = 1
+                        tile.ID = 1
                         SUM += Grids[tier][col][row].elevation
-                self.master_grid[col][row].elevation = SUM
+                if SUM > 0:
+                    tile.elevation = SUM -1
+                else:
+                    tile.elevation = SUM               
 
     def build_grid(self):
         grid = []
@@ -82,13 +87,12 @@ class Generation():
     def adjust_parametric(self,tier):
         """iterates once on the parametric to find a maximum and minimum, 
         uses these parameters to determain scale of correctional factors"""
-        number_samples = self.sample_size
         x_min = 0
         x_max = 0
         y_min = 0
         y_max = 0
-        for i in range(number_samples):
-            coordinates = self.parametric(number_samples,i,False)
+        for i in range(self.sample_size):
+            coordinates = self.parametric(i,False)
             if coordinates[0] < x_min:
                 x_min = coordinates[0]
             if coordinates[1] < y_min:
@@ -97,8 +101,6 @@ class Generation():
                 x_max = coordinates[0]
             if coordinates[1] > y_max:
                 y_max = coordinates[1]
-
-            #self.Loading_screen.Update()
 
         y_range = (y_max - y_min)
         x_range = (x_max - x_min)
@@ -111,16 +113,15 @@ class Generation():
     def check_parametric_contained(self,grid):
         """most processor intensive function, this is the cause of long load_world screens. Needs to iterate as many times as there
         are tiles * samples, and this in iteself is done once per tier"""
-        number_samples = self.sample_size
-        for i in range(number_samples):
-            coordinates = self.parametric(number_samples,i,True)
+        for i in range(self.sample_size):
+            coordinates = self.parametric(i,True)
             for col in range(len(grid)):
                 for row in range(len(grid[col])):
                     grid[col][row].check_contained(coordinates[0],coordinates[1])
-                    #self.Loading_screen.Update()
+            self.Loading_screen.Update()
         return grid
 
-    def parametric(self,number_samples,i,corrected):
+    def parametric(self,i,corrected):
         """This is a line drawing function that works on the bases of periodic functions ie:
         sins and cosins. It is set to parameters made by the seed, and as long as each individual
         periodic function is set to end at a factor of 2 pi, there will be no spiral behavior.
@@ -130,7 +131,7 @@ class Generation():
         x_margin = (3 * 90)
         y_margin = (6 * 26)
         pi = 3.1415
-        t = (2*pi)*(i/number_samples)
+        t = (2*pi)*(i/self.sample_size)
 
         x = r*(
             self.variables[0]* cos(self.variables[1]*t)+
@@ -190,6 +191,7 @@ class Post_Generation():
         self.Max_Columns = len(self.grid)
         self.Max_Rows = len(self.grid[0])
         self.create_stairs()
+        self.variables = []
         
     def create_fortress(self):
         r = 1
@@ -249,8 +251,6 @@ class Post_Generation():
         y = rng.seed_random_bound_int(
             self.seed, (2,self.Max_Rows-2), 3)
 
-        print("x : {}, y: {}".format(x,y))
-
         self.stairs = [x,y]
         self.door = [x,y-2]
 
@@ -264,6 +264,25 @@ class Post_Generation():
         self.grid[x][y].elevation = self.elevation
         self.grid[x][y].ID = 101
         self.grid[x-2][y].elevation = self.elevation
+
+##
+    """def river(self):
+        seed = rng.generate_seed_from_seed(self.seed,9)
+        river_chance = rng.seed_weighted_bound_int(seed,(0,2),0,[0.7,0.2,0.1])
+        for i in range(river_chance):
+            print("wah")
+
+    def make_variable_list(self,seed):
+        for i in range(len(self.variables)):
+            self.variables[i] = rng.seed_random_bound_int(
+                seed, (-8,8), i)
+
+    def river_parametric(self,i):
+        number_samples = 2500
+        t = (i/number_samples)
+
+        x = (self.variables[0]*t + self.variables[1]*pow(t,abs(self.variables[2])))
+        y = (self.variables[3]*t + self.variables[4]*pow(t,abs(self.variables[3])))"""
 
 class Hexagon():
     #perfect hexagon class, use as a means to derive a map

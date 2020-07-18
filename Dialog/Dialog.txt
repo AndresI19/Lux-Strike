@@ -1,0 +1,33 @@
+E2P2.1 #test
+{Sardonxy,S1,1}%QGooooood evening, everybody!
+This is the lovely $RSardonyx!
+Coming to you live from the soon-to-be-former $GCommunication $GHub!
+How are y'all doin' tonight?
+{Steven,S2,-1}*gasps* Giant woman!
+{Sardonxy,S1,1}Oh my $Y%Qstars!
+If it isn't $RSteven $RUniverse! We finally meet.
+@So, what do you think?
+@Was I worth the wait?
+@What am I saying? %QOf %Qcourse I was!
+{Steven,S2,-1}Wow, you're so articulated!
+{Sardonxy,S1,1}Well, aren't you the sweetest $Blittle charmer!
+I could literally squish you right now!
+It would not be hard.
+#End
+
+Tutorial0.1
+{Dr.Navy,T0,1}Press the $RE button to move $Gnorthwest.
+{Dr.Navy,DN1,1}Oh shit! What is that?
+{???,SW1,-1}%QHHOOOooooooooonnk!
+{Dr.Navy,DN1,1}My god...
+.
+.
+no.
+@Dont do that again.
+@Looks like this is a hybrid between a swan and a tree?
+.............
+$GSWANZAI
+{Swanzai,SW1,-1}Hooooonkkkkkkkkk!
+{Dr.Navy,DN1,1}It did it again!
+You will die now! Hear me swanzai foe!
+#End

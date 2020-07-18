@@ -1,6 +1,7 @@
 import pygame
 import pygame.font
 from math import sqrt
+import sys
 
 """Mother class Buttons-----------------------------------------------------------------"""
 #Simple Button (Mother) vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -308,6 +309,21 @@ class Clear(Hexagon_Button):
             self.Ctrl_Vars.Left_click = False
             self.Ctrl_Vars.seed = ""
 
+class Save_seed(Hexagon_Button):
+    def __init__(self,Screen,x,y,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars)
+        self.text = "Save Seed"
+        self.init_text(29)
+
+    def functionality(self):
+        #activates campaign mode
+        self.On = True
+        if self.Ctrl_Vars.Left_click:
+            File = 'Saved_Worlds/Favorite Seeds.txt'
+            File = open(File,"a")
+            File.writelines(self.Ctrl_Vars.seed + "\n")
+            File.close()
+    
 #Menu Buttons vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 """Play ---------------"""
 class Campaign(Hexagon_Button):
@@ -322,9 +338,10 @@ class Campaign(Hexagon_Button):
         self.On = True
         if self.Ctrl_Vars.Left_click:
             self.Ctrl_Vars.Left_click = False
-            self.Ctrl_Vars.load_world = True
             self.Ctrl_Vars.Start_Screen = False
+            self.Ctrl_Vars.Game_Win = False
 
+            self.Ctrl_Vars.load_world = True
             self.Ctrl_Vars.Random = True
 
 class Endless(Hexagon_Button):
@@ -462,6 +479,7 @@ class Return_start(Hexagon_Button):
         if self.Ctrl_Vars.Left_click:
             self.Ctrl_Vars.Left_click = False
             self.Ctrl_Vars.Pause = False
+            self.Ctrl_Vars.seed_menu = False
             self.Ctrl_Vars.Start_Screen = True
 
             self.Ctrl_Vars.Game_Over = False
@@ -471,14 +489,14 @@ class Quit(Hexagon_Button):
     def __init__(self,Screen,x,y,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars)
         self.clicked = False
-        self.text = "Quit"
+        self.text = "Desktop"
         self.init_text(36)
 
     def functionality(self):
         #activates campaign mode
         self.On = True
         if self.Ctrl_Vars.Left_click:
-            sys.exit()
+            sys.exit(0)
 #Menu Buttons ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 """Specialized Folders   *******************************************************************************"""
@@ -525,19 +543,15 @@ class Settings(Folder):
         self.Buttons.append(self.Display_Button)
 
 #Pause Screen
-class Pause_play(Folder):
+class Quit_Folder(Folder):
     def __init__(self,Screen,x,y,Campaign_Button):
         Folder.__init__(self,Screen,x,y,Campaign_Button)
-        self.text = "Game"
+        self.text = "Quit"
         self.init_text(36)
     def build_submenu(self):
         #Settings Options ----
         self.Buttons = []
-        self.resume = Resume(self.Screen,self.x,self.y,self.Ctrl_Vars)
-        self.retry = Retry(self.Screen,self.x,self.y,self.Ctrl_Vars)
         self.return_start = Return_start(self.Screen,self.x,self.y,self.Ctrl_Vars)
         self.quit = Quit(self.Screen,self.x,self.y,self.Ctrl_Vars)
-        self.Buttons.append(self.resume)
-        self.Buttons.append(self.retry)
         self.Buttons.append(self.return_start)
         self.Buttons.append(self.quit)

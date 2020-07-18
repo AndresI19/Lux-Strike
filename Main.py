@@ -1,7 +1,8 @@
 #import all modules from directory, as well as pygame lib
 #full modules
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
-import pygame.font
 import time
 import Engine
 import Graphics
@@ -44,6 +45,7 @@ Num_Pad = Menus.Num_Pad(Screen,Ctrl_Vars)
 def world_init(Ctrl_Vars,Screen):
     if Ctrl_Vars.Random:
         world = World(Screen,None)
+        Ctrl_Vars.seed = str(world.seed)
         Ctrl_Vars.Random = False
     elif Ctrl_Vars.set_seed:
         Seed = Ctrl_Vars.seed
@@ -55,22 +57,12 @@ def world_init(Ctrl_Vars,Screen):
 while True:
     clock.tick(60) #set fram rate (variable in argument per second)
     if not Ctrl_Vars.Game_active:
-        #Dynamic Menus, Start, Pause, Victory, Game Over
-        if Ctrl_Vars.Start_Screen:
-            Engine.Start_check_events(Settings,Ctrl_Vars,Start_Screen.Menus)
-            Graphics.Menu_diplay(Start_Screen)
-        elif Ctrl_Vars.seed_menu:
-            Engine.Start_check_events(Settings,Ctrl_Vars,Num_Pad.Menus)
-            Graphics.Menu_diplay(Num_Pad)
-        elif Ctrl_Vars.Pause:
-            Engine.Pause_check_events(Settings,Ctrl_Vars,Pause_Screen.Menus)
-            Graphics.Menu_diplay(Pause_Screen) 
-        elif Ctrl_Vars.Game_Win:
-            Engine.Pause_check_events(Settings,Ctrl_Vars,Game_Win.Menus)
-            Graphics.Menu_diplay(Game_Win)
-        elif Ctrl_Vars.Game_Over:
-            Engine.Pause_check_events(Settings,Ctrl_Vars,Game_Over.Menus)
-            Graphics.Menu_diplay(Game_Over) 
+        if not Ctrl_Vars.load_world:
+            #Dynamic Menus, Start, Pause, Victory, Game Over
+            Engine.menu_management(Settings,
+                Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,
+                Game_Over,Num_Pad
+                )
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
         elif Ctrl_Vars.load_world:
@@ -81,34 +73,30 @@ while True:
             if not Ctrl_Vars.initialized:
                 World = world_init(Ctrl_Vars,Screen)
                 Max_parameters = (World.Max_Rows,World.Max_Columns)
-                coordinates = (World.spawn_row,World.spawn_col)
-                Player = Player(Screen,coordinates,Max_parameters)
+                spawn_coord = (World.spawn_row,World.spawn_col)
+                Player = Player(Screen,spawn_coord)
                 Enemies = ENEMIES(Screen,Max_parameters,World)
-                HUD = HUD(Settings,Screen,World,Player.Stats)
+                HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
                 Ctrl_Vars.initialized = True
             else:
                 Engine.new_world_init(Ctrl_Vars,Screen,World) 
-                Engine.re_init(Settings,Screen,World,Player,Enemies,HUD)
-            
-            Ctrl_Vars.load_world = False
-            Ctrl_Vars.Game_active = True
-
-            Engine.Center_Screen(Settings,World,Player,Enemies)
-            Player.update_coordinates(World)
-            Enemies.update_coordinates(World)
-        #--------------------------------------------------------------------------------------------*
+                Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,HUD)
+            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies)
+        #-------------------------------------------------------------------------------------------*
     #Main Game loop
     else:
-        Ctrl_Vars.turn_timer()
-        if Ctrl_Vars.TURN_PLAYER:
-            Engine.check_events(Settings,Ctrl_Vars,World,Player,Enemies)
-            Engine.Player_turn_end(World,Player,Enemies,Ctrl_Vars)
-            if Ctrl_Vars.turn_frame == 0:
-                Player.update_coordinates(World)
-        else:
-            Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies)
-            if Ctrl_Vars.turn_frame == 0:
-                Enemies.update_coordinates(World)
+        Ctrl_Vars.merge_timer()
+        if Ctrl_Vars.phase_active:
+            if Ctrl_Vars.TURN_PLAYER:
+                Engine.Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies)   
+            elif Ctrl_Vars.TURN_ENEMY:
+                Engine.Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies)
+        else: #Ctrl_Vars.phase_active == False
+            if Ctrl_Vars.TURN_PLAYER:
+                Engine.check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies)
+                Engine.Player_turn_end(World,Player,Enemies,Ctrl_Vars)
+            else:
+                Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies)
+
         Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies)
         Graphics.Display(Screen,World,HUD,Player,Enemies)
-

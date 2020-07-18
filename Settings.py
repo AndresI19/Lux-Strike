@@ -1,4 +1,5 @@
 import pygame.display
+import text_reader as tr
 
 #class for player set variables
 class Settings():
@@ -14,9 +15,19 @@ class Settings():
         self.bg_color = (255,255,255)
 
         self.drag_sensativity = 1
-
         self.fullscreen = False
 
+        self.set_settings_from_file()
+        
+        self.box = 0
+
+    def set_settings_from_file(self):
+        self.master_volume = tr.get_settings('master_volume')
+        self.SFX_volume = tr.get_settings('SFX_volume')
+        self.music_volume = tr.get_settings('music_volume')
+        self.voice_volume = tr.get_settings('voice_volume')
+
+    def set_default_settings(self):
         self.master_volume = 100
         self.SFX_volume = 100
         self.music_volume = 100
@@ -29,6 +40,7 @@ class Settings():
         self.music_volume *= value
         self.voice_volume *= value
 
+    #simple full screen toggle
     def toggle_fullscreen(self):
         if self.fullscreen:
             self.fullscreen = False
@@ -38,6 +50,3 @@ class Settings():
             self.fullscreen = True
             pygame.display.set_mode((
                 self.resolution_list[self.resolution]),pygame.FULLSCREEN)
-
-
-    
