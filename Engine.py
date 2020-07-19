@@ -2,7 +2,7 @@ import pygame
 import pygame.display
 import sys
 from Graphics import Menu_diplay
-import Game_Functions as GF 
+import Game_Functions as GF
 
 """Main Loop *************************************************************************"""
 #Game Engine. (Turn Based Engine) ++++++++++++++++++++++++++++++++++++++++
@@ -19,32 +19,30 @@ def Player_turn_end(World,Player,Enemies,Ctrl_Vars):
     check_death(Player,Ctrl_Vars)
 
 def enemy_turn(Ctrl_Vars,World,Player,Enemies):
+    x = Player.x + Player.dx
+    y = Player.y + Player.dy
     for Enemy in Enemies.Group:
+        Enemy.update_player_location(x,y)    #update knowledge of player projected location
         if Enemy.aware:
             Enemy.choose_direction()
-            Enemy_move(World,Enemy,Player,Enemies)
+            Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies)
         else:
             Enemy.scan_radius(Player,4)
-        #update knowledge of player location
-        x = Player.x
-        y = Player.y
-        Enemy.update_player_location(x,y)
     Enemies.Enemy_Group_Collsion()
     Ctrl_Vars.end_turn()
 
 """Animation Phase"""
 def Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies):
-    animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies)
-    Player.move_line(Ctrl_Vars.phase_frame)
+    Player.move_line(World,Ctrl_Vars.phase_frame)
     if Ctrl_Vars.phase_frame + 1 == Ctrl_Vars.phase_Frames:
-        Player.update_coordinates(World)
+        Player.glue(World)
     
 def Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies):
-    Enemies.move_line(Ctrl_Vars.phase_frame)
+    Enemies.move_line(World,Ctrl_Vars.phase_frame)
     if Player.hitstun:
         Player.hurt_animation(Ctrl_Vars.phase_frame)
     if Ctrl_Vars.phase_frame + 1 == Ctrl_Vars.phase_Frames:
-        Enemies.update_coordinates(World)
+        Enemies.glue(World)
         Player.reset_hitstun()
 
 #Player input engine vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -107,6 +105,7 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies):
     if event.key == pygame.K_ESCAPE:
         Ctrl_Vars.Game_active = False
         Ctrl_Vars.Pause = True
+        Ctrl_Vars.menu_select = True
     #camera Center
     elif event.key == pygame.K_LSHIFT:
         Center_Screen(Settings,World,Player,Enemies)
@@ -120,6 +119,7 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies):
         print("Player Grid Coordinates = X: {}, Y:{}".format(Player.x,Player.y))
         Spot = World.Terrain[Player.y][Player.x].get_Character_Spot()
         print("Player Pixel Cordinates = X: {}, Y:{}".format(Spot[0],Spot[1]))
+        HUD.Dialog_box.init_dialog('Tutorial0')
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
@@ -281,18 +281,27 @@ def num_keys(event,Ctrl_Vars):
 def Player_move(Ctrl_Vars,World,Player,Enemies):
     x = Player.x + Player.dx #projected direction
     y = Player.y + Player.dy
-    boundry = World.check_bounds(x,y)
-    cliff_obsticle = World.check_cliff(Player,y,x)
-    enemy_obsticle = P_check_occupancy(y,x,Enemies,Ctrl_Vars)
-    stop_move = enemy_obsticle or cliff_obsticle or boundry
-    if stop_move:
+    if World.check_bounds(x,y):
+        sound = pygame.mixer.Sound("SFX/hit_wall.wav")
+        pygame.mixer.Sound.play(sound)
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
+        return
+    if World.check_cliff(Player,y,x):
+        sound = pygame.mixer.Sound("SFX/hit_wall.wav")
+        pygame.mixer.Sound.play(sound)
+        Player.reset_direction()
+        Ctrl_Vars.set_button_downs()
+        return
+    if P_check_occupancy(y,x,Enemies,Ctrl_Vars):
+        Player.reset_direction()
+        Ctrl_Vars.set_button_downs()
+        return
     else:
         line(Player,World,Ctrl_Vars.phase_Frames)
         Ctrl_Vars.end_turn()
 
-def Enemy_move(World,Enemy,Player,Enemies):
+def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies):
     x = Enemy.x + Enemy.dx #projected direction
     y = Enemy.y + Enemy.dy
     boundry = World.check_bounds(x,y)
@@ -302,13 +311,14 @@ def Enemy_move(World,Enemy,Player,Enemies):
     if stop_move:
         Enemy.reset_direction()
     else:
-        line(Enemy,World,5)
+        line(Enemy,World,Ctrl_Vars.phase_Frames)
 
 def P_check_occupancy(y,x,Enemies,Ctrl_Vars):
     for Enemy in Enemies.Group:
         if Enemy.x == x and Enemy.y == y:
             Enemies.Group.remove(Enemy)
             Ctrl_Vars.end_phase()
+            Enemy.SFX_death()
             return True
     return False
 
@@ -317,6 +327,9 @@ def E_check_occupancy(y,x,Player,Enemies):
         if Player.hitstun == False:
             Player.Stats.Health_Points -= 1
             Player.hitstun = True
+            Player.SFX_damage()
+            
+
         return True
     """for Enemy in Enemies.Group:
         if (Enemy.x) == x and (Enemy.y) == y:
@@ -352,6 +365,15 @@ def check_tall_block(World,MOB,Ctrl_Vars):
 def Camera(Settings,Ctrl_Vars,World,Player,Enemies):
     if Ctrl_Vars.camera_follow:
         Center_Screen(Settings,World,Player,Enemies)
+    if Player.hitstun:
+        Camera_shake(4,Ctrl_Vars.phase_frame,World,Player,Enemies)
+
+def Camera_shake(degree,frame,World,Player,Enemies):
+    if frame%2 == 0:
+        x = degree
+    elif frame%2 == 1:
+        x = -1*degree
+    Translate_Screen((x,0),World,Player,Enemies)
 
 #Checking/Updating
 def check_ground(World,Player,Ctrl_Vars):
@@ -359,11 +381,15 @@ def check_ground(World,Player,Ctrl_Vars):
     if Player.x == x and Player.y == y:
         Ctrl_Vars.Game_active = False
         Ctrl_Vars.Game_Win = True
+        Ctrl_Vars.menu_select = True
 
 def check_death(Player,Ctrl_Vars):
     if Player.Stats.Health_Points <= 0:
         Ctrl_Vars.Game_active = False
         Ctrl_Vars.Game_Over = True
+        Ctrl_Vars.menu_select = True
+        sound = pygame.mixer.Sound("SFX/game over.wav")
+        pygame.mixer.Sound.play(sound)
 
 #other
 def line(MOB,World,N):
@@ -390,40 +416,38 @@ def line(MOB,World,N):
             x += increment
 
 def Scan_line(World,MOB,Start,stagger):
+    Next = select_line_path(MOB,Start,stagger)
+    off_center = Next[1]
+    Next = Next[0]
+    if check_line(World,Start,Next):    #Else end
+        Scan_line(World,MOB,Next,off_center)
+
+def select_line_path(MOB,Start,stagger):
     Next_x = Start[0]
     Next_y = Start[1]
     off_center = stagger
-##
-    if MOB.D == 'NE':
-        Next_y += 1
-        off_center *= -1
-        if off_center == -1:
-            Next_x += 1
+    if MOB.D == 'S':
+        Next_y -= 2
     elif MOB.D == 'N':
         Next_y += 2
+    off_center *= -1
+    if MOB.D == 'NE':
+        Next_y += 1
+        if off_center == -1:
+            Next_x += 1
     elif MOB.D == 'NW':
         Next_y += 1
-        off_center *= -1
         if off_center == 1:
             Next_x -= 1
     elif MOB.D == 'SW':
         Next_y -= 1
-        off_center *= -1
         if off_center == 1:
             Next_x -= 1
-    elif MOB.D == 'S':
-        Next_y -= 2
     elif MOB.D == 'SE':
         Next_y -= 1
-        off_center *= -1
         if off_center == -1:
             Next_x += 1
-##
-    Next = [Next_x,Next_y]
-    if not check_line(World,Start,Next):
-        return
-
-    Scan_line(World,MOB,Next,off_center)
+    return [(Next_x,Next_y),off_center]
 
 def check_line(World,Start,Next):
     Start_x = Start[0]
@@ -467,5 +491,7 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies):
     Ctrl_Vars.load_world = False
     Ctrl_Vars.Game_active = True
     Center_Screen(Settings,World,Player,Enemies)
-    Player.update_coordinates(World)
-    Enemies.update_coordinates(World)
+    Player.glue(World)
+    Enemies.glue(World)
+    pygame.mixer.music.load('Music/Navy Blues.mp3')
+    pygame.mixer.music.play(-1)

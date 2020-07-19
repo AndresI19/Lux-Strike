@@ -55,7 +55,7 @@ class HUD():
         self.Mini_map.draw()
         self.Player_Stats.draw()
         self.Screen.blit(self.font_image,self.font_rect)
-        #self.Dialog_box.draw()
+        self.Dialog_box.draw()
         
 #Left
 class Player_Stats():
@@ -148,8 +148,17 @@ class Dialog_box():
 
         self.frame = 0
         self.box = []
-        self.init_dialog()
+        self.dialog = []
+        self.dialog_play = False
+        self.SFX = pygame.mixer.Sound("SFX/new dialog box.wav")
 
+    def init_dialog(self,Code):
+        File = "Dialog/Dialog.txt"
+        self.dialog = text_reader.load_text(Code,File)
+        self.init_box()
+        self.dialog_play = True
+
+##Initializing Dialog Box
     def init_background(self):
         self.background_image = pygame.Surface(
             (self.Screen_rect.width//2,self.Screen_rect.height//5)
@@ -161,13 +170,6 @@ class Dialog_box():
         self.background_rect.centerx = self.Screen_rect.centerx
         self.background_rect.bottom = self.Screen_rect.bottom - 100
 
-    def init_dialog(self):
-        File = "Dialog/Dialog.txt"
-        Code = 'Tutorial0'
-        #Code = "E2P2"
-        self.dialog = text_reader.load_text(Code,File)
-        self.init_box()
-
     def init_box(self):
         if self.Ctrl_Vars.box_count < len(self.dialog):
             count = self.Ctrl_Vars.box_count
@@ -178,6 +180,7 @@ class Dialog_box():
             self.portrait_side = profile['Side']
             self.init_portraits()
             self.box = self.dialog[count][1]
+            pygame.mixer.Sound.play(self.SFX)
 
     def init_character_text(self):
         self.font_image = self.font.render(self.character_name,True,(255,255,255),None)
@@ -196,13 +199,17 @@ class Dialog_box():
             )
         if int(self.portrait_side) == -1:
             self.portrait = pygame.transform.flip(self.portrait, True, False)
-
+##Drawing Dialog Box
     def draw(self):
-        if self.Ctrl_Vars.box_count < len(self.dialog):
-            self.Screen.blit(self.background_image, self.background_rect)
-            self.Screen.blit(self.font_image, self.font_rect)
-            self.text_scroll()
-            self.Screen.blit(self.portrait, self.portrait_rect)
+        if self.dialog_play:
+            if self.Ctrl_Vars.box_count < len(self.dialog):
+                self.Screen.blit(self.background_image, self.background_rect)
+                self.Screen.blit(self.font_image, self.font_rect)
+                self.text_scroll()
+                self.Screen.blit(self.portrait, self.portrait_rect)
+            else:
+                self.dialog_play = False
+                self.Ctrl_Vars.box_count = 0
 
     def text_scroll(self):
         x = self.dialog_x

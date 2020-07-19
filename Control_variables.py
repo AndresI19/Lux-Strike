@@ -11,7 +11,7 @@ class Ctrl_Vars():
         self.camera_follow = True
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
-        
+#Key Controls _____________________________________________
 #HOLD KEYS____________________________________________________________
         self.Left_MouseDown = False
         self.LSHIFT_DOWN = False
@@ -26,6 +26,34 @@ class Ctrl_Vars():
         self.a_down = False
         self.s_down = False
         self.d_down = False
+
+    def mouse_down_update(self):
+        #Fucntional way to know and act on the exact frame the mouse was clicked. Probably a better way to do this.
+        if self.Left_MouseDown:
+            if not self.L_click_memory:
+                self.Left_click = True
+                self.L_click_memory = True
+            else:
+                self.Left_click = False
+        else:
+            self.L_click_memory = False     
+#Menu Controls_______________________________________________
+    def menu_var_init(self):
+        #initialize all menu switch bools
+        self.Game_active = True #True win playing game, false if in menu
+        self.menu_select = False
+        #menus
+        self.Pause = False
+        self.Start_Screen = False
+        self.Game_Win = False
+        self.Game_Over = False
+        self.seed_menu = False 
+        self.load_world = False #the bool called to load a new world
+
+        #World building Instructions
+        self.restart_world = False
+        self.Random = False
+        self.set_seed = False
 #Clocks ______________________________________________________________
     def timer_init(self):
         #Turn timer variables
@@ -35,7 +63,7 @@ class Ctrl_Vars():
         self.TURN_ENEMY = False
     
         self.phase_frame = 0
-        self.phase_Frames = 5 #set to 2 for no animation frames
+        self.phase_Frames = 4 #set to 2 for no animation frames
         self.phase_active = False
 
     def switch_turns(self):
@@ -67,35 +95,4 @@ class Ctrl_Vars():
 
     def end_turn(self):
         self.turn_frame = 0
-        self.phase_active = True
-
-#Key Controls _____________________________________________
-    def mouse_down_update(self):
-        #Fucntional way to know and act on the exact frame the mouse was clicked. Probably a better way to do this.
-        if self.Left_MouseDown:
-            if not self.L_click_memory:
-                self.Left_click = True
-                self.L_click_memory = True
-            else:
-                self.Left_click = False
-        else:
-            self.L_click_memory = False     
-
-#Menu Controls_______________________________________________
-    def menu_var_init(self):
-        #initialize all menu switch bools
-        self.Game_active = True #True win playing game, false if in menu
-        #menus
-        self.Pause = False
-        self.Start_Screen = False
-        self.Game_Win = False
-        self.Game_Over = False
-        self.seed_menu = False 
-        self.load_world = False #the bool called to load a new world
-
-        #World building Instructions
-        self.restart_world = False
-        self.Random = False
-        self.set_seed = False
-     
-                 
+        self.phase_active = True            

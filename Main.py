@@ -2,6 +2,7 @@
 #full modules
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import sys
 import pygame
 import time
 import Engine
@@ -19,6 +20,12 @@ from Player import Player
 clock = pygame.time.Clock()
 pygame.font.init()
 Settings = Settings()
+##SOUND
+pygame.mixer.pre_init(22050, -16, 2, 1024)
+pygame.init()
+pygame.mixer.quit()
+pygame.mixer.init(22050, -16, 2, 1024)
+pygame.mixer.music.set_volume(0.08)
 
 Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 pygame.display.set_caption("Lux Strike")
@@ -33,12 +40,7 @@ Ctrl_Vars = Ctrl_Vars()
 """Set Control variables to start with an active start menu operation, initialize all start menu elements"""
 Ctrl_Vars.Game_active = False
 Ctrl_Vars.Start_Screen = True
-#start menu object that contains all start menu elements.
-Start_Screen = Menus.Start_Envelope(Screen,Ctrl_Vars)
-Pause_Screen = Menus.Pause_Envelope(Screen,Ctrl_Vars)
-Game_Over = Menus.Game_Over_Envelope(Screen,Ctrl_Vars)
-Game_Win = Menus.Game_Win_Envelope(Screen,Ctrl_Vars)
-Num_Pad = Menus.Num_Pad(Screen,Ctrl_Vars)
+Ctrl_Vars.menu_select = True
 #---------------------------------------------------------------------------------
 
 #initialization swtich menu:
@@ -59,10 +61,9 @@ while True:
     if not Ctrl_Vars.Game_active:
         if not Ctrl_Vars.load_world:
             #Dynamic Menus, Start, Pause, Victory, Game Over
-            Engine.menu_management(Settings,
-                Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,
-                Game_Over,Num_Pad
-                )
+            if Ctrl_Vars.menu_select:
+                active_menu = Menus.menu_select(Screen,Ctrl_Vars)
+            Engine.run_menu(Settings,Ctrl_Vars,active_menu) 
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
         elif Ctrl_Vars.load_world:
@@ -87,6 +88,7 @@ while True:
     else:
         Ctrl_Vars.merge_timer()
         if Ctrl_Vars.phase_active:
+            Engine.animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies)
             if Ctrl_Vars.TURN_PLAYER:
                 Engine.Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies)   
             elif Ctrl_Vars.TURN_ENEMY:

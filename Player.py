@@ -77,10 +77,17 @@ class MOB():
         self.dx = 0
         self.dy = 0
 
-    def move_line(self,frame):
+    def move_line(self,World,frame):
         if len(self.track) > 0:
             self.MOB_rect.centerx = self.track[frame][0]
             self.MOB_rect.bottom = self.track[frame][1]
+            going_up = self.D == 'N' or self.D == 'NW' or self.D == 'NE'
+            if going_up:
+                if frame + 1 == len(self.track):
+                    self.update_coordinates(World)
+            else:
+                self.update_coordinates(World)
+
     
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
@@ -89,12 +96,14 @@ class MOB():
         self.x += self.dx
         if abs(self.dy) == 1:
             self.off_center *= -1
+        self.reset_direction()
+
+    def glue(self,World):
+        self.Icon.update_coo(self.y,self.x)
+        self.track = []
         coordinates = World.Terrain[self.y][self.x].get_Character_Spot()
         self.MOB_rect.centerx = coordinates[0]
         self.MOB_rect.bottom = coordinates[1]
-        self.Icon.update_coo(self.y,self.x)
-        self.reset_direction()
-        self.track = []
 
     #Image translation
     def translate(self,x,y):
@@ -123,6 +132,9 @@ class Player(MOB):
         self.max_frames = 0
         self.Icon = Icon_Player(self.Screen,self.y,self.x)
 
+        self.damage_SFX = pygame.mixer.Sound("SFX/damage.wav")
+        self.last_heart_SXF = pygame.mixer.Sound("SFX/last heart.wav")
+
     def animation_clock(self):
         if self.frame + 1 >= self.max_frames:
             self.frame = 0
@@ -150,6 +162,13 @@ class Player(MOB):
     def reset_hitstun(self): #no functionality yet
         if self.hitstun == True:
             self.hitstun = False
+
+##sound
+    def SFX_damage(self):
+        pygame.mixer.Sound.play(self.damage_SFX)
+        if self.Stats.Health_Points == 1:
+            pygame.mixer.Sound.play(self.last_heart_SXF)
+
 
 #class for dynamic game statistics
 class Stats():

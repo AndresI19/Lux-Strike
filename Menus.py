@@ -1,6 +1,26 @@
 import pygame
 import Buttons
 from text_reader import word_object
+import time
+
+def menu_select(Screen,Ctrl_Vars):
+    if Ctrl_Vars.Start_Screen:
+        Active_Menu = Start_Envelope(Screen,Ctrl_Vars)
+        time.sleep(0.5)
+    elif Ctrl_Vars.seed_menu:
+        Active_Menu = Num_Pad(Screen,Ctrl_Vars)
+        time.sleep(0.5)
+    elif Ctrl_Vars.Pause:
+        Active_Menu = Pause_Envelope(Screen,Ctrl_Vars)
+    elif Ctrl_Vars.Game_Win:
+        Active_Menu = Game_Win_Envelope(Screen,Ctrl_Vars)
+        time.sleep(0.5)
+    elif Ctrl_Vars.Game_Over:
+        Active_Menu = Game_Over_Envelope(Screen,Ctrl_Vars)
+        time.sleep(0.5)
+    Ctrl_Vars.menu_select = False
+    #let garbage collector take care of un-used menus
+    return Active_Menu
 
 #Envelope class that contrains all start menu options and graphics vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 class Start_Envelope():
@@ -11,14 +31,13 @@ class Start_Envelope():
         self.Still = still(Screen)
         self.Menus = []
         #Main options
+        pygame.mixer.music.load('Music/6 Solutions per Side.mp3')
+        pygame.mixer.music.play(-1)
         """These are folders, each contain a few more options within them"""
         self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Extras(Screen,1,2,Ctrl_Vars))
         self.Menus.append(Buttons.Play(Screen,2,3,Ctrl_Vars))
-        Quit = Buttons.Quit(Screen,9,0,Ctrl_Vars)
-        Quit.hide = False
-        Quit.active = True
-        self.Menus.append(Quit)
+        self.Menus.append(Buttons.Quit(Screen,9,0,Ctrl_Vars,True))
 
     def draw(self):
         """self.Background.draw()
@@ -32,19 +51,16 @@ class Pause_Envelope():
     def __init__(self,Screen,Ctrl_Vars):
         self.Screen = Screen
         self.Screen_rect = self.Screen.get_rect()
+        pygame.mixer.music.load('Music/Think.mp3')
+        pygame.mixer.music.play(-1)
+
         #Main options
         """These are folders, each contain a few more options within them"""
         self.Menus = []
         self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Quit_Folder(Screen,7,1,Ctrl_Vars))
-        Resume = Buttons.Resume(Screen,4,3,Ctrl_Vars)
-        Resume.active = True
-        Resume.hide = False
-        self.Menus.append(Resume)
-        Retry = Buttons.Retry(Screen,6,3,Ctrl_Vars)
-        Retry.active = True
-        Retry.hide = False
-        self.Menus.append(Retry)
+        self.Menus.append(Buttons.Resume(Screen,4,3,Ctrl_Vars,True))
+        self.Menus.append(Buttons.Retry(Screen,6,3,Ctrl_Vars,True))
 
         self.text = "Paused"
         self.init_text(100)
@@ -71,6 +87,8 @@ class Game_Over_Envelope(Pause_Envelope):
         Pause_Envelope.__init__(self,Screen,Ctrl_Vars)
         self.text = "Death"
         self.init_text(100)
+        pygame.mixer.music.load('Music/Approach.mp3')
+        pygame.mixer.music.play(-1)
 
 class Game_Win_Envelope():
     def __init__(self,Screen,Ctrl_Vars):
@@ -79,24 +97,14 @@ class Game_Win_Envelope():
         #Main options
         """These are folders, each contain a few more options within them"""
         self.Menus = []
-##
         self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Quit_Folder(Screen,7,1,Ctrl_Vars))
-        Next = Buttons.Campaign(Screen,4,3,Ctrl_Vars)
-        Next.active = True
-        Next.hide = False
-        self.Menus.append(Next)
-        Retry = Buttons.Retry(Screen,6,3,Ctrl_Vars)
-        Retry.active = True
-        Retry.hide = False
-        self.Menus.append(Retry)
-        Save = Buttons.Save_seed(Screen,4,1,Ctrl_Vars)
-        Save.active = True
-        Save.hide = False
-        self.Menus.append(Save)
+        self.Menus.append(Buttons.Campaign(Screen,4,3,Ctrl_Vars,True))
+        self.Menus.append(Buttons.Retry(Screen,6,3,Ctrl_Vars,True))
+        self.Menus.append(Buttons.Save_seed(Screen,4,1,Ctrl_Vars,True))
         self.init_background()
         self.init_animation()
-##
+
     def init_animation(self):
         self.images = []
         for i in range(8):
@@ -178,20 +186,17 @@ class Num_Pad():
         x = 3 #column
         y = 3 #row
         for i in range(9): #arranging main 9 numbers not including 0
-            self.Menus.append(Buttons.Key(self.Screen,x,y,self.Ctrl_Vars,i+1))
+            self.Menus.append(Buttons.Key(self.Screen,x,y,self.Ctrl_Vars,i+1,True))
             x += 1
             if x >= 6:
                 y -= 1
                 x = 3
         #arranging 0 and functional keys by hand
-        self.Menus.append(Buttons.Del_Key(self.Screen,3,0,self.Ctrl_Vars)) 
-        self.Menus.append(Buttons.Key(self.Screen,4,0,self.Ctrl_Vars,0)) 
-        self.Menus.append(Buttons.Enter_Key(self.Screen,5,0,self.Ctrl_Vars)) 
-        self.Menus.append(Buttons.Clear(self.Screen,2,0,self.Ctrl_Vars))
-        self.Menus.append(Buttons.Return_start(self.Screen,9,0,self.Ctrl_Vars))
-        for i in range(len(self.Menus)):
-            self.Menus[i].hide = False
-            self.Menus[i].active = True
+        self.Menus.append(Buttons.Del_Key(self.Screen,3,0,self.Ctrl_Vars,True)) 
+        self.Menus.append(Buttons.Key(self.Screen,4,0,self.Ctrl_Vars,0,True)) 
+        self.Menus.append(Buttons.Enter_Key(self.Screen,5,0,self.Ctrl_Vars,True)) 
+        self.Menus.append(Buttons.Clear(self.Screen,2,0,self.Ctrl_Vars,True))
+        self.Menus.append(Buttons.Return_start(self.Screen,9,0,self.Ctrl_Vars,True))
 
     def init_text(self):
         self.font_size = 100

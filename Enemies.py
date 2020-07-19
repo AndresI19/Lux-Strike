@@ -2,6 +2,7 @@ import pygame
 from Player import MOB
 from RNG import seed_random_bound_int
 from Tile import Icon_Enemy
+import random
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():
@@ -49,9 +50,13 @@ class ENEMIES():
         for i in range(len(self.Group)):
             self.Group[i].choose_direction()
 
-    def move_line(self,frame):
+    def move_line(self,World,frame):
         for i in range(len(self.Group)):
-            self.Group[i].move_line(frame)
+            self.Group[i].move_line(World,frame)
+        
+    def glue(self,World):
+        for i in range(len(self.Group)):
+            self.Group[i].glue(World)     
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
         for i in range(len(self.Group)):
@@ -83,6 +88,11 @@ class enemy(MOB):
 
         self.Player_location = (0,0)
         self.aware = False
+        choice = random.randrange(0,2)
+        self.death_SFX = pygame.mixer.Sound("SFX/Death Honk{}.wav".format(choice))
+
+    def SFX_death(self):
+        pygame.mixer.Sound.play(self.death_SFX)
 
     def update_player_location(self,x,y):
         self.Player_location = (x,y)
@@ -94,33 +104,32 @@ class enemy(MOB):
         if Rx == 0 and Ry%2 == 0:
             #verticle
             if Ry < 0:
-                self.set_direction(0,-2,'S')
+                self.set_S()
             else:
-                self.set_direction(0,2,'N')
-        elif Rx < 0:
+                self.set_N()
+        elif Rx < 0: #if Rx is less than 0 that means that the player is on the left
             #west
-            dx = 0 
-            dy = 1
-            if Ry < 0:
-                D = 'SW'
-                dy = -1
+            if Ry < 0: #if Ry is less than 0 that means that the player is below
+                self.set_SW()
             else:
-                D = 'NW'
-            if self.off_center == -1:
-                dx = -1
-            self.set_direction(dx,dy,D)
-        else:
+                self.set_NW()
+        elif Rx > 0:
             #east
-            dy = 1
-            dx = 0
             if Ry < 0:
-                D = 'SE'
-                dy = -1
+                self.set_SE()
             else:
-                D = 'NE'
-            if self.off_center == 1:
-                dx = 1
-            self.set_direction(dx,dy,D)
+                self.set_NE()
+        elif Rx == 0:
+            if Ry < 0:
+                if self.off_center == 1:
+                    self.set_SW()
+                else:
+                    self.set_SE()
+            else:
+                if self.off_center == 1:
+                    self.set_NW()
+                else:
+                    self.set_NE()
 
     def set_direction(self,dx,dy,D):
         self.dx = dx
@@ -176,3 +185,5 @@ class enemy(MOB):
         x = self.x + rel_coord[0]
         if Player.x == x and Player.y == y:
             self.aware = True
+            sound = pygame.mixer.Sound("SFX/aware.wav")
+            pygame.mixer.Sound.play(sound)

@@ -152,6 +152,7 @@ class word_object():
         font_size = 28
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
         self.font.set_bold(True)
+        self.sound = pygame.mixer.Sound("SFX/letter type.wav")
 
     def init_text(self):
         self.font_image = self.font.render(self.text,True,self.color,None)
@@ -197,7 +198,8 @@ class word_object():
             pass
         else:
             self.text += self.word[self.frame]
-            self.init_text() 
+            self.init_text()
+            pygame.mixer.Sound.play(self.sound)
         self.frame += 1
         coordinates = self.after_effects(coordinates)
         Screen.blit(self.font_image,coordinates)
