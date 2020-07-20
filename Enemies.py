@@ -90,6 +90,7 @@ class enemy(MOB):
         self.aware = False
         choice = random.randrange(0,2)
         self.death_SFX = pygame.mixer.Sound("SFX/Death Honk{}.wav".format(choice))
+        self.Aware_animation = exclamation_mark()
 
     def SFX_death(self):
         pygame.mixer.Sound.play(self.death_SFX)
@@ -187,3 +188,44 @@ class enemy(MOB):
             self.aware = True
             sound = pygame.mixer.Sound("SFX/aware.wav")
             pygame.mixer.Sound.play(sound)
+            self.Aware_animation.activate(
+                (self.MOB_rect.centerx,self.MOB_rect.top)
+                )
+##Standard
+    def Draw(self):
+        self.Screen.blit(self.MOB_image, self.MOB_rect)
+        if self.Aware_animation.active:
+            self.Aware_animation.activate((self.MOB_rect.centerx,self.MOB_rect.top)) #refactored for updating
+            self.Aware_animation.draw(self.Screen)
+
+class exclamation_mark():
+    def __init__(self):
+        self.images = []
+        for i in range(3):
+            image = pygame.image.load(
+                'Enemies/!{}.png'.format(i)).convert()
+            image.set_colorkey((255,0,255))
+            self.images.append(image)
+        self.images.append(image)
+        self.images.append(image)
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.Frames = 10
+        self.frame = 0
+        self.active = False
+
+    def draw(self,screen):
+        screen.blit(self.image,self.rect)
+        self.clock()
+
+    def activate(self,coord):
+        self.rect.centerx = coord[0]
+        self.rect.bottom = coord[1]
+        self.active = True
+
+    def clock(self):
+        if self.frame + 1 >= self.Frames:
+            self.active = False
+        else:
+            self.frame += 1
+        self.image = self.images[self.frame//2]

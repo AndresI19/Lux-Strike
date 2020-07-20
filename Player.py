@@ -87,8 +87,6 @@ class MOB():
                     self.update_coordinates(World)
             else:
                 self.update_coordinates(World)
-
-    
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
         #To be carried out last frame
@@ -168,6 +166,8 @@ class Player(MOB):
         pygame.mixer.Sound.play(self.damage_SFX)
         if self.Stats.Health_Points == 1:
             pygame.mixer.Sound.play(self.last_heart_SXF)
+            pygame.mixer.music.load('Music/Approach.mp3')
+            pygame.mixer.music.play(-1)
 
 
 #class for dynamic game statistics

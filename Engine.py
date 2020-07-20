@@ -329,11 +329,11 @@ def E_check_occupancy(y,x,Player,Enemies):
             Player.hitstun = True
             Player.SFX_damage()
             
-
         return True
-    """for Enemy in Enemies.Group:
+    #FIXME:enemy on enemy collision
+    for Enemy in Enemies.Group:
         if (Enemy.x) == x and (Enemy.y) == y:
-            return True"""
+            return True
     return False
 
 #directional MOTION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

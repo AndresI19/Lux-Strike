@@ -25,7 +25,7 @@ pygame.mixer.pre_init(22050, -16, 2, 1024)
 pygame.init()
 pygame.mixer.quit()
 pygame.mixer.init(22050, -16, 2, 1024)
-pygame.mixer.music.set_volume(0.08)
+pygame.mixer.music.set_volume(0.2)
 
 Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 pygame.display.set_caption("Lux Strike")
