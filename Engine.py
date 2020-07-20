@@ -2,7 +2,6 @@ import pygame
 import pygame.display
 import sys
 from Graphics import Menu_diplay
-import Game_Functions as GF
 
 """Main Loop *************************************************************************"""
 #Game Engine. (Turn Based Engine) ++++++++++++++++++++++++++++++++++++++++
