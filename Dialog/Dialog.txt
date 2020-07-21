@@ -1,4 +1,4 @@
-Tutorial0.1
+Tutorial0.2
 {Dr.Navy,T0,1}Press the $RE button to move $Gnorthwest.
 {Dr.Navy,DN1,1}Oh my! What is that?
 {???,SW1,-1}%QHHOOOooooooooonnk!
@@ -13,4 +13,14 @@ $GSWANZAI
 {Swanzai,SW1,-1}Hooooonkkkkkkkkk!
 {Dr.Navy,DN1,1}It did it again!
 You will die now! Hear me swanzai foe!
+#End
+Tutorial1.2
+{Dr.Navy,DN1,1}Was that Swanzai hoarding $Rtreasure??
+What use is money to a Swanzai?
+{Treasure,OJ0,-1}.................................
+.................................
+{Dr.Navy,DN1,1}Well, no ones stopping me from taking it. so...
+{Treasure,OJ0,-1}.................................
+.................................
+{Dr.Navy,DN1,1}Who am I talking to?
 #End

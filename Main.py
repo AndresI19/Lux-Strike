@@ -14,6 +14,7 @@ from Control_variables import Ctrl_Vars
 from HUD import HUD
 from World import World
 from Enemies import ENEMIES
+from Drops import Drop_envelope
 from Player import Player
 
 #initialize clock function, settings, screen window
@@ -77,28 +78,30 @@ while True:
                 spawn_coord = (World.spawn_row,World.spawn_col)
                 Player = Player(Screen,spawn_coord)
                 Enemies = ENEMIES(Screen,Max_parameters,World)
+                Drops = Drop_envelope()
                 HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
                 Ctrl_Vars.initialized = True
             else:
                 Engine.new_world_init(Ctrl_Vars,Screen,World) 
-                Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,HUD)
-            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies)
+                Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
+            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         #-------------------------------------------------------------------------------------------*
     #Main Game loop
     else:
         Ctrl_Vars.merge_timer()
         if Ctrl_Vars.phase_active:
-            Engine.animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies)
+            Engine.animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops)
             if Ctrl_Vars.TURN_PLAYER:
                 Engine.Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies)   
             elif Ctrl_Vars.TURN_ENEMY:
                 Engine.Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies)
         else: #Ctrl_Vars.phase_active == False
             if Ctrl_Vars.TURN_PLAYER:
-                Engine.check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies)
-                Engine.Player_turn_end(World,Player,Enemies,Ctrl_Vars)
+                Engine.check_drops(Player,Drops)
+                Engine.check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops)
+                Engine.Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars)
             else:
                 Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies)
 
-        Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies)
-        Graphics.Display(Screen,World,HUD,Player,Enemies)
+        Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
+        Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)

@@ -87,7 +87,7 @@ class Game_Over_Envelope(Pause_Envelope):
         Pause_Envelope.__init__(self,Screen,Ctrl_Vars)
         self.text = "Death"
         self.init_text(100)
-        pygame.mixer.music.load('Music/Beach Ball.mp3')
+        pygame.mixer.music.load('Music/Approach.mp3')
         pygame.mixer.music.play(-1)
 
 class Game_Win_Envelope():

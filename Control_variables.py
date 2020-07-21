@@ -11,6 +11,9 @@ class Ctrl_Vars():
         self.camera_follow = True
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
+##Dynamic game stats
+        self.wallet = 0
+        self.keys = 1
 #Key Controls _____________________________________________
 #HOLD KEYS____________________________________________________________
         self.Left_MouseDown = False
