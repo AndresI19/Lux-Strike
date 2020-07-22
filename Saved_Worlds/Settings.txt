@@ -1,1 +1,1 @@
-master_volume = 70 SFX_volume = 70   music_volume = 100voice_volume = 100
+master_volume = 20 SFX_volume = 100  music_volume = 100 voice_volume = 100 

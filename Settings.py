@@ -50,3 +50,9 @@ class Settings():
             self.fullscreen = True
             pygame.display.set_mode((
                 self.resolution_list[self.resolution]),pygame.FULLSCREEN)
+
+    def save_volume(self):
+        tr.set_setting('master_volume',self.master_volume)
+        tr.set_setting('SFX_volume',self.SFX_volume)
+        tr.set_setting('music_volume',self.music_volume)
+        tr.set_setting('voice_volume',self.voice_volume)

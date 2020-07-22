@@ -3,12 +3,9 @@ import Buttons
 from text_reader import word_object
 import time
 
-def menu_select(Screen,Ctrl_Vars):
+def menu_select(Screen,Ctrl_Vars,Settings):
     if Ctrl_Vars.Start_Screen:
-        Active_Menu = Start_Envelope(Screen,Ctrl_Vars)
-        time.sleep(0.5)
-    elif Ctrl_Vars.seed_menu:
-        Active_Menu = Num_Pad(Screen,Ctrl_Vars)
+        Active_Menu = Start_Envelope(Screen,Ctrl_Vars,Settings)
         time.sleep(0.5)
     elif Ctrl_Vars.Pause:
         Active_Menu = Pause_Envelope(Screen,Ctrl_Vars)
@@ -18,35 +15,114 @@ def menu_select(Screen,Ctrl_Vars):
     elif Ctrl_Vars.Game_Over:
         Active_Menu = Game_Over_Envelope(Screen,Ctrl_Vars)
         time.sleep(0.5)
+
     Ctrl_Vars.menu_select = False
     #let garbage collector take care of un-used menus
     return Active_Menu
 
 #Envelope class that contrains all start menu options and graphics vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 class Start_Envelope():
-    def __init__(self,Screen,Ctrl_Vars):
-        """self.Background = background(Screen)
-        self.GonGrid = gonGrid(Screen)
-        self.LUX_STRIKE = lUX_STRIKE(Screen)"""
-        self.Still = still(Screen)
-        self.Menus = []
+    def __init__(self,Screen,Ctrl_Vars,Settings):
+        self.Ctrl_Vars = Ctrl_Vars
+        self.Screen = Screen
         #Main options
+        self.Still = Background(Screen)
+        self.Start_vars = Internal_vars()
         pygame.mixer.music.load('Music/6 Solutions per Side.mp3')
         pygame.mixer.music.play(-1)
+
+        self.Title_Screen = Title_Screen(Screen,Ctrl_Vars,self.Start_vars)
+        self.Volume_Screen = Settings_Envelope(Screen,Ctrl_Vars,Settings,self.Start_vars)
+        self.Num_Pad = Num_Pad(Screen,Ctrl_Vars,self.Start_vars)
+        self.Sub_menu_select()
+
+    def Sub_menu_select(self):
+        if self.Start_vars.load_menu:
+            if self.Start_vars.Title:
+                self.Active_Menu = self.Title_Screen
+                time.sleep(0.5)
+            elif self.Start_vars.Settings:
+                self.Active_Menu = self.Volume_Screen
+                time.sleep(0.5)
+            elif self.Start_vars.Num_pad:
+                self.Active_Menu = self.Num_Pad
+                time.sleep(0.5)          
+            self.Start_vars.load_menu = False
+            self.Menus = self.Active_Menu.Menus
+        
+    def draw(self):
+        self.Sub_menu_select()
+        self.Still.draw()
+        self.Active_Menu.draw()
+
+class Title_Screen():
+    def __init__(self,Screen,Ctrl_Vars,Start_vars):
+        self.Menus = []
         """These are folders, each contain a few more options within them"""
-        self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
-        self.Menus.append(Buttons.Extras(Screen,1,2,Ctrl_Vars))
-        self.Menus.append(Buttons.Play(Screen,2,3,Ctrl_Vars))
+        self.Menus.append(Buttons.Settings(Screen,4,1,Ctrl_Vars,Start_vars)) #Settings
+        self.Menus.append(Buttons.Extras(Screen,4,2,Ctrl_Vars))
+        self.Menus.append(Buttons.Play(Screen,4,3,Ctrl_Vars,Start_vars))
         self.Menus.append(Buttons.Quit(Screen,9,0,Ctrl_Vars,True))
 
     def draw(self):
-        """self.Background.draw()
-        self.GonGrid.draw()
-        self.LUX_STRIKE.draw()"""
-        self.Still.draw()
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
+class Settings_Envelope():
+    def __init__(self,Screen,Ctrl_Vars,Settings,Start_Vars):
+        self.Settings = Settings
+        self.Screen = Screen
+        Screen_rect = Screen.get_rect()
+        self.curtain = pygame.Surface((Screen_rect.right,Screen_rect.bottom))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(120)
+        x = Screen_rect.centerx - 120
+        y = Screen_rect.top + 450
+        self.Menus = []
+        #Buttons
+        self.Menus.append(Buttons.Back(Screen,9,0,Ctrl_Vars,Start_Vars,True)) #back button
+        self.Menus.append(Buttons.Save_Settings(Screen,9,1,Ctrl_Vars,Settings,True)) #commit
+        self.Default = Buttons.Default(Screen,9,2,Ctrl_Vars,Settings,True)
+        self.Menus.append(self.Default) #return default
+        #Sliders
+        i = 175
+        self.MasterV_Slider = Buttons.Slider_Bar(Screen,Ctrl_Vars,x,y,"Master Volume")
+        self.MusicV_slider = Buttons.Slider_Bar(Screen,Ctrl_Vars,x,y + i,"Music Volume")
+        self.SFX_slider = Buttons.Slider_Bar(Screen,Ctrl_Vars,x,y + i*2,"SFX Volume")
+        self.Voice_slider = Buttons.Slider_Bar(Screen,Ctrl_Vars,x,y + i*3,"Voice Volume")
+        self.Menus.append(self.MasterV_Slider)
+        self.Menus.append(self.MusicV_slider)
+        self.Menus.append(self.SFX_slider)
+        self.Menus.append(self.Voice_slider)
+        self.init_slider_values()
+
+    def init_slider_values(self):
+        self.MasterV_Slider.value = self.Settings.master_volume
+        self.MasterV_Slider.set_Knob()
+        self.MusicV_slider.value = self.Settings.music_volume
+        self.MusicV_slider.set_Knob()
+        self.SFX_slider.value = self.Settings.SFX_volume
+        self.SFX_slider.set_Knob()
+        self.Voice_slider.value = self.Settings.voice_volume
+        self.Voice_slider.set_Knob()
+
+    def update(self):
+        if self.Default.value:
+            self.Settings.set_default_settings()
+            self.init_slider_values()
+        self.Settings.master_volume = self.MasterV_Slider.value
+        self.Settings.music_volume = self.MusicV_slider.value
+        self.Settings.SFX_volume = self.SFX_slider.value
+        self.Settings.voice_volume = self.Voice_slider.value
+        pygame.mixer.music.set_volume(self.Settings.master_volume/100)
+
+    def draw(self):
+        self.update()
+        self.Screen.blit(self.curtain,(0,0))
+        for i in range(len(self.Menus)):
+            self.Menus[i].draw()
+
+"""TODO: temporary use of a the pause screen as a mother class"""
 class Pause_Envelope():
     def __init__(self,Screen,Ctrl_Vars):
         self.Screen = Screen
@@ -57,7 +133,7 @@ class Pause_Envelope():
         #Main options
         """These are folders, each contain a few more options within them"""
         self.Menus = []
-        self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
+        #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Quit_Folder(Screen,7,1,Ctrl_Vars))
         self.Menus.append(Buttons.Resume(Screen,4,3,Ctrl_Vars,True))
         self.Menus.append(Buttons.Retry(Screen,6,3,Ctrl_Vars,True))
@@ -80,8 +156,7 @@ class Pause_Envelope():
         self.Screen.blit(self.font_image,self.font_rect)
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
-        
-"""TODO: temporary use of a the pause screen as a mother class"""
+
 class Game_Over_Envelope(Pause_Envelope):
     def __init__(self,Screen,Ctrl_Vars):
         Pause_Envelope.__init__(self,Screen,Ctrl_Vars)
@@ -97,7 +172,7 @@ class Game_Win_Envelope():
         #Main options
         """These are folders, each contain a few more options within them"""
         self.Menus = []
-        self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
+        #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Quit_Folder(Screen,7,1,Ctrl_Vars))
         self.Menus.append(Buttons.Campaign(Screen,4,3,Ctrl_Vars,True))
         self.Menus.append(Buttons.Retry(Screen,6,3,Ctrl_Vars,True))
@@ -169,9 +244,10 @@ class Game_Win_Envelope():
 
 class Num_Pad():
     #TODO: Makes a number pad like on a phone for entering numbers. The functionality of this one can and should be generalized
-    def __init__(self,Screen,Ctrl_Vars):
+    def __init__(self,Screen,Ctrl_Vars,Start_Vars):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
+        self.Start_Vars = Start_Vars
         self.seed = self.Ctrl_Vars.seed
         self.Screen = Screen
         self.Screen_rect = Screen.get_rect()
@@ -180,6 +256,13 @@ class Num_Pad():
         self.num_left = word_object(self.num,['$R'])
         self.init_text()
         self.Menus_init()
+        #Screen_rect = Screen.get_rect()
+        self.curtain = pygame.Surface((1350,125))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(185)
+        self.curtain_rect = self.curtain.get_rect()
+        self.curtain_rect.centerx = self.Screen_rect.centerx
+        self.curtain_rect.centery = 270
 
     def Menus_init(self):
         self.Menus = []
@@ -196,7 +279,7 @@ class Num_Pad():
         self.Menus.append(Buttons.Key(self.Screen,4,0,self.Ctrl_Vars,0,True)) 
         self.Menus.append(Buttons.Enter_Key(self.Screen,5,0,self.Ctrl_Vars,True)) 
         self.Menus.append(Buttons.Clear(self.Screen,2,0,self.Ctrl_Vars,True))
-        self.Menus.append(Buttons.Return_start(self.Screen,9,0,self.Ctrl_Vars,True))
+        self.Menus.append(Buttons.Back(self.Screen,9,0,self.Ctrl_Vars,self.Start_Vars,True)) #back button
 
     def init_text(self):
         self.font_size = 100
@@ -207,7 +290,7 @@ class Num_Pad():
         self.font_image = self.font.render(self.text,True,self.text_color,None)
         self.font_rect = self.font_image.get_rect()
         self.font_rect.centerx = self.Screen_rect.centerx
-        self.font_rect.centery = 250
+        self.font_rect.centery = 270
 
     def update_text(self):
         self.seed = self.Ctrl_Vars.seed
@@ -217,59 +300,53 @@ class Num_Pad():
         self.num_left.init_text()
 
     def draw(self):
-        self.Screen.fill((0,0,0))
+        self.Screen.blit(self.curtain,self.curtain_rect)
         self.update_text()
         self.Screen.blit(self.font_image,self.font_rect)
         self.num_left.draw(self.Screen,(1550,285))
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
-#Envelope class that contrains all starft menue options ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-"""class background():
+class Background():
     def __init__(self,Screen):
         self.Screen = Screen
-        self.image = pygame.image.load('Title/BK00.png')
-        self.rect = self.image.get_rect()
 
-    def draw(self):
-        self.Screen.blit(self.image,self.rect)
-    
-class gonGrid():
-    def __init__(self,Screen):
-        self.Screen = Screen
-        self.Screen_rect = self.Screen.get_rect()
-        self.image = pygame.image.load('Title/GonGrid.png').convert()
-        self.image.set_colorkey((255,0,255))
-        self.rect = self.image.get_rect()
-        self.rect.right = self.Screen_rect.right
-
-    def draw(self):
-        self.Screen.blit(self.image, self.rect)
-
-class lUX_STRIKE():
-    def __init__(self,Screen):
-        self.Screen = Screen
-        self.image = pygame.image.load('Title/LS21.png').convert()
-        self.image.set_colorkey((255,0,255))
-
-        self.rect = self.image.get_rect()
-
-    def draw(self):
-        self.Screen.blit(self.image, self.rect)"""
-
-class still():
-    #TODO: a still title screen image with no animations (placeholder) should be phased out with better graphics
-    def __init__(self,Screen):
-        self.Screen = Screen
-        self.image = pygame.image.load('Title/Title Screen.png').convert()
-        self.image.set_colorkey((255,0,255))
-
+        self.images = []
+        self.init_images()
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.Screen_rect = self.Screen.get_rect()
         self.rect.centerx = self.Screen_rect.centerx
 
+    def init_images(self):
+        N = 36
+        for i in range(N):
+            image = pygame.image.load(
+                'Title/Title{}.png'.format(i)
+                ).convert()
+            image.set_colorkey((255,0,255))
+            self.images.append(image)
+        for i in range(N):
+            image = pygame.image.load(
+                'Title/Title{}.png'.format(N-1)
+                ).convert()
+            image.set_colorkey((255,0,255))
+            self.images.append(image)
+
+        self.rate = 4
+        self.Frames = N * 2 * self.rate
+        self.frame = 0
+
     def draw(self):
+        self.clock()
         self.Screen.blit(self.image, self.rect)
+
+    def clock(self):
+        if self.frame + 1 >= self.Frames:
+            self.frame = 0
+        else:
+            self.frame += 1
+        self.image = self.images[self.frame//self.rate]
 
 """ TODO: #Loading Screen object"""
 class load_world_screen():
@@ -325,3 +402,10 @@ class load_world_screen():
         surface.set_alpha(105)
 
         self.Screen.blit(surface,font_rect)
+
+class Internal_vars():
+    def __init__(self):
+        self.load_menu = True
+        self.Title = True
+        self.Settings = False
+        self.Num_pad = False

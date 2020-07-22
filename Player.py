@@ -133,17 +133,6 @@ class Player(MOB):
         self.damage_SFX = pygame.mixer.Sound("SFX/damage.wav")
         self.last_heart_SXF = pygame.mixer.Sound("SFX/last heart.wav")
 
-    def animation_clock(self):
-        if self.frame + 1 >= self.max_frames:
-            self.frame = 0
-
-    def animate(self):
-        self.MOB_image = self.MOB_images[self.frame//self.frame_rate]
-        self.Screen.blit(self.MOB_image, self.MOB_rect)
-
-    def set_frame_rate(self):
-        self.frame_rate = self.max_frames//len(self.MOB_images)
-
     def sprite_direction(self,D):
         self.D = D
         self.MOB_image = self.MOB_image = pygame.image.load(
@@ -157,6 +146,16 @@ class Player(MOB):
             ).convert()
         self.MOB_image.set_colorkey((255,0,255))
 
+    def walk_animation(self,frame):
+        if self.D == 'SW' or self.D == 'SE': #once all animations are finished this can be removed
+            x = frame
+            if x >= 3:
+                x = 0
+            self.MOB_image = self.MOB_image = pygame.image.load(
+                'Player/{}0{}.png'.format(self.D,x)
+                ).convert()
+            self.MOB_image.set_colorkey((255,0,255))
+
     def reset_hitstun(self): #no functionality yet
         if self.hitstun == True:
             self.hitstun = False
@@ -168,7 +167,6 @@ class Player(MOB):
             pygame.mixer.Sound.play(self.last_heart_SXF)
             pygame.mixer.music.load('Music/Approach.mp3')
             pygame.mixer.music.play(-1)
-
 
 #class for dynamic game statistics
 class Stats():

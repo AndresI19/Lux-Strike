@@ -24,7 +24,7 @@ class Generation():
         #size correction variables
         self.corrections = [(0,0),(0,0)]
         #number of iterations of the parametric function
-        self.sample_size = 2500
+        self.sample_size = 2300
 
         #experimental
         N = (self.sample_size * self.total_tiers)/2
@@ -192,6 +192,7 @@ class Post_Generation():
         self.Max_Rows = len(self.grid[0])
         self.create_stairs()
         self.variables = []
+        self.set_cliffs()
         
     def create_fortress(self):
         r = 1
@@ -265,6 +266,57 @@ class Post_Generation():
         self.grid[x][y].ID = 101
         self.grid[x-2][y].elevation = self.elevation
 
+    def set_cliffs(self):
+        for col in range(self.Max_Columns):
+            #subject_row = self.Max_Columns - col - 1
+            for row in range(len(self.grid[col])):
+                subject_tile = self.grid[-1-col][row]
+                self.set_cliffs_subject(subject_tile)
+
+    def set_cliffs_subject(self,subject_tile):
+        #TODO: labeling of x and y are backwards for all these functions. should be functional, 
+        # but not developer friendly
+        self.check_left_cliff(subject_tile)
+        self.check_center_cliff(subject_tile)
+        self.check_right_cliff(subject_tile)
+
+    def check_left_cliff(self,subject_tile):
+        Ly = subject_tile.col - 1
+        if subject_tile.off_center == 1:
+            Lx = subject_tile.row
+        else:
+            Lx = subject_tile.row - 1
+        Le = 1
+        if Lx >= 0:
+            if Ly >= 0:
+                Le = subject_tile.elevation - self.grid[Ly][Lx].elevation
+                if Le < 0:
+                    Le = 0
+        subject_tile.cliffs.append(Le)
+
+    def check_center_cliff(self,subject_tile):
+        Cy = subject_tile.col - 2
+        Ce = 1
+        if Cy >= 0:
+            Ce = subject_tile.elevation - self.grid[Cy][subject_tile.row].elevation
+            if Ce < 0:
+                Ce = 0
+        subject_tile.cliffs.append(Ce)
+
+    def check_right_cliff(self,subject_tile):
+        Ry = subject_tile.col - 1
+        if subject_tile.off_center == 1:
+            Rx = subject_tile.row + 1
+        else:
+            Rx = subject_tile.row
+        Re = 1
+        if Rx < self.Max_Rows:
+            if Ry >= 0:
+                Re = subject_tile.elevation - self.grid[Ry][Rx].elevation
+                if Re < 0:
+                    Re = 0
+        subject_tile.cliffs.append(Re)
+
 ##
     """def river(self):
         seed = rng.generate_seed_from_seed(self.seed,9)
@@ -304,8 +356,9 @@ class Hexagon():
 
         self.ID = 0
         self.elevation = 0
+        self.cliffs = []
 
-        self.water = True
+        #self.water = True
 
     def position(self):
         self.bottom = self.col * (self.height / 2)

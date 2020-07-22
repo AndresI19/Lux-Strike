@@ -1,4 +1,4 @@
-from pygame import display,image
+from pygame import display,image,transform
 
 #graphics master loops vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 #main game
@@ -22,6 +22,12 @@ def Draw_map(World,Player,Enemies,Drops):
         for drop in Drops.Group:
             if drop.y == draw_row:
                 drop.draw()
+                
+#TODO: Working on scaleable graphics
+def scale(Window,Screen,Settings):
+    Screen = transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
+    Window.blit(Screen,(0,0))
+    display.flip()
 
 #Menu displays
 def Menu_diplay(Menu):

@@ -2,6 +2,7 @@
 #full modules
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,30)
 import sys
 import pygame
 import time
@@ -21,18 +22,30 @@ from Player import Player
 clock = pygame.time.Clock()
 pygame.font.init()
 Settings = Settings()
+
 ##SOUND
 pygame.mixer.pre_init(22050, -16, 2, 1024)
 pygame.init()
 pygame.mixer.quit()
 pygame.mixer.init(22050, -16, 2, 1024)
-pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.set_volume(Settings.master_volume/100)
 
+#Screen = pygame.Surface((1920,1080))
 Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
+Window = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 pygame.display.set_caption("Lux Strike")
 Icon = pygame.image.load('HUD/Icon.png').convert()
 Icon.set_colorkey((255,0,255))
 pygame.display.set_icon(Icon)
+
+studio = pygame.image.load('Title/Studio.png')
+
+#TODO: Working on scaleable graphics
+#Screen.blit(studio,(0,0))
+#Graphics.scale(Window,Screen,Settings)
+"""Screen = pygame.transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
+Window.blit(Screen,(0,0))
+pygame.display.flip()"""
 
 #initialize control variables
 Ctrl_Vars = Ctrl_Vars()
@@ -63,8 +76,8 @@ while True:
         if not Ctrl_Vars.load_world:
             #Dynamic Menus, Start, Pause, Victory, Game Over
             if Ctrl_Vars.menu_select:
-                active_menu = Menus.menu_select(Screen,Ctrl_Vars)
-            Engine.run_menu(Settings,Ctrl_Vars,active_menu) 
+                active_menu = Menus.menu_select(Screen,Ctrl_Vars,Settings)
+            Engine.run_menu(Settings,Ctrl_Vars,active_menu)
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
         elif Ctrl_Vars.load_world:
@@ -105,3 +118,5 @@ while True:
 
         Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
+    #TODO: Working on scaleable graphics
+    #Graphics.scale(Window,Screen,Settings)

@@ -34,6 +34,8 @@ def enemy_turn(Ctrl_Vars,World,Player,Enemies):
 """Animation Phase"""
 def Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies):
     Player.move_line(World,Ctrl_Vars.phase_frame)
+    if not Player.reset_hitstun():
+        Player.walk_animation(Ctrl_Vars.phase_frame)
     if Ctrl_Vars.phase_frame + 1 == Ctrl_Vars.phase_Frames:
         Player.glue(World)
     
@@ -120,6 +122,8 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
         Spot = World.Terrain[Player.y][Player.x].get_Character_Spot()
         print("Player Pixel Cordinates = X: {}, Y:{}".format(Spot[0],Spot[1]))
         HUD.Dialog_box.init_dialog('Tutorial1')
+    elif event.key == pygame.K_F2:
+        World.Terrain[Player.y][Player.x].Hexagon_image.set_alpha(50)
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
@@ -275,6 +279,9 @@ def num_keys(event,Ctrl_Vars):
                 Ctrl_Vars.seed_menu = False
                 Ctrl_Vars.load_world = True
                 Ctrl_Vars.set_seed = True
+                Ctrl_Vars.Start_Screen = False
+        sound = pygame.mixer.Sound("SFX/Button_press.wav")
+        pygame.mixer.Sound.play(sound)
 
 """Main Loop *************************************************************************"""
 

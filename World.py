@@ -49,16 +49,18 @@ class World():
             for row in range(len(self.master_grid[0])):
                 elevation = self.master_grid[col][row].elevation
                 ID = self.master_grid[col][row].ID
+                cliffs = self.master_grid[col][row].cliffs
+                #TODO: I dont think you need to pass ID, its set for each already
                 if ID == 0:
-                    tile = T.Water(self.Screen,col,row,0,0)
+                    tile = T.Water(self.Screen,col,row,0,cliffs,0)
                 elif ID == 1:
-                    tile = T.Grass(self.Screen,col,row,ID,elevation)
+                    tile = T.Grass(self.Screen,col,row,ID,cliffs,elevation)
                 elif ID == 2:
-                    tile = T.Beach(self.Screen,col,row,ID,elevation)
+                    tile = T.Beach(self.Screen,col,row,ID,cliffs,elevation)
                 elif ID == 100:
-                    tile = T.Brick(self.Screen,col,row,ID,elevation)
+                    tile = T.Brick(self.Screen,col,row,ID,cliffs,elevation)
                 elif ID == 101:
-                    tile = T.Stairs(self.Screen,col,row,ID,elevation)
+                    tile = T.Stairs(self.Screen,col,row,ID,cliffs,elevation)
                 self.Terrain[col].append(tile) 
 
     def find_player_spawn(self):
