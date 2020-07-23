@@ -4,7 +4,7 @@ from pygame import display
 from Menus import load_world_screen as loading_screen
 
 class Generation():
-    def __init__(self,Seed,Max_parameters,Screen):
+    def __init__(self,Seed,Max_parameters,Screen,Window,Settings):
         #Seed for world gen!
         if type(Seed) == str:
             self.seed = Seed
@@ -28,7 +28,7 @@ class Generation():
 
         #experimental
         N = (self.sample_size * self.total_tiers)/2
-        self.Loading_screen = loading_screen(Screen,N)
+        self.Loading_screen = loading_screen(Window,Screen,Settings,N)
 
         #start -----------
         self.generate_master_grid()

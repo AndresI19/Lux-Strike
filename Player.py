@@ -174,3 +174,4 @@ class Stats():
         self.Health_Points = 10
         self.Laser_Heat = 0
         self.Money = 0
+        self.combo = 0

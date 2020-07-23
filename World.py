@@ -8,7 +8,7 @@ and each tile contains its individual properties. The World starts with size par
 and by association the world generation time. A genertaion object is used to create a world case by case, so reinitializing this object
 hence creates a new world."""
 class World():
-    def __init__(self,Screen,Seed):
+    def __init__(self,Screen,Seed,Window,Settings):
         self.Screen = Screen
         #Size Parameters
         self.Max_Columns = 18   #width
@@ -21,14 +21,14 @@ class World():
         self.spawn_row = 0
         self.spawn_col = 0
 
-        self.generate_map(Seed)
+        self.generate_map(Seed,Window,Settings)
         self.find_player_spawn()
 
 ###MAP GENERATION/ INITIALIZATION vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    def generate_map(self,Seed):
+    def generate_map(self,Seed,Window,Settings):
         #initialize generation object, creates a new world --------------------------------------
         max_parameters = (self.Max_Columns,self.Max_Rows)
-        generation = Generation(Seed,max_parameters,self.Screen)
+        generation = Generation(Seed,max_parameters,self.Screen,Window,Settings)
         #save seed for display and copy paste use
         self.seed = generation.seed
         self.total_tiers = generation.total_tiers

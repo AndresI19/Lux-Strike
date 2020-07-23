@@ -223,7 +223,7 @@ def run_menu(Settings,Ctrl_Vars,Menu_envelope):
 #Menu input engine--------------------------------------------------------------------
 def Menu_check_events(Settings,Ctrl_Vars,Buttons):
     Ctrl_Vars.mouse_down_update()
-    check_hover(Buttons)
+    check_hover(Settings,Buttons)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
@@ -237,16 +237,14 @@ def Menu_check_events(Settings,Ctrl_Vars,Buttons):
             if event.key == pygame.K_ESCAPE:
                 if Ctrl_Vars.Start_Screen:
                     sys.exit(0)
-            elif event.key == pygame.K_TAB:
-                Settings.toggle_fullscreen()
             if Ctrl_Vars.seed_menu:
                 num_keys(event,Ctrl_Vars)
 
-def check_hover(Buttons):
+def check_hover(Settings,Buttons):
     mouse_position = pygame.mouse.get_pos()
     for i in range(len(Buttons)):
-        x = mouse_position[0]
-        y = mouse_position[1]
+        x = mouse_position[0] * Settings.mouseX_scaling
+        y = mouse_position[1] * Settings.mouseY_scaling
         Buttons[i].check_contained(x,y)
 
 def num_keys(event,Ctrl_Vars):
@@ -304,6 +302,7 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
     if P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars): #hit an enemy?
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
+        Player.Stats.combo += 1
         return
     else:
         line(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
@@ -338,6 +337,7 @@ def E_check_occupancy(y,x,Player,Enemies):
     if Player.x == x and Player.y == y: #hit player?
         if Player.hitstun == False:
             Player.Stats.Health_Points -= 1
+            Player.Stats.combo = 0
             Player.hitstun = True
             Player.SFX_damage()
             
@@ -350,8 +350,8 @@ def E_check_occupancy(y,x,Player,Enemies):
 
 #Camera funtions ....
 def Center_Screen(Settings,World,Player,Enemies,Drops):
-    xf = Settings.Screen_center[0]
-    yf = Settings.Screen_center[1]
+    xf = 960 
+    yf = 540
     xi = Player.MOB_rect.centerx
     yi = Player.MOB_rect.centery
     dx = xf - xi
@@ -486,17 +486,17 @@ def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     spawn_coord = (World.spawn_row,World.spawn_col)
     Player.__init__(Screen,spawn_coord)
     Enemies.__init__(Screen,Max_parameters,World)
-    Drops.__init__()
     HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
+    Drops.__init__(HUD)
 
-def new_world_init(Ctrl_Vars,Screen,World):
+def new_world_init(Ctrl_Vars,Screen,World,Window,Settings):
     if Ctrl_Vars.Random:
-        World.__init__(Screen,None)
+        World.__init__(Screen,None,Window,Settings)
         Ctrl_Vars.seed = str(World.seed)
         Ctrl_Vars.Random = False
     elif Ctrl_Vars.set_seed:
         Seed = Ctrl_Vars.seed
-        World.__init__(Screen,Seed)
+        World.__init__(Screen,Seed,Window,Settings)
         Ctrl_Vars.set_seed = False
     elif Ctrl_Vars.restart_world:
         Ctrl_Vars.restart_world = False
@@ -508,5 +508,5 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops):
     Center_Screen(Settings,World,Player,Enemies,Drops)
     Player.glue(World)
     Enemies.glue(World)
-    pygame.mixer.music.load('Music/Beach Ball.mp3')
+    pygame.mixer.music.load('Music/Navy Blues.mp3')
     pygame.mixer.music.play(-1)

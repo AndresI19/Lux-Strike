@@ -1,16 +1,25 @@
 import pygame
+from math import floor
+from random import randint
 #drops
 """We all knew we would get here one day"""
 ##new file, early comments and refactorying
 class Drop_envelope():
-    def __init__(self):
+    def __init__(self,HUD):
         self.Group = []
+        self.HUD = HUD
 
     def check_pick_up(self,Player):
         for drop in self.Group:
             if Player.x == drop.x and Player.y == drop.y:
                 drop.functionality()
                 self.Group.remove(drop)
+                Player.Stats.Money += round(drop.value * (1 + Player.Stats.combo/2))
+                self.HUD.Money_bar.init_text()
+                choice = randint(0,2)
+                sound = pygame.mixer.Sound('SFX/Money{}.wav'.format(choice)
+                    )
+                pygame.mixer.Sound.play(sound)
 
     def translate(self,x,y):
         for drop in self.Group:

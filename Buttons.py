@@ -2,6 +2,7 @@ import pygame
 import pygame.font
 from math import sqrt
 import sys
+from time import sleep
 
 """Mother class Buttons-----------------------------------------------------------------"""
 #Simple Button (Mother) vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -335,7 +336,27 @@ class Save_seed(Hexagon_Button):
             File.writelines(self.Ctrl_Vars.seed + "\n")
             File.close()
             pygame.mixer.Sound.play(self.sound)
-    
+
+class Resolution(Hexagon_Button):
+    def __init__(self,Window,Screen,x,y,Ctrl_Vars,Settings,value,text,active):
+        Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars,active)
+        self.text = text
+        self.value = value
+        self.init_text(30)
+        self.Window = Window
+        self.Settings = Settings
+
+    def functionality(self):
+        #activates campaign mode
+        self.On = True
+        if self.Ctrl_Vars.Left_click:
+            self.Ctrl_Vars.Left_click = False
+            if self.Settings.resolution != self.value:
+                self.Settings.resolution = self.value
+                self.Settings.init_Screen()
+                self.Window = self.Settings.create_window(self.Window)
+            pygame.mixer.Sound.play(self.sound)
+
 #Menu Buttons vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 """Play ---------------"""
 class Campaign(Hexagon_Button):
@@ -399,14 +420,22 @@ class Gallary(Hexagon_Button):
             print('Its Waluigi time!')
 
 class Jukebox(Hexagon_Button):
-    def __init__(self,Screen,x,y,Ctrl_Vars,active):
+    def __init__(self,Screen,x,y,Ctrl_Vars,Start_Vars,active):
         Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars,active)
-        self.clicked = False
+        self.text = "Random"
+        self.init_text(36)
+        self.Start_Vars = Start_Vars
         
     def functionality(self):
         self.On = True
-        if self.clicked:
-            print('Its Waluigi time!')
+        if self.Ctrl_Vars.Left_click:
+            self.Ctrl_Vars.Left_click = False
+            self.Start_Vars.Title = False
+
+            self.Start_Vars.Jukebox = True
+            self.Start_Vars.load_menu = True
+            pygame.mixer.Sound.play(self.sound)
+
 
 class Store(Hexagon_Button):
     def __init__(self,Screen,x,y,Ctrl_Vars,active):
@@ -444,18 +473,26 @@ class Sound(Hexagon_Button):
             self.Ctrl_Vars.Left_MouseDown = False
             self.Start_Vars.Title = False
             self.Start_Vars.load_menu = True
-            self.Start_Vars.Settings = True
+            self.Start_Vars.Sound_Settings = True
             pygame.mixer.Sound.play(self.sound)
 
 class Display(Hexagon_Button):
-    def __init__(self,Screen,x,y,Ctrl_Vars,active):
+    def __init__(self,Screen,x,y,Ctrl_Vars,Settings,Start_Vars,active):
         Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars,active)
         self.clicked = False
+        self.Start_Vars = Start_Vars
+        self.text = 'Display'
+        self.init_text(34)
         
     def functionality(self):
         self.On = True
-        if self.clicked:
-            print('Its Waluigi time!')
+        if self.Ctrl_Vars.Left_click:
+            self.Ctrl_Vars.Left_click = False
+            self.Ctrl_Vars.Left_MouseDown = False
+            self.Start_Vars.Title = False
+            self.Start_Vars.load_menu = True
+            self.Start_Vars.Display_Settings = True
+            pygame.mixer.Sound.play(self.sound)
 
 """In game: play"""
 class Resume(Hexagon_Button):
@@ -529,6 +566,7 @@ class Quit(Hexagon_Button):
         self.On = True
         if self.Ctrl_Vars.Left_click:
             pygame.mixer.Sound.play(self.sound)
+            sleep(0.5)
             sys.exit(0)
 #Menu Buttons ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -556,6 +594,8 @@ class Extras(Folder):
         Folder.__init__(self,Screen,x,y,Ctrl_Vars)
     def build_submenu(self):
         #Extras Options ----
+        self.text = "Extras!"
+        self.init_text(36)
         self.Buttons = []
         self.Gallary_Button = Hexagon_Button(self.Screen,self.x,self.y,self.Ctrl_Vars,False)
         self.Jukebox_Button = Hexagon_Button(self.Screen,self.x,self.y,self.Ctrl_Vars,False)
@@ -565,22 +605,22 @@ class Extras(Folder):
         self.Buttons.append(self.Store_Button)
 
 class Settings(Folder):
-    def __init__(self,Screen,x,y,Ctrl_Vars,Start_Vars):
+    def __init__(self,Screen,x,y,Ctrl_Vars,Start_Vars,Settings):
         Folder.__init__(self,Screen,x,y,Ctrl_Vars)
         self.text = 'Settings'
         self.init_text(36)
 
         self.Start_Vars = Start_Vars
-        self.Sound_Button = Sound(self.Screen,self.x,self.y,self.Ctrl_Vars,self.Start_Vars,False)
-        self.Buttons.insert(1,self.Sound_Button)
+        Sound_Button = Sound(self.Screen,self.x,self.y,self.Ctrl_Vars,self.Start_Vars,False)
+        Display_Button = Display(self.Screen,self.x,self.y,self.Ctrl_Vars,Settings,self.Start_Vars,False)
+        self.Buttons.insert(0,Display_Button)
+        self.Buttons.insert(1,Sound_Button)
 
     def build_submenu(self):
         #Settings Options ----
         self.Buttons = []
         self.Controls_Button = Hexagon_Button(self.Screen,self.x,self.y,self.Ctrl_Vars,False)
-        self.Display_Button = Hexagon_Button(self.Screen,self.x,self.y,self.Ctrl_Vars,False)
         self.Buttons.append(self.Controls_Button)
-        self.Buttons.append(self.Display_Button)
 
 #Pause Screen
 class Quit_Folder(Folder):
@@ -598,7 +638,7 @@ class Quit_Folder(Folder):
 
 """MOVE WHEN DONE"""
 #Settings
-class Default(Hexagon_Button):
+class Default_Sound(Hexagon_Button):
     def __init__(self,Screen,x,y,Ctrl_Vars,Settings,active):
         Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars,active)
         self.clicked = False
@@ -630,6 +670,7 @@ class Save_Settings(Hexagon_Button):
         #activates campaign mode
         self.On = True
         if self.Ctrl_Vars.Left_click:
+            self.Ctrl_Vars.Left_click = False
             pygame.mixer.Sound.play(self.sound)
             self.Settings.save_volume()
 
@@ -650,9 +691,25 @@ class Back(Hexagon_Button):
 
             self.Start_Vars.load_menu = True
             self.Start_Vars.Title = True
-            self.Start_Vars.Settings = False
+            self.Start_Vars.Sound_Settings = False
+            self.Start_Vars.Display_Settings = False
             self.Num_pad = False
             pygame.mixer.Sound.play(self.sound)
+
+class Full_Screen(Hexagon_Button):
+    def __init__(self,Screen,x,y,Ctrl_Vars,Settings,active):
+        Hexagon_Button.__init__(self,Screen,x,y,Ctrl_Vars,active)
+        self.Settings = Settings
+        self.clicked = False
+        self.text = "Full Screen"
+        self.init_text(28)
+    
+    def functionality(self):
+        #activates campaign mode
+        self.On = True
+        if self.Ctrl_Vars.Left_click:
+            pygame.mixer.Sound.play(self.sound)
+            self.Settings.toggle_fullscreen()
 
 """SLIDERS *************************************************************************************************************"""
 class Slider_Bar():

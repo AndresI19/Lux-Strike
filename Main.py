@@ -30,8 +30,8 @@ pygame.mixer.quit()
 pygame.mixer.init(22050, -16, 2, 1024)
 pygame.mixer.music.set_volume(Settings.master_volume/100)
 
-#Screen = pygame.Surface((1920,1080))
-Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
+Screen = pygame.Surface((1920,1080))
+#Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 Window = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 pygame.display.set_caption("Lux Strike")
 Icon = pygame.image.load('HUD/Icon.png').convert()
@@ -41,11 +41,11 @@ pygame.display.set_icon(Icon)
 studio = pygame.image.load('Title/Studio.png')
 
 #TODO: Working on scaleable graphics
-#Screen.blit(studio,(0,0))
-#Graphics.scale(Window,Screen,Settings)
-"""Screen = pygame.transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
-Window.blit(Screen,(0,0))
-pygame.display.flip()"""
+Screen.blit(studio,(0,0))
+Graphics.scale(Window,Screen,Settings)
+#Screen = pygame.transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
+#Window.blit(Screen,(0,0))
+pygame.display.flip()
 
 #initialize control variables
 Ctrl_Vars = Ctrl_Vars()
@@ -58,14 +58,14 @@ Ctrl_Vars.menu_select = True
 #---------------------------------------------------------------------------------
 
 #initialization swtich menu:
-def world_init(Ctrl_Vars,Screen):
+def world_init(Ctrl_Vars,Screen,Window,Settings):
     if Ctrl_Vars.Random:
-        world = World(Screen,None)
+        world = World(Screen,None,Window,Settings)
         Ctrl_Vars.seed = str(world.seed)
         Ctrl_Vars.Random = False
     elif Ctrl_Vars.set_seed:
         Seed = Ctrl_Vars.seed
-        world = World(Screen,Seed)
+        world = World(Screen,Seed,Window,Settings)
         Ctrl_Vars.set_seed = False
     return world
 
@@ -76,7 +76,7 @@ while True:
         if not Ctrl_Vars.load_world:
             #Dynamic Menus, Start, Pause, Victory, Game Over
             if Ctrl_Vars.menu_select:
-                active_menu = Menus.menu_select(Screen,Ctrl_Vars,Settings)
+                active_menu = Menus.menu_select(Screen,Window,Ctrl_Vars,Settings)
             Engine.run_menu(Settings,Ctrl_Vars,active_menu)
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
@@ -86,16 +86,16 @@ while True:
             pygame.display.flip()
             #Initialization of major game objects
             if not Ctrl_Vars.initialized:
-                World = world_init(Ctrl_Vars,Screen)
+                World = world_init(Ctrl_Vars,Screen,Window,Settings)
                 Max_parameters = (World.Max_Rows,World.Max_Columns)
                 spawn_coord = (World.spawn_row,World.spawn_col)
                 Player = Player(Screen,spawn_coord)
                 Enemies = ENEMIES(Screen,Max_parameters,World)
-                Drops = Drop_envelope()
                 HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
+                Drops = Drop_envelope(HUD)
                 Ctrl_Vars.initialized = True
             else:
-                Engine.new_world_init(Ctrl_Vars,Screen,World) 
+                Engine.new_world_init(Ctrl_Vars,Screen,World,Window,Settings) 
                 Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
             Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         #-------------------------------------------------------------------------------------------*
@@ -118,5 +118,4 @@ while True:
 
         Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
-    #TODO: Working on scaleable graphics
-    #Graphics.scale(Window,Screen,Settings)
+    Graphics.scale(Window,Screen,Settings)

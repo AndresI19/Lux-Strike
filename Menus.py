@@ -3,9 +3,9 @@ import Buttons
 from text_reader import word_object
 import time
 
-def menu_select(Screen,Ctrl_Vars,Settings):
+def menu_select(Screen,Window,Ctrl_Vars,Settings):
     if Ctrl_Vars.Start_Screen:
-        Active_Menu = Start_Envelope(Screen,Ctrl_Vars,Settings)
+        Active_Menu = Start_Envelope(Screen,Window,Ctrl_Vars,Settings)
         time.sleep(0.5)
     elif Ctrl_Vars.Pause:
         Active_Menu = Pause_Envelope(Screen,Ctrl_Vars)
@@ -22,7 +22,7 @@ def menu_select(Screen,Ctrl_Vars,Settings):
 
 #Envelope class that contrains all start menu options and graphics vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 class Start_Envelope():
-    def __init__(self,Screen,Ctrl_Vars,Settings):
+    def __init__(self,Screen,Window,Ctrl_Vars,Settings):
         self.Ctrl_Vars = Ctrl_Vars
         self.Screen = Screen
         #Main options
@@ -31,8 +31,9 @@ class Start_Envelope():
         pygame.mixer.music.load('Music/6 Solutions per Side.mp3')
         pygame.mixer.music.play(-1)
 
-        self.Title_Screen = Title_Screen(Screen,Ctrl_Vars,self.Start_vars)
-        self.Volume_Screen = Settings_Envelope(Screen,Ctrl_Vars,Settings,self.Start_vars)
+        self.Title_Screen = Title_Screen(Screen,Ctrl_Vars,self.Start_vars,Settings)
+        self.Volume_Screen = Sound_Envelope(Screen,Ctrl_Vars,Settings,self.Start_vars)
+        self.Display_Screen = Display_Envelope(Screen,Window,Ctrl_Vars,Settings,self.Start_vars)
         self.Num_Pad = Num_Pad(Screen,Ctrl_Vars,self.Start_vars)
         self.Sub_menu_select()
 
@@ -41,12 +42,17 @@ class Start_Envelope():
             if self.Start_vars.Title:
                 self.Active_Menu = self.Title_Screen
                 time.sleep(0.5)
-            elif self.Start_vars.Settings:
+            elif self.Start_vars.Sound_Settings:
                 self.Active_Menu = self.Volume_Screen
+                pygame.mixer.music.load('Music/Bad KRP.mp3')
+                pygame.mixer.music.play(-1)
                 time.sleep(0.5)
             elif self.Start_vars.Num_pad:
                 self.Active_Menu = self.Num_Pad
-                time.sleep(0.5)          
+                time.sleep(0.5)
+            elif self.Start_vars.Display_Settings:
+                self.Active_Menu = self.Display_Screen
+                time.sleep(0.5)
             self.Start_vars.load_menu = False
             self.Menus = self.Active_Menu.Menus
         
@@ -56,10 +62,10 @@ class Start_Envelope():
         self.Active_Menu.draw()
 
 class Title_Screen():
-    def __init__(self,Screen,Ctrl_Vars,Start_vars):
+    def __init__(self,Screen,Ctrl_Vars,Start_vars,Settings):
         self.Menus = []
         """These are folders, each contain a few more options within them"""
-        self.Menus.append(Buttons.Settings(Screen,4,1,Ctrl_Vars,Start_vars)) #Settings
+        self.Menus.append(Buttons.Settings(Screen,4,1,Ctrl_Vars,Start_vars,Settings)) #Settings
         self.Menus.append(Buttons.Extras(Screen,4,2,Ctrl_Vars))
         self.Menus.append(Buttons.Play(Screen,4,3,Ctrl_Vars,Start_vars))
         self.Menus.append(Buttons.Quit(Screen,9,0,Ctrl_Vars,True))
@@ -68,7 +74,7 @@ class Title_Screen():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
-class Settings_Envelope():
+class Sound_Envelope():
     def __init__(self,Screen,Ctrl_Vars,Settings,Start_Vars):
         self.Settings = Settings
         self.Screen = Screen
@@ -82,7 +88,7 @@ class Settings_Envelope():
         #Buttons
         self.Menus.append(Buttons.Back(Screen,9,0,Ctrl_Vars,Start_Vars,True)) #back button
         self.Menus.append(Buttons.Save_Settings(Screen,9,1,Ctrl_Vars,Settings,True)) #commit
-        self.Default = Buttons.Default(Screen,9,2,Ctrl_Vars,Settings,True)
+        self.Default = Buttons.Default_Sound(Screen,9,2,Ctrl_Vars,Settings,True)
         self.Menus.append(self.Default) #return default
         #Sliders
         i = 175
@@ -118,6 +124,35 @@ class Settings_Envelope():
 
     def draw(self):
         self.update()
+        self.Screen.blit(self.curtain,(0,0))
+        for i in range(len(self.Menus)):
+            self.Menus[i].draw()
+
+class Display_Envelope():
+    def __init__(self,Screen,Window,Ctrl_Vars,Settings,Start_Vars):
+        self.Settings = Settings
+        self.Screen = Screen
+        self.Window = Window
+        Screen_rect = Screen.get_rect()
+        self.curtain = pygame.Surface((Screen_rect.right,Screen_rect.bottom))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(120)
+        self.Menus = []
+        #Buttons
+        self.Menus.append(Buttons.Back(Screen,9,0,Ctrl_Vars,Start_Vars,True)) #back button
+        #self.Menus.append(Buttons.Save_Settings(Screen,9,1,Ctrl_Vars,Settings,True)) #commit
+        Full_Screen = Buttons.Full_Screen(Screen,4,2,Ctrl_Vars,Settings,True)
+        self.Menus.append(Full_Screen)
+        R1920X1080 = Buttons.Resolution(Window,Screen,3,1,Ctrl_Vars,Settings,0,"1920X1080",True)
+        R1600X900 = Buttons.Resolution(Window,Screen,4,1,Ctrl_Vars,Settings,1,"1600X900",True)
+        R1280X720 = Buttons.Resolution(Window,Screen,5,1,Ctrl_Vars,Settings,2,"1280X720",True)
+        R640X480 = Buttons.Resolution(Window,Screen,6,1,Ctrl_Vars,Settings,3,"640X480",True)
+        self.Menus.append(R1920X1080)
+        self.Menus.append(R1600X900)
+        self.Menus.append(R1280X720)
+        self.Menus.append(R640X480)
+
+    def draw(self):
         self.Screen.blit(self.curtain,(0,0))
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
@@ -162,7 +197,7 @@ class Game_Over_Envelope(Pause_Envelope):
         Pause_Envelope.__init__(self,Screen,Ctrl_Vars)
         self.text = "Death"
         self.init_text(100)
-        pygame.mixer.music.load('Music/Approach.mp3')
+        pygame.mixer.music.load('Music/Beach Ball.mp3')
         pygame.mixer.music.play(-1)
 
 class Game_Win_Envelope():
@@ -350,8 +385,10 @@ class Background():
 
 """ TODO: #Loading Screen object"""
 class load_world_screen():
-    def __init__(self,Screen,N):
+    def __init__(self,Window,Screen,Settings,N):
         #loading screen variables
+        self.Window = Window
+        self.Settings = Settings
         self.Screen = Screen
         self.screen_rect = self.Screen.get_rect()
 
@@ -380,6 +417,11 @@ class load_world_screen():
             self.bar_left += 2
             if self.bar_left <= (1826):
                 self.Screen.blit(self.bar,(self.bar_left,self.bar_top))
+            
+            if not self.Settings.resolution == 0:
+                self.Screen = pygame.transform.scale(
+                    self.Screen,(self.Settings.Screen_width,self.Settings.Screen_height))
+            self.Window.blit(self.Screen,(0,0))
             pygame.display.flip()
         
     def init_text(self):
@@ -407,5 +449,7 @@ class Internal_vars():
     def __init__(self):
         self.load_menu = True
         self.Title = True
-        self.Settings = False
+        self.Sound_Settings = False
+        self.Display_Settings = False
         self.Num_pad = False
+        self.Jukebox = False

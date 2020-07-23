@@ -11,6 +11,7 @@ class HUD():
         self.Settings = Settings
         self.HUD_Borders = self.make_HUD_Borders()
         self.Player_Stats = Player_Stats(Screen,Player.Stats)
+        self.Money_bar = Currency_bar(Screen,Player.Stats)
         self.Mini_map = Mini_map(Screen,World,Player,Enemies)
         self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
         self.init_text(World)
@@ -28,16 +29,18 @@ class HUD():
 
     def make_HUD_Borders(self):
         #left border margin
-        Left = pygame.Surface((self.Settings.Screen_width//18,self.Settings.Screen_height))
+        Screen_Width = 1920
+        Screen_height = 1080
+        Left = pygame.Surface((Screen_Width//18,Screen_height))
         Left_rect = Left.get_rect()
 
         #Bottom border margin
-        Bottom = pygame.Surface((self.Settings.Screen_width,self.Settings.Screen_height//9))
+        Bottom = pygame.Surface((Screen_Width,Screen_height//9))
         Bottom_rect = Bottom.get_rect()
         Bottom_rect.bottom = self.Screen_rect.bottom
 
         #Right border margin
-        Right = pygame.Surface((self.Settings.Screen_width//9,self.Settings.Screen_height))
+        Right = pygame.Surface((Screen_Width//9,Screen_height))
         Right_rect = Right.get_rect()
         Right_rect.right = self.Screen_rect.right
 
@@ -54,6 +57,7 @@ class HUD():
             self.Screen.blit(self.HUD_Borders[0][i],self.HUD_Borders[1][i])
         self.Mini_map.draw()
         self.Player_Stats.draw()
+        self.Money_bar.draw()
         self.Screen.blit(self.font_image,self.font_rect)
         self.Dialog_box.draw()
         
@@ -235,14 +239,60 @@ class Dialog_box():
 #Planned UI elements
 """TODO: class Terrain_info():
     def __init__(self,Screen):
-        self.Screen = Screen
+        self.Screen = Screen"""
 
-#Right
-class Currancy_bar():
-    def __init__(self,Screen):
+class Currency_bar():
+    def __init__(self,Screen,Stats):
         self.Screen = Screen
+        self.Stats = Stats
+        self.Currency_images = []
+        for i in range(14):
+            image = pygame.image.load(
+                'HUD/Currency{}.png'.format(i)
+                ).convert()
+            image.set_colorkey((255,0,255))
+            self.Currency_images.append(image)
+        self.Currency_image = self.Currency_images[0]
+        self.Currency_rect = self.Currency_image.get_rect()
+        self.position((1680,50))
 
-class Target_Tile_Display():
+
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",32)
+        self.font.set_bold(True)
+        self.init_text()
+
+        self.Frames = 14 * 3
+        self.frame = 0
+        self.frame2 = 0
+        
+    def position(self,coords):
+        self.Currency_rect.left = coords[0]
+        self.Currency_rect.top = coords[1]
+
+    def init_text(self):
+        self.value = str(self.Stats.Money)
+        self.font_image = self.font.render(self.value,True,(255,255,255),None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.left = self.Currency_rect.right + 10
+        self.font_rect.bottom = self.Currency_rect.bottom
+
+    def clock(self):
+        if self.frame + 1 >= self.Frames * 4:
+            if self.frame2 + 1 >= self.Frames:
+                self.frame = 0
+                self.frame2 = 0
+            self.frame2 += 1
+        else:
+            self.frame += 1
+        self.Currency_image = self.Currency_images[self.frame2//3]
+
+    def draw(self):
+        self.clock()
+        self.Screen.blit(self.Currency_image,self.Currency_rect)
+        self.Screen.blit(self.font_image,self.font_rect)
+
+
+"""class Target_Tile_Display():
     def __init__(self,Screen):
             self.Screen = Screen"""
 

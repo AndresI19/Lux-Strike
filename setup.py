@@ -7,7 +7,7 @@ cx_Freeze.setup(
         name = "Lux Strike",options = {"build_exe":{
                 "packages":["pygame","time","math","sys","random","pygame.font","numpy","os"],
                 "include_files":['galaxy-bt','HUD','Music','Player','Portraits','Saved_Worlds','SFX','Tiles',
-                'Title','Dialog','Enemies']
+                'Title','Dialog','Enemies','Drops']
                 }
         }
         ,executables = executables,version = '1.0.0'
