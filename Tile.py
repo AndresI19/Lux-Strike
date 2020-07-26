@@ -13,7 +13,7 @@ from numpy.random import choice
 """
 
 class Tile():
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
+    def __init__(self,Screen,col,row,cliffs,elevation):
         self.Screen = Screen
         self.Screen_rect = self.Screen.get_rect()
         self.set_ledge_draw_height(cliffs)
@@ -27,7 +27,6 @@ class Tile():
         self.Center_display = False
         self.Right_display = False
 
-        self.ID = ID
         self.elevation = elevation
         
         #place holder images
@@ -165,13 +164,12 @@ class Tile():
     def check_render(self):
         """FIXME: fix tiles whose ledges should render but hexagon doesnt. Add actual margin
         Happens rarely at the top but enough to notice will become more of a problem the more elevation becomes important"""
-        margin_guess = 120
-        bottom_bound = self.Hexagon_rect.top <= self.Screen_rect.bottom - margin_guess
+        bottom_bound = self.Hexagon_rect.top <= self.Screen_rect.bottom - 150
         top_bound = self.Hexagon_rect.bottom >= self.Screen_rect.top
         verticle_bound = bottom_bound and top_bound
 
-        left_bound = self.Hexagon_rect.right >= self.Screen_rect.left + margin_guess
-        right_bound = self.Hexagon_rect.left <= self.Screen_rect.right - margin_guess
+        left_bound = self.Hexagon_rect.right >= self.Screen_rect.left + 203 
+        right_bound = self.Hexagon_rect.left <= self.Screen_rect.right - 240
         horizontal_bound = left_bound and right_bound
 
         if verticle_bound and horizontal_bound:
@@ -189,8 +187,8 @@ class Tile():
 
 #tile daughter classes.
 class Water(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         #animation image list
         self.Hexagon_images = []
         for i in range(8):
@@ -218,18 +216,18 @@ class Water(Tile):
         self.clock()
         if self.render:
             self.draw_extended_terrain()
+            self.Screen.blit(self.Hexagon_images[self.frame_count//13], self.Hexagon_rect)
+            if self.highlighted:
+                self.highlight.draw(self.Hexagon_rect)
         
     def clock(self):
         if self.frame_count + 1 >= self.frames:
             self.frame_count = 0
-        self.Screen.blit(self.Hexagon_images[self.frame_count//13], self.Hexagon_rect)
-        if self.highlighted:
-            self.highlight.draw(self.Hexagon_rect)
         self.frame_count += 1
 
 class Grass(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         #randomize grass environement 
         Choice = choice(range(4),1,False,[.55,.35,.05,.05])
         self.Hexagon_image = pygame.image.load(
@@ -244,8 +242,8 @@ class Grass(Tile):
         self.Icon = Icon_Grass(Screen,col,row,elevation)
 
 class Mountain(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         self.Hexagon_image = pygame.image.load('Tiles/Mountain/H00.png').convert()
         self.Left_image = pygame.image.load('Tiles/Mountain/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Mountain/C00.png').convert()
@@ -255,8 +253,8 @@ class Mountain(Tile):
         self.Icon = Icon_Brick(Screen,col,row,1)
 
 class Beach(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         Choice = choice(range(4),1,False,[.75,.10,.10,.05])
         self.Hexagon_image = pygame.image.load(
             'Tiles/Beach/H0{}.png'.format(Choice[0])
@@ -270,8 +268,8 @@ class Beach(Tile):
         self.Icon = Icon_Sand(Screen,col,row,1)
 
 class Brick(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         self.Hexagon_image = pygame.image.load('Tiles/Brick/H00.png').convert()
         self.Left_image = pygame.image.load('Tiles/Brick/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Brick/C00.png').convert()
@@ -281,8 +279,8 @@ class Brick(Tile):
         self.Icon = Icon_Brick(Screen,col,row,1)
 
 class Stairs(Tile):
-    def __init__(self,Screen,col,row,ID,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,ID,cliffs,elevation)
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
         self.Hexagon_image = pygame.image.load('Tiles/Brick/H01.png').convert()
         self.Left_image = pygame.image.load('Tiles/Brick/L00.png').convert()
         self.Center_image = pygame.image.load('Tiles/Brick/C00.png').convert()

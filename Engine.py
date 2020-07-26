@@ -105,9 +105,8 @@ def KEYUP(event,Ctrl_Vars,World):
 
 def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
     if event.key == pygame.K_ESCAPE:
-        Ctrl_Vars.Game_active = False
-        Ctrl_Vars.Pause = True
-        Ctrl_Vars.menu_select = True
+        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+        Ctrl_Vars.Game_Menu_Vars.Pause = True
     #camera Center
     elif event.key == pygame.K_LSHIFT:
         Center_Screen(Settings,World,Player,Enemies,Drops)
@@ -237,7 +236,7 @@ def Menu_check_events(Settings,Ctrl_Vars,Buttons):
             if event.key == pygame.K_ESCAPE:
                 if Ctrl_Vars.Start_Screen:
                     sys.exit(0)
-            if Ctrl_Vars.seed_menu:
+            if Ctrl_Vars.Start_Vars.Num_pad:
                 num_keys(event,Ctrl_Vars)
 
 def check_hover(Settings,Buttons):
@@ -351,7 +350,7 @@ def E_check_occupancy(y,x,Player,Enemies):
 #Camera funtions ....
 def Center_Screen(Settings,World,Player,Enemies,Drops):
     xf = 960 
-    yf = 540
+    yf = 440
     xi = Player.MOB_rect.centerx
     yi = Player.MOB_rect.centery
     dx = xf - xi
@@ -390,18 +389,16 @@ def Camera_shake(degree,frame,World,Player,Enemies,Drops):
 def check_stairs(World,Player,Ctrl_Vars):
     y,x = World.stairs[0],World.stairs[1]
     if Player.x == x and Player.y == y:
-        Ctrl_Vars.Game_active = False
-        Ctrl_Vars.Game_Win = True
-        Ctrl_Vars.menu_select = True
+        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+        Ctrl_Vars.Game_Menu_Vars.Game_Win = True
 
 def check_drops(Player,Drops):
     Drops.check_pick_up(Player)
 
 def check_death(Player,Ctrl_Vars):
     if Player.Stats.Health_Points <= 0:
-        Ctrl_Vars.Game_active = False
-        Ctrl_Vars.Game_Over = True
-        Ctrl_Vars.menu_select = True
+        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+        Ctrl_Vars.Game_Menu_Vars.Game_Over = True
         sound = pygame.mixer.Sound("SFX/game over.wav")
         pygame.mixer.Sound.play(sound)
 
@@ -490,21 +487,21 @@ def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     Drops.__init__(HUD)
 
 def new_world_init(Ctrl_Vars,Screen,World,Window,Settings):
-    if Ctrl_Vars.Random:
+    if Ctrl_Vars.Game_Menu_Vars.Random:
         World.__init__(Screen,None,Window,Settings)
         Ctrl_Vars.seed = str(World.seed)
-        Ctrl_Vars.Random = False
-    elif Ctrl_Vars.set_seed:
+        Ctrl_Vars.Game_Menu_Vars.Random = False
+    elif Ctrl_Vars.Game_Menu_Vars.Custom:
         Seed = Ctrl_Vars.seed
         World.__init__(Screen,Seed,Window,Settings)
-        Ctrl_Vars.set_seed = False
+        Ctrl_Vars.Game_Menu_Vars.Custom = False
     elif Ctrl_Vars.restart_world:
         Ctrl_Vars.restart_world = False
     Ctrl_Vars.camera_follow = True
 
 def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops):
-    Ctrl_Vars.load_world = False
-    Ctrl_Vars.Game_active = True
+    Ctrl_Vars.Game_Menu_Vars.load_world = False
+    Ctrl_Vars.Game_Menu_Vars.Game_active = True
     Center_Screen(Settings,World,Player,Enemies,Drops)
     Player.glue(World)
     Enemies.glue(World)

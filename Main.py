@@ -31,7 +31,6 @@ pygame.mixer.init(22050, -16, 2, 1024)
 pygame.mixer.music.set_volume(Settings.master_volume/100)
 
 Screen = pygame.Surface((1920,1080))
-#Screen = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 Window = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
 pygame.display.set_caption("Lux Strike")
 Icon = pygame.image.load('HUD/Icon.png').convert()
@@ -40,47 +39,39 @@ pygame.display.set_icon(Icon)
 
 studio = pygame.image.load('Title/Studio.png')
 
-#TODO: Working on scaleable graphics
+#Present start up screen --
 Screen.blit(studio,(0,0))
 Graphics.scale(Window,Screen,Settings)
-#Screen = pygame.transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
-#Window.blit(Screen,(0,0))
 pygame.display.flip()
+#--
 
 #initialize control variables
 Ctrl_Vars = Ctrl_Vars()
 
-#Start Menu --------------------------------------------------------------------
-"""Set Control variables to start with an active start menu operation, initialize all start menu elements"""
-Ctrl_Vars.Game_active = False
-Ctrl_Vars.Start_Screen = True
-Ctrl_Vars.menu_select = True
-#---------------------------------------------------------------------------------
-
-#initialization swtich menu:
+#initialization swtich menu: Can probobaly move to world module
 def world_init(Ctrl_Vars,Screen,Window,Settings):
-    if Ctrl_Vars.Random:
+    if Ctrl_Vars.Game_Menu_Vars.Random:
         world = World(Screen,None,Window,Settings)
         Ctrl_Vars.seed = str(world.seed)
-        Ctrl_Vars.Random = False
-    elif Ctrl_Vars.set_seed:
+        Ctrl_Vars.Game_Menu_Vars.Random = False
+    elif Ctrl_Vars.Game_Menu_Vars.Custom:
         Seed = Ctrl_Vars.seed
         world = World(Screen,Seed,Window,Settings)
-        Ctrl_Vars.set_seed = False
+        Ctrl_Vars.Game_Menu_Vars.Custom = False
     return world
 
 #main loop: note pause functionality limited.
 while True:
     clock.tick(60) #set fram rate (variable in argument per second)
-    if not Ctrl_Vars.Game_active:
-        if not Ctrl_Vars.load_world:
+    if not Ctrl_Vars.Game_Menu_Vars.Game_active:
+        if not Ctrl_Vars.Game_Menu_Vars.load_world:
             #Dynamic Menus, Start, Pause, Victory, Game Over
-            if Ctrl_Vars.menu_select:
+            if Ctrl_Vars.Game_Menu_Vars.menu_select:
                 active_menu = Menus.menu_select(Screen,Window,Ctrl_Vars,Settings)
             Engine.run_menu(Settings,Ctrl_Vars,active_menu)
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
-        elif Ctrl_Vars.load_world:
+        elif Ctrl_Vars.Game_Menu_Vars.load_world:
             time.sleep(0.5)
             Screen.fill((0,0,0))
             pygame.display.flip()

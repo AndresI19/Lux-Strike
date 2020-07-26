@@ -6,7 +6,6 @@ def Display(Screen,World,HUD,Player,Enemies,Drops):
     Screen.fill((0,0,0))
     Draw_map(World,Player,Enemies,Drops)
     HUD.draw()
-    #display.flip()
 
 def Draw_map(World,Player,Enemies,Drops):
     Max_Columns = len(World.Terrain)
@@ -23,7 +22,6 @@ def Draw_map(World,Player,Enemies,Drops):
             if drop.y == draw_row:
                 drop.draw()
                 
-#TODO: Working on scaleable graphics
 def scale(Window,Screen,Settings):
     if not Settings.resolution == 0:
         Screen = transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))

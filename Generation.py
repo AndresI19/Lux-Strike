@@ -24,7 +24,7 @@ class Generation():
         #size correction variables
         self.corrections = [(0,0),(0,0)]
         #number of iterations of the parametric function
-        self.sample_size = 2300
+        self.sample_size = 2500
 
         #experimental
         N = (self.sample_size * self.total_tiers)/2
@@ -49,6 +49,7 @@ class Generation():
         seed = self.seed
         if tier >=1:
             seed = rng.generate_seed_from_seed(self.seed,tier)
+
         self.make_variable_list(seed)
         self.adjust_parametric(tier)
         grid = self.check_parametric_contained(grid)
@@ -346,19 +347,12 @@ class Hexagon():
         self.side_length = self.width/2
         self.offset = (self.side_length*(3/2))
 
-        self.bottom = 0
-        self.top = 0
-        self.center_y = 0
-        self.left = 0
-
         self.off_center = False
         self.position()
 
         self.ID = 0
         self.elevation = 0
         self.cliffs = []
-
-        #self.water = True
 
     def position(self):
         self.bottom = self.col * (self.height / 2)

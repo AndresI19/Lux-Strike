@@ -25,35 +25,41 @@ class HUD():
         self.font_image = self.font.render("Seed: "+ World.seed,True,self.text_color,None)
         self.font_rect = self.font_image.get_rect()
         self.font_rect.right = self.Screen_rect.right - 1
-        self.font_rect.top = self.Screen_rect.top + 3
+        self.font_rect.bottom = self.Screen_rect.bottom -3
 
     def make_HUD_Borders(self):
         #left border margin
-        Screen_Width = 1920
-        Screen_height = 1080
-        Left = pygame.Surface((Screen_Width//18,Screen_height))
+        Left = pygame.image.load("HUD/Left frame.png").convert()
+        Left.set_colorkey((255,0,255))
         Left_rect = Left.get_rect()
 
         #Bottom border margin
-        Bottom = pygame.Surface((Screen_Width,Screen_height//9))
+        Bottom = pygame.image.load("HUD/Bottom frame.png").convert()
+        Bottom.set_colorkey((255,0,255))
         Bottom_rect = Bottom.get_rect()
-        Bottom_rect.bottom = self.Screen_rect.bottom
+        Bottom_rect.bottom = Left_rect.bottom
+        Bottom_rect.left = Left_rect.right
 
         #Right border margin
-        Right = pygame.Surface((Screen_Width//9,Screen_height))
+        Right = pygame.image.load("HUD/Right frame.png").convert()
+        Right.set_colorkey((255,0,255))
         Right_rect = Right.get_rect()
         Right_rect.right = self.Screen_rect.right
 
+        Middle = pygame.image.load("HUD/Map frame.png").convert()
+        Middle.set_colorkey((255,0,255))
+        Middle_rect = Middle.get_rect()
+        Middle_rect.bottom = Bottom_rect.top
+        Middle_rect.right = Right_rect.right
+
         #add all border margins to a list for easy operation
-        HUD_Borders = [Left,Bottom,Right]
-        HUD_rects = [Left_rect,Bottom_rect,Right_rect]
-        for i in range(3):
-            HUD_Borders[i].convert()
-            HUD_Borders[i].fill((0,0,0))
+        HUD_Borders = [Left,Bottom,Right,Middle]
+        HUD_rects = [Left_rect,Bottom_rect,Right_rect,Middle_rect]
+
         return (HUD_Borders,HUD_rects)
 
     def draw(self):
-        for i in range(3):
+        for i in range(len(self.HUD_Borders[0])):
             self.Screen.blit(self.HUD_Borders[0][i],self.HUD_Borders[1][i])
         self.Mini_map.draw()
         self.Player_Stats.draw()
@@ -254,10 +260,10 @@ class Currency_bar():
             self.Currency_images.append(image)
         self.Currency_image = self.Currency_images[0]
         self.Currency_rect = self.Currency_image.get_rect()
-        self.position((1680,50))
+        self.position((1720,20))
 
 
-        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",32)
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",28)
         self.font.set_bold(True)
         self.init_text()
 
