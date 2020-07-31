@@ -10,8 +10,6 @@ class Settings():
         self.resolution = 1
         self.init_Screen()
 
-        self.bg_color = (255,255,255)
-
         self.drag_sensativity = 1
         self.fullscreen = False
 
@@ -29,7 +27,6 @@ class Settings():
     def create_window(self,window):
         Window = pygame.display.set_mode((self.Screen_width,self.Screen_height))
         return Window
-
 
     def set_settings_from_file(self):
         self.master_volume = tr.get_settings('master_volume')

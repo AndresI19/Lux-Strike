@@ -12,7 +12,7 @@ no.
 $GSWANZAI
 {Swanzai,SW1,-1}Hooooonkkkkkkkkk!
 {Dr.Navy,DN1,1}It did it again!
-You will die now! Hear me swanzai foe!
+I will defeat you! Hear me Swanzai foe!
 #End
 Tutorial1.2
 {Dr.Navy,DN1,1}Was that Swanzai hoarding $Rtreasure??

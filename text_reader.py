@@ -18,11 +18,11 @@ past location, as they should not act as independent objects. They need to be us
 an external call. Each sentence in the list is a new line. Each complex object in the dialog list
 is a new dialog box."""
 
-#Dialog reading
 def load_text(Code,File):
     File = open(File,"r")
     Lines = File.readlines()
     line_count = 0
+    #first task is to find the section in the txt document with relevent information
     for line in Lines:
         search = line[0:len(Code)]
         if search == Code:
@@ -33,13 +33,14 @@ def load_text(Code,File):
     File.close()
 
 def paragraph_reader(lines,line_count):
+    #tyhe text document is formated by paragraph, this function reads through it line by line
     dialog = []
     box = []
     first = True
     box_count = 0
     while True:
         line = lines[line_count]
-        profile = new_box(line)
+        profile = new_box(line) #function that defines a profile information
         if profile[0] == 0:
             #new profile
             if not first:
@@ -87,6 +88,7 @@ def new_box(line):
         return [None]
 
 def load_sentence(line,start):
+    #creates a list of word objects that form a sentence, gives each word customizability
     sentence = []
     tags = []
     word = ""
@@ -128,6 +130,7 @@ def fill_profile(line):
     return {'Character':name,'Image_Code':image,'Side':side}
 
 def fill_to_x(line,count,x):
+    #wills information until it reaches character x which is either a ',' or a '}'
     name = ''
     active = True
     while active:
@@ -140,6 +143,7 @@ def fill_to_x(line,count,x):
     return name
 
 class word_object():
+    #Word object, is nothing more than a rendered text object, with the ability to display in a certain way
     def __init__(self,word,tags):
         self.word = word
         self.length = len(self.word)
@@ -204,11 +208,13 @@ class word_object():
         coordinates = self.after_effects(coordinates)
         Screen.blit(self.font_image,coordinates)
 
-    def print(self):
+    def print(self):#for testing. will delete
         print(self.word)
 
-#Settings_________________________________________________________________
+#Settings,_________________________________________________________________
+"""The following are functions that allow you load and save settings to file."""
 def find(Lines,Code):
+    #works just like load_text, at least the first step, could be refactored. suggested to be refactored actually
     line_count = 0
     offset = 0
     for line in Lines:
@@ -219,6 +225,7 @@ def find(Lines,Code):
         line_count += 1
 
 def recieve_setting(Lines,location,Code):
+    #gets a value from file
     line = Lines[location]
     start = len(Code)+3
     setting = ''
@@ -226,7 +233,9 @@ def recieve_setting(Lines,location,Code):
         setting += char
     return setting.strip()
 
+"""main calls %%%%%%%%%%%%%%%%%%%%%"""
 def get_settings(Code):
+    #parces file, this file v for a setting by code, to retrieve data.
     File = 'Saved_Worlds/Settings.txt'
     File = open(File,"r+")
     Lines = File.readlines()
@@ -237,6 +246,7 @@ def get_settings(Code):
     return int(setting)
 
 def set_setting(Code,Setting):
+    #saves current settings to file, well, saves passed arguement. intended for settings
     File = 'Saved_Worlds/Settings.txt'
     File = open(File,"r+")
     Lines = File.readlines()

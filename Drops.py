@@ -15,7 +15,7 @@ class Drop_envelope():
                 drop.functionality()
                 self.Group.remove(drop)
                 Player.Stats.Money += round(drop.value * (1 + Player.Stats.combo/2))
-                self.HUD.Money_bar.init_text()
+                self.HUD.Money_bar.queue()
                 choice = randint(0,2)
                 sound = pygame.mixer.Sound('SFX/Money{}.wav'.format(choice)
                     )

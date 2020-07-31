@@ -156,6 +156,13 @@ class Player(MOB):
                 ).convert()
             self.MOB_image.set_colorkey((255,0,255))
 
+    def hurt(self):
+        if self.hitstun == False: #dont hurt twice
+            self.Stats.Health_Points -= 1
+            self.Stats.combo = 0
+            self.hitstun = True
+            self.SFX_damage()
+
     def reset_hitstun(self): #no functionality yet
         if self.hitstun == True:
             self.hitstun = False

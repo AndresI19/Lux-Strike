@@ -280,7 +280,7 @@ def num_keys(event,Ctrl_Vars):
         sound = pygame.mixer.Sound("SFX/Button_press.wav")
         pygame.mixer.Sound.play(sound)
 
-"""Main Loop *************************************************************************"""
+"""Main Loop end *************************************************************************"""
 
 #Movement Checks vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
@@ -304,7 +304,7 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
         Player.Stats.combo += 1
         return
     else:
-        line(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
+        Queue_movement(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
         Ctrl_Vars.end_turn() #end turn
 
 def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies):
@@ -317,7 +317,7 @@ def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies):
     if stop_move: #no need to make a thud noise, you dont care what the enemy noise makes
         Enemy.reset_direction()
     else:
-        line(Enemy,World,Ctrl_Vars.phase_Frames) #make a line
+        Queue_movement(Enemy,World,Ctrl_Vars.phase_Frames) #make a line
 
 def P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars):
     for Enemy in Enemies.Group: #Maybe you killed something
@@ -334,14 +334,9 @@ def P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars):
 
 def E_check_occupancy(y,x,Player,Enemies):
     if Player.x == x and Player.y == y: #hit player?
-        if Player.hitstun == False:
-            Player.Stats.Health_Points -= 1
-            Player.Stats.combo = 0
-            Player.hitstun = True
-            Player.SFX_damage()
-            
+        Player.hurt()   
         return True
-    #FIXME:enemy on enemy collision
+    #FIXME:enemy on enemy collision: it might be fixed but keep an eye out
     for Enemy in Enemies.Group:
         if (Enemy.x) == x and (Enemy.y) == y:
             return True
@@ -364,13 +359,6 @@ def Translate_Screen(coordinates,World,Player,Enemies,Drops):
     Player.translate(dx,dy)
     Enemies.translate(dx,dy)
     Drops.translate(dx,dy)
-
-def update_elevation(MOB,World):
-    MOB.elevation = World.Terrain[MOB.y][MOB.x].elevation
-
-def check_tall_block(World,MOB,Ctrl_Vars):
-    World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
-    World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)
 
 def Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops):
     if Ctrl_Vars.camera_follow:
@@ -402,8 +390,14 @@ def check_death(Player,Ctrl_Vars):
         sound = pygame.mixer.Sound("SFX/game over.wav")
         pygame.mixer.Sound.play(sound)
 
+def update_elevation(MOB,World):
+    MOB.elevation = World.Terrain[MOB.y][MOB.x].elevation
+
+def check_tall_block(World,MOB,Ctrl_Vars):
+    World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
+    World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)
 #other
-def line(MOB,World,N):
+def Queue_movement(MOB,World,N):
     Initial = World.Terrain[MOB.y][MOB.x].get_Character_Spot()
     Final = World.Terrain[MOB.y + MOB.dy][MOB.x + MOB.dx].get_Character_Spot()
     x = Initial[0]

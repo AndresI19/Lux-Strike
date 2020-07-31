@@ -165,7 +165,9 @@ class Tile():
         """FIXME: fix tiles whose ledges should render but hexagon doesnt. Add actual margin
         Happens rarely at the top but enough to notice will become more of a problem the more elevation becomes important"""
         bottom_bound = self.Hexagon_rect.top <= self.Screen_rect.bottom - 150
-        top_bound = self.Hexagon_rect.bottom >= self.Screen_rect.top
+        tile_bottom = self.Hexagon_rect.bottom + self.C_num * self.Center_rect.height
+        top_bound = tile_bottom >= self.Screen_rect.top
+        
         verticle_bound = bottom_bound and top_bound
 
         left_bound = self.Hexagon_rect.right >= self.Screen_rect.left + 203 

@@ -262,11 +262,13 @@ class Currency_bar():
         self.Currency_rect = self.Currency_image.get_rect()
         self.position((1720,20))
 
-
+        self.value = self.Stats.Money
+        self.display_amount = self.value
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",28)
         self.font.set_bold(True)
         self.init_text()
 
+        self.animate_text = False
         self.Frames = 14 * 3
         self.frame = 0
         self.frame2 = 0
@@ -276,8 +278,8 @@ class Currency_bar():
         self.Currency_rect.top = coords[1]
 
     def init_text(self):
-        self.value = str(self.Stats.Money)
-        self.font_image = self.font.render(self.value,True,(255,255,255),None)
+        self.font_image = self.font.render(
+            str(self.display_amount),True,(255,255,255),None)
         self.font_rect = self.font_image.get_rect()
         self.font_rect.left = self.Currency_rect.right + 10
         self.font_rect.bottom = self.Currency_rect.bottom
@@ -292,15 +294,26 @@ class Currency_bar():
             self.frame += 1
         self.Currency_image = self.Currency_images[self.frame2//3]
 
+    def queue(self):
+        self.value = self.Stats.Money
+        differance = self.value - self.display_amount
+        self.increment = differance // 60
+        self.animate_text = True
+
+    def number_animate(self):
+        if self.animate_text:
+            if self.display_amount >= self.value:
+                self.display_amount = self.value
+                self.animate_text = False
+            else:
+                self.display_amount += self.increment
+            self.init_text()
+
     def draw(self):
         self.clock()
+        self.number_animate()
         self.Screen.blit(self.Currency_image,self.Currency_rect)
         self.Screen.blit(self.font_image,self.font_rect)
-
-
-"""class Target_Tile_Display():
-    def __init__(self,Screen):
-            self.Screen = Screen"""
 
 """#Bottom
 class Time_Weather():

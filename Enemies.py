@@ -66,11 +66,6 @@ class ENEMIES():
         for i in range(len(self.Group)):
             self.Group[i].translate(x,y)
 
-    """def Draw(self):
-        if len(self.Group) > 0:
-            for i in range(len(self.Group)):
-                self.Group[i].Draw()"""#obsolete
-    
     def Icon_draw(self):
         for i in range(len(self.Group)):
             self.Group[i].Icon.draw()
