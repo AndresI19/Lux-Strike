@@ -1,6 +1,6 @@
 #class for player input variables; ei knowing the mouse is down or what menu is on
 class Ctrl_Vars():
-    def __init__(self):
+    def __init__(self,debug):
         self.timer_init()
         self.set_button_downs()
         self.initialized = False #memory used to know if game objects have already been loaded and dont need to be re initialized
@@ -11,7 +11,7 @@ class Ctrl_Vars():
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
         self.Start_Vars = Start_Menu_vars()
-        self.Game_Menu_Vars = Game_Menu_vars()
+        self.Game_Menu_Vars = Game_Menu_vars(debug)
         self.restart_world = False
 
 ##Dynamic game stats
@@ -89,7 +89,7 @@ class Ctrl_Vars():
 
 """Menu Controls%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 class Game_Menu_vars():
-    def __init__(self):
+    def __init__(self,debug):
         self.menu_select = True
         self.Start_Screen = True
 
@@ -100,6 +100,11 @@ class Game_Menu_vars():
         self.load_world = False #the bool called to load a new world
         self.Random = False
         self.Custom = False
+        if debug == True:
+            self.menu_select = False
+            self.Start_Screen = False
+            self.load_world = True
+            self.Random = True
 
     def Menu_reset(self):
         self.Game_active = False #True win playing game, false if in menu

@@ -111,10 +111,11 @@ def seed_weighted_bound_int(seed,bounds,instance,weights):
 
 def generate_seed_from_seed(seed,instance):
     #shuffles the numbers around in the seed to create a different seed for operations
+    if not instance == 0:
         final_seed = ''
         factor = (19/7)
         for i in range(len(seed)):
             Seed = ((int(seed[i])+instance)*factor)
             Seed = str(round(Seed))
             final_seed = final_seed + Seed[-1]
-        return final_seed
+    return final_seed

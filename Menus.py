@@ -125,9 +125,9 @@ class Sound_Menu():
         self.Voice_slider.set_Knob()
 
     def init_buttons(self):
-        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)#back button
-        Save = Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings,True) #commit changes to file
-        self.Default = Buttons.Default_Sound(self.Screen,[9,2],self.Ctrl_Vars,self.Settings,True)
+        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")#back button
+        Save = Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings) #commit changes to file
+        self.Default = Buttons.Default_Sound(self.Screen,[9,2],self.Ctrl_Vars,self.Settings)
         self.Menus.append(Back_Nav) 
         self.Menus.append(Save)
         self.Menus.append(self.Default) #return default
@@ -170,10 +170,10 @@ class Display_Menu():
         #TODO: self.Menus.append(Buttons.Save_Settings(Screen,9,1,Ctrl_Vars,Settings,True)) #commit
         Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)
         Full_Screen = Buttons.Full_Screen(self.Screen,[4,2],self.Ctrl_Vars,self.Settings,True)
-        R1920X1080 = Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,0,"1920X1080",True)
-        R1600X900 = Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,1,"1600X900",True)
-        R1280X720 = Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,2,"1280X720",True)
-        R640X480 = Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,3,"640X480",True)
+        R1920X1080 = Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,0,"1920X1080")
+        R1600X900 = Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,1,"1600X900")
+        R1280X720 = Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,2,"1280X720")
+        R640X480 = Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,3,"640X480")
 
         self.Menus.append(Back_Nav) #back button
         self.Menus.append(Full_Screen)
@@ -199,10 +199,10 @@ class Jukebox_Menu():
         count = 0
         for i in range(1,8):
             for j in range(0,5):
-                button = Buttons.Music_Button(self.Screen,[i,j],count,self.Ctrl_Vars,True)
+                button = Buttons.Music_Button(self.Screen,[i,j],count,self.Ctrl_Vars)
                 self.Menus.append(button)
                 count += 1     
-        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)
+        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")
         self.Menus.append(Back_Nav)
 
     def init_curtain(self):
@@ -230,8 +230,8 @@ class Pause_Envelope():
         self.Menus = []
         #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
         self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
-        self.Menus.append(Buttons.Resume(Screen,[4,3],Ctrl_Vars,True))
-        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars,True))
+        self.Menus.append(Buttons.Resume(Screen,[4,3],Ctrl_Vars))
+        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars))
 
     def init_text(self,size):
         text_color = ((255,255,255))
@@ -265,10 +265,10 @@ class Game_Win_Envelope():
         self.Menus = []
 
         self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
-        Random = Buttons.Menu_Navagation(Screen,[4,3],Ctrl_Vars,"Random","Random",True)
+        Random = Buttons.Menu_Navagation(Screen,[4,3],Ctrl_Vars,"Random","Random")
         self.Menus.append(Random)
-        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars,True))
-        self.Menus.append(Buttons.Save_seed(Screen,[4,1],Ctrl_Vars,True))
+        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars))
+        self.Menus.append(Buttons.Save_seed(Screen,[4,1],Ctrl_Vars))
         self.init_background()
         self.init_animation()
 
@@ -354,18 +354,18 @@ class Num_Pad():
         x = 3 #column
         y = 3 #row
         for i in range(9): #arranging main 9 numbers not including 0
-            self.Menus.append(Buttons.Key(self.Screen,[x,y],self.Ctrl_Vars,i+1,True))
+            self.Menus.append(Buttons.Key(self.Screen,[x,y],self.Ctrl_Vars,i+1))
             x += 1
             if x >= 6:
                 y -= 1
                 x = 3
         #arranging 0 and functional keys by hand
-        self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars,True)) 
-        self.Menus.append(Buttons.Key(self.Screen,[4,0],self.Ctrl_Vars,0,True)) 
-        Enter = Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Custom","Enter",True)
-        self.Menus.append(Enter) 
-        self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars,True))
-        self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)) #back button
+        self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars)) 
+        self.Menus.append(Buttons.Key(self.Screen,[4,0],self.Ctrl_Vars,0)) 
+        Enter = Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Custom","Enter")
+        self.Menus.append(Enter)
+        self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars))
+        self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")) #back button
 
     def init_text(self):
         font_size = 100

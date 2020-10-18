@@ -455,10 +455,8 @@ def select_line_path(MOB,Start,stagger):
     return [(Next_x,Next_y),off_center]
 
 def check_line(World,Start,Next):
-    Start_x = Start[0]
-    Start_y = Start[1]
-    Next_x = Next[0]
-    Next_y = Next[1]
+    Start_x,Start_y = Start
+    Next_x,Next_y = Next
     row_bound = Next_y >= 0 and Next_y < World.Max_Rows
     col_bound = Next_x >= 0 and Next_x < World.Max_Columns
     if row_bound and col_bound:

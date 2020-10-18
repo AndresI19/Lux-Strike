@@ -60,7 +60,7 @@ class Tile():
         self.width = self.Hexagon_rect.right
 
         self.side_length = self.Hexagon_rect.right/2
-        self.outline = 1
+        self.outline = 2
 
         self.height = 73#self.side_length * sqrt(3), this temporary specification prevents scalability of image size ;(
         self.offset = (self.side_length*(3/2))

@@ -1,3 +1,4 @@
+debug = False
 #import all modules from directory, as well as pygame lib
 #full modules
 from os import environ
@@ -46,7 +47,7 @@ pygame.display.flip()
 #--
 
 #initialize control variables
-Ctrl_Vars = Ctrl_Vars()
+Ctrl_Vars = Ctrl_Vars(debug)
 
 #initialization swtich menu: Can probobaly move to world module
 def world_init(Ctrl_Vars,Screen,Window,Settings):

@@ -1,6 +1,6 @@
 import Tile as T
 import random
-from Generation import Generation,Post_Generation
+from generation2 import Generation,Post_Generation
 
 #World Object!
 """This is the most big baby mamma of all the objects! This object will contain a grid of every tile object int he world,
@@ -27,7 +27,7 @@ class World():
 ###MAP GENERATION/ INITIALIZATION vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def generate_map(self,Seed,Window,Settings):
         #initialize generation object, creates a new world --------------------------------------
-        max_parameters = (self.Max_Columns,self.Max_Rows)
+        max_parameters = [self.Max_Columns,self.Max_Rows]
         generation = Generation(Seed,max_parameters,self.Screen,Window,Settings)
         #save seed for display and copy paste use
         self.seed = generation.seed
@@ -56,6 +56,8 @@ class World():
                     tile = T.Grass(self.Screen,col,row,cliffs,elevation)
                 elif ID == 2:
                     tile = T.Beach(self.Screen,col,row,cliffs,elevation)
+                elif ID == 3:
+                    tile = T.Mountain(self.Screen,col,row,cliffs,elevation)
                 elif ID == 100:
                     tile = T.Brick(self.Screen,col,row,cliffs,elevation)
                 elif ID == 101:

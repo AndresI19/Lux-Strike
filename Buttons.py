@@ -7,7 +7,7 @@ from time import sleep
 """Mother class Buttons%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 #Simple Button (Mother) vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 class Hexagon_Button():
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
+    def __init__(self,Screen,Coords,Ctrl_Vars,active = True):
         self.Coords = Coords
         self.Screen = Screen #needed for graphics
         self.Screen_rect = self.Screen.get_rect()
@@ -260,7 +260,7 @@ class Folder(Hexagon_Button):
             self.draw_text()
 """MENU SWITCHS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 class Start_Navigation(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,GoTo,Text,active):
+    def __init__(self,Screen,Coords,Ctrl_Vars,GoTo,Text,active = True):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
         self.GoTo = GoTo
         self.text = Text
@@ -272,7 +272,7 @@ class Start_Navigation(Hexagon_Button):
         self.Ctrl_Vars.Start_Vars.Set_Menu(self.GoTo)
 
 class Menu_Navagation(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,load_type,Text,active):
+    def __init__(self,Screen,Coords,Ctrl_Vars,load_type,Text,active = True):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
         self.text = Text
         self.init_text(36)
@@ -295,8 +295,8 @@ class Menu_Navagation(Hexagon_Button):
 """Simple Button specialized types ***************************************************************************"""
 #Number PAD
 class Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,value,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars,value):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "{}".format(str(value))
         self.init_text(44)
         self.value = str(value)
@@ -307,8 +307,8 @@ class Key(Hexagon_Button):
             self.Ctrl_Vars.seed += "{}".format(self.value)
 
 class Del_Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Del"
         self.init_text(44)
 
@@ -317,8 +317,8 @@ class Del_Key(Hexagon_Button):
         self.Ctrl_Vars.seed = self.Ctrl_Vars.seed[:-1]
 
 class Enter_Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Enter"
         self.init_text(36)
 
@@ -331,8 +331,8 @@ class Enter_Key(Hexagon_Button):
             self.Ctrl_Vars.Start_Screen = False
 
 class Clear(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Clear"
         self.init_text(44)
 
@@ -341,8 +341,8 @@ class Clear(Hexagon_Button):
         self.Ctrl_Vars.seed = ""
 
 class Save_seed(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Save Seed"
         self.init_text(29)
 
@@ -354,8 +354,8 @@ class Save_seed(Hexagon_Button):
         File.close()
 
 class Resolution(Hexagon_Button):
-    def __init__(self,Window,Screen,Coords,Ctrl_Vars,Settings,value,text,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Window,Screen,Coords,Ctrl_Vars,Settings,value,text):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = text
         self.value = value
         self.init_text(30)
@@ -371,8 +371,8 @@ class Resolution(Hexagon_Button):
 
 #Extras ------------------
 class Music_Button(Hexagon_Button):
-    def __init__(self,Screen,Coords,N,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,N,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.music_library = ["6 Solutions per Side","Bad KpR","Beach Ball","Navy Blues","Approach","Think"]
         self.N = N
         if self.N < len(self.music_library):
@@ -391,8 +391,8 @@ class Music_Button(Hexagon_Button):
 
 #Settings
 class Default_Sound(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.Settings = Settings
         self.text = "Set Default"
@@ -408,8 +408,8 @@ class Default_Sound(Hexagon_Button):
         self.value = True
 
 class Save_Settings(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Save"
         self.init_text(38)
@@ -433,8 +433,8 @@ class Full_Screen(Hexagon_Button):
   
 #In game: play-------------
 class Resume(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Resume"
         self.init_text(36)
@@ -445,8 +445,8 @@ class Resume(Hexagon_Button):
         self.Ctrl_Vars.Game_Menu_Vars.Pause = False
 
 class Retry(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
+    def __init__(self,Screen,Coords,Ctrl_Vars):
+        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Retry"
         self.init_text(36)
