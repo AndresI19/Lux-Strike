@@ -14,6 +14,8 @@ class HUD():
         self.Money_bar = Currency_bar(Screen,Player.Stats)
         self.Mini_map = Mini_map(Screen,World,Player,Enemies)
         self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
+        self.Combo = Combo_meter(Screen,Player.Stats)
+        self.Keys = Keys(Screen,Player.Stats)
         self.init_text(World)
 
     def init_text(self,World):
@@ -64,6 +66,8 @@ class HUD():
         self.Mini_map.draw()
         self.Player_Stats.draw()
         self.Money_bar.draw()
+        self.Combo.draw()
+        self.Keys.draw()
         self.Screen.blit(self.font_image,self.font_rect)
         self.Dialog_box.draw()
         
@@ -314,6 +318,93 @@ class Currency_bar():
         self.number_animate()
         self.Screen.blit(self.Currency_image,self.Currency_rect)
         self.Screen.blit(self.font_image,self.font_rect)
+
+class Combo_meter():
+    def __init__(self,Screen,Stats):
+        """---------------------------
+        I DO NOT HAVE LICENCE TO USE FONT
+        ------------------------------"""
+        self.Screen = Screen
+        self.Screen_rect = Screen.get_rect()
+        self.Stats = Stats
+        size = 60
+        self.color = (255,255,255)
+        self.font = pygame.font.Font("HUD/Error.ttf",size)
+        self.frame = 0
+        self.frames = 10
+        self.update()
+
+    def color_switch(self):
+        if self.Stats.combo < 8:
+            x = 255 - self.Stats.combo*64
+            y=255
+            if self.Stats.combo >= 4:
+                x = 0
+                y = 255 - (self.Stats.combo - 4)*64
+            self.color = (255,y,x)
+        else:
+            self.color = (255,0,0)
+
+    def update(self):
+        self.animate = True
+        self.color_switch()
+        self.image = self.font.render("x{}".format(self.Stats.combo),False,self.color,None)
+        self.rect = self.image.get_rect()
+        self.position()
+
+    def position(self):
+        self.rect.right = self.Screen_rect.right - 40
+        self.rect.top = self.Screen_rect.top + 200
+
+    def Animate(self):
+        if self.animate:
+            if self.frame >= self.frames:
+                self.frame = 0
+                self.animate = False
+            else:
+                x = 1
+                if self.frame%2 ==0:
+                    x = -1
+                self.rect.right += x*2
+                self.frame += 1
+                
+    def draw(self):
+        self.Animate()
+        self.Screen.blit(self.image,self.rect)
+
+class Keys():
+    def __init__(self,Screen,Stats):
+        """---------------------------
+        I DO NOT HAVE LICENCE TO USE FONT
+        ------------------------------"""
+        self.Screen = Screen
+        self.Screen_rect = Screen.get_rect()
+        self.Stats = Stats
+        size = 40
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
+        self.init_key()
+
+        self.update()
+
+    def init_key(self):
+        self.key = pygame.image.load('Drops/Key.png').convert()
+        self.key.set_colorkey((255,0,255))
+        self.key_rect = self.key.get_rect()
+        self.key_rect.right = self.Screen_rect.right - 85
+        self.key_rect.top = self.Screen_rect.top + 120
+
+    def update(self):
+        color = (255,255,255)
+        self.text_image = self.font.render(": x{}".format(self.Stats.keys),False,color,None)
+        self.text_rect = self.text_image.get_rect()
+        self.text_rect.left = self.key_rect.right
+        self.text_rect.bottom = self.key_rect.bottom
+     
+    def draw(self):
+        self.Screen.blit(self.key,self.key_rect)
+        self.Screen.blit(self.text_image,self.text_rect)
+
+
 
 """#Bottom
 class Time_Weather():

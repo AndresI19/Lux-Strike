@@ -376,7 +376,8 @@ class Post_Generation():
 
         self.grid[x][y].elevation = self.elevation
         self.grid[x][y].ID = 101
-        self.grid[x-2][y].elevation = self.elevation
+        self.grid[x-2][y].ID = 102
+        self.grid[x-2][y].elevation = self.elevation + 2
 
     def set_all_cliffs(self):
         for col in range(self.Max_Columns):

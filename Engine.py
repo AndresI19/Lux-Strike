@@ -9,23 +9,23 @@ from Drops import Money_drop,Key
 """Action Phase"""
 #Not that Player input engine gets called brefore this.
 
-def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars):
+def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
     if Player.dx != 0 or Player.dy != 0:
-        Player_move(Ctrl_Vars,World,Player,Enemies,Drops)
+        Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD)
     update_elevation(Player,World)
     
     check_tall_block(World,Player,Ctrl_Vars)
     check_stairs(World,Player,Ctrl_Vars)
     check_death(Player,Ctrl_Vars)
 
-def enemy_turn(Ctrl_Vars,World,Player,Enemies):
+def enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD):
     x = Player.x + Player.dx
     y = Player.y + Player.dy
     for Enemy in Enemies.Group:
         Enemy.update_player_location(x,y)    #update knowledge of player projected location
         if Enemy.aware:
             Enemy.choose_direction()
-            Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies)
+            Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD)
         else:
             Enemy.scan_radius(Player,4)
     Enemies.Enemy_Group_Collsion()
@@ -48,7 +48,7 @@ def Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies):
         Player.reset_hitstun()
 
 #Player input engine vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-def check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
+def check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     hold_keys(Ctrl_Vars,Player)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -60,13 +60,13 @@ def check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
             MouseUp(event,Ctrl_Vars)
         #camera controls
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops)
+            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYDOWN:
-            KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops)
+            KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYUP:
             KEYUP(event,Ctrl_Vars,World)
 
-def animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
+def animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
@@ -76,7 +76,7 @@ def animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
         elif event.type == pygame.MOUSEBUTTONUP:
             MouseUp(event,Ctrl_Vars)
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops)
+            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYUP:
             KEYUP(event,Ctrl_Vars,World)    
 
@@ -103,14 +103,13 @@ def KEYUP(event,Ctrl_Vars,World):
         World.reset_highlight()
         Ctrl_Vars.a_down = False
 
-def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
+def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     if event.key == pygame.K_ESCAPE:
         Ctrl_Vars.Game_Menu_Vars.Menu_reset()
         Ctrl_Vars.Game_Menu_Vars.Pause = True
     #camera Center
     elif event.key == pygame.K_LSHIFT:
-        Center_Screen(Settings,World,Player,Enemies,Drops)
-        Ctrl_Vars.camera_follow = True
+        Camera.set_pan(4)
         Ctrl_Vars.LSHIFT_DOWN = True
     elif event.key == pygame.K_SPACE:
         Ctrl_Vars.box_count += 1
@@ -123,6 +122,8 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops):
         HUD.Dialog_box.init_dialog('Tutorial1')
     elif event.key == pygame.K_F2:
         World.Terrain[Player.y][Player.x].Hexagon_image.set_alpha(50)
+        for door in World.Doors:
+            door.Open(World)
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
@@ -192,14 +193,14 @@ def MouseUp(event,Ctrl_Vars):
     elif event.button == 2:
         Ctrl_Vars.Right_MouseDown = False
 
-def MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops):
+def MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     #handles relative movement of the mouse
     if Ctrl_Vars.Left_MouseDown:
         #drag
         dx = Settings.drag_sensativity*event.rel[0]
         dy = Settings.drag_sensativity*event.rel[1]
-        Translate_Screen((dx,dy),World,Player,Enemies,Drops)
-        Ctrl_Vars.camera_follow = False
+        Camera.Translate_Screen((dx,dy))
+        Camera.follow = False
 
 #Menu Engine. ------------------------------------------------------------
 def menu_management(Settings,Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,Game_Over,Num_Pad):
@@ -283,7 +284,7 @@ def num_keys(event,Ctrl_Vars):
 """Main Loop end *************************************************************************"""
 
 #Movement Checks vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
+def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     x = Player.x + Player.dx #projected tile
     y = Player.y + Player.dy
     if World.check_bounds(x,y): #in bounds?
@@ -292,6 +293,10 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
         return
+    if World.check_doors(Player,y,x):
+        Player.reset_direction()
+        HUD.Keys.update()
+        Ctrl_Vars.set_button_downs()
     if World.check_cliff(Player,y,x): #too high?
         sound = pygame.mixer.Sound("SFX/hit_wall.wav")
         pygame.mixer.Sound.play(sound)
@@ -302,17 +307,18 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops):
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
         Player.Stats.combo += 1
+        HUD.Combo.update()
         return
     else:
         Queue_movement(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
         Ctrl_Vars.end_turn() #end turn
 
-def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies):
+def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
     x = Enemy.x + Enemy.dx #projected direction
     y = Enemy.y + Enemy.dy
     boundry = World.check_bounds(x,y)
     cliff_obsticle = World.check_cliff(Enemy,y,x)
-    enemy_obsticle = E_check_occupancy(y,x,Player,Enemies)
+    enemy_obsticle = E_check_occupancy(y,x,Player,Enemies,HUD)
     stop_move = enemy_obsticle or cliff_obsticle or boundry
     if stop_move: #no need to make a thud noise, you dont care what the enemy noise makes
         Enemy.reset_direction()
@@ -323,55 +329,30 @@ def P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars):
     for Enemy in Enemies.Group: #Maybe you killed something
         if Enemy.x == x and Enemy.y == y:
             Enemy.SFX_death()
-            drop = Money_drop(
-                Enemies.Screen,Ctrl_Vars,[Enemy.x,Enemy.y],[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
-            )
+            if Enemy.key == True:
+                drop = Key(
+                    Enemies.Screen,Ctrl_Vars,[Enemy.x,Enemy.y],[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
+                )
+            else:
+                drop = Money_drop(
+                    Enemies.Screen,Ctrl_Vars,[Enemy.x,Enemy.y],[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
+                )
             Drops.Group.append(drop)
             Enemies.Group.remove(Enemy)
             Ctrl_Vars.end_phase()
             return True
     return False
 
-def E_check_occupancy(y,x,Player,Enemies):
+def E_check_occupancy(y,x,Player,Enemies,HUD):
     if Player.x == x and Player.y == y: #hit player?
-        Player.hurt()   
+        Player.hurt()
+        HUD.Combo.update()
         return True
     #FIXME:enemy on enemy collision: it might be fixed but keep an eye out
     for Enemy in Enemies.Group:
         if (Enemy.x) == x and (Enemy.y) == y:
             return True
     return False
-
-#Camera funtions ....
-def Center_Screen(Settings,World,Player,Enemies,Drops):
-    xf = 960 
-    yf = 440
-    xi = Player.MOB_rect.centerx
-    yi = Player.MOB_rect.centery
-    dx = xf - xi
-    dy = yf - yi
-    Translate_Screen((dx,dy),World,Player,Enemies,Drops)
-
-def Translate_Screen(coordinates,World,Player,Enemies,Drops):
-    dx = coordinates[0]
-    dy = coordinates[1]
-    World.translate(dx,dy)
-    Player.translate(dx,dy)
-    Enemies.translate(dx,dy)
-    Drops.translate(dx,dy)
-
-def Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops):
-    if Ctrl_Vars.camera_follow:
-        Center_Screen(Settings,World,Player,Enemies,Drops)
-    if Player.hitstun:
-        Camera_shake(4,Ctrl_Vars.phase_frame,World,Player,Enemies,Drops)
-
-def Camera_shake(degree,frame,World,Player,Enemies,Drops):
-    if frame%2 == 0:
-        x = degree
-    elif frame%2 == 1:
-        x = -1*degree
-    Translate_Screen((x,0),World,Player,Enemies,Drops)
 
 #Checking/Updating
 def check_stairs(World,Player,Ctrl_Vars):
@@ -474,11 +455,11 @@ def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     Max_parameters = (World.Max_Rows,World.Max_Columns)
     spawn_coord = (World.spawn_row,World.spawn_col)
     Player.__init__(Screen,spawn_coord)
-    Enemies.__init__(Screen,Max_parameters,World)
+    Enemies.__init__(Screen,Max_parameters,World,Player)
     HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
     Drops.__init__(HUD)
 
-def new_world_init(Ctrl_Vars,Screen,World,Window,Settings):
+def new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera):
     if Ctrl_Vars.Game_Menu_Vars.Random:
         World.__init__(Screen,None,Window,Settings)
         Ctrl_Vars.seed = str(World.seed)
@@ -489,12 +470,12 @@ def new_world_init(Ctrl_Vars,Screen,World,Window,Settings):
         Ctrl_Vars.Game_Menu_Vars.Custom = False
     elif Ctrl_Vars.restart_world:
         Ctrl_Vars.restart_world = False
-    Ctrl_Vars.camera_follow = True
+    Camera.follow = True
 
-def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops):
+def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     Ctrl_Vars.Game_Menu_Vars.load_world = False
     Ctrl_Vars.Game_Menu_Vars.Game_active = True
-    Center_Screen(Settings,World,Player,Enemies,Drops)
+    Camera.Center_Screen()
     Player.glue(World)
     Enemies.glue(World)
     pygame.mixer.music.load('Music/Navy Blues.mp3')

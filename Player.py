@@ -28,6 +28,14 @@ class MOB():
         self.spawn()
         
     #spawn player in start location
+    def compare_spawn(self,coords):
+        row,col = coords
+        allow = True
+        if row == self.spawn_row:
+            if col == self.spawn_col:
+                allow = False
+        return allow
+
     def spawn(self):
         self.y = self.spawn_col
         self.x = self.spawn_row
@@ -111,6 +119,8 @@ class MOB():
             i[0] += x
             i[1] += y
 
+    def get_coords(self):
+        return [self.MOB_rect.centerx,self.MOB_rect.centery]
     #Draw functions and animation loops for world entities
     def Draw(self):
         self.Screen.blit(self.MOB_image, self.MOB_rect)
@@ -182,3 +192,4 @@ class Stats():
         self.Laser_Heat = 0
         self.Money = 0
         self.combo = 0
+        self.keys = 0

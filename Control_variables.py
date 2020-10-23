@@ -7,7 +7,6 @@ class Ctrl_Vars():
 
         self.box_count = 0
 
-        self.camera_follow = True
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
         self.Start_Vars = Start_Menu_vars()

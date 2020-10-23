@@ -45,22 +45,22 @@ def seed_random_bound_int(seed,bounds,instance):
     if type(bounds) == tuple:
         if len(bounds) == 2:
             if bounds[1] > bounds[0]:
-                if instance < len(seed):
-                    length = abs(bounds[1]-bounds[0])
-                    register = []
-                    for i in range(length+1):
-                        register.append(bounds[0]+i)
-                    #------------------------------------------------------
-                    RNG = float(seed[instance:])
-                    order = pow(10,(-len(seed[instance:])))
-                    RNG = RNG*order
-                    for i in range(len(register)):
-                        partition = (i+1) * (1/len(register))
-                        if RNG < partition:
-                            return register[i]
+                if instance >= len(seed):
+                    seed = generate_seed_from_seed(seed,len(seed)+1-instance)
+                    instance = instance%len(seed)
+                length = abs(bounds[1]-bounds[0])
+                register = []
+                for i in range(length+1):
+                    register.append(bounds[0]+i)
                 #------------------------------------------------------
-                else:
-                    print('Seed is too small for the instance size')
+                RNG = float(seed[instance:])
+                order = pow(10,(-len(seed[instance:])))
+                RNG = RNG*order
+                for i in range(len(register)):
+                    partition = (i+1) * (1/len(register))
+                    if RNG < partition:
+                        return register[i]
+            #------------------------------------------------------
             else:
                 print('Second bound arguement must be larger than the first')
         else: 
@@ -111,6 +111,7 @@ def seed_weighted_bound_int(seed,bounds,instance,weights):
 
 def generate_seed_from_seed(seed,instance):
     #shuffles the numbers around in the seed to create a different seed for operations
+    final_seed = seed
     if not instance == 0:
         final_seed = ''
         factor = (19/7)

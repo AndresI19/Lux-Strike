@@ -250,11 +250,46 @@ class Pause_Envelope():
 
 class Game_Over_Envelope(Pause_Envelope):
     def __init__(self,Screen,Ctrl_Vars):
-        Pause_Envelope.__init__(self,Screen,Ctrl_Vars)
+        self.Screen = Screen
+        self.Ctrl_Vars = Ctrl_Vars
+        self.Screen_rect = self.Screen.get_rect()
         self.text = "Death"
         self.init_text(100)
         pygame.mixer.music.load('Music/Beach Ball.mp3')
         pygame.mixer.music.play(-1)
+        self.init_image()
+        self.init_menus()
+
+    def init_menus(self):
+        #Main options
+        """These are folders, each contain a few more options within them"""
+        self.Menus = []
+        #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
+        self.Menus.append(Buttons.Quit_Folder(self.Screen,[6,3],self.Ctrl_Vars))
+        self.Menus.append(Buttons.Retry(self.Screen,[4,3],self.Ctrl_Vars))
+
+    def init_image(self):
+        self.image = pygame.image.load('HUD/Death.png')
+        self.image.set_colorkey((255,0,255))
+        self.image_rect = self.image.get_rect()
+        self.image_rect.bottom = self.Screen_rect.bottom - 100
+        self.image_rect.centerx = self.Screen_rect.centerx
+
+    def init_text(self,size):
+        text_color = ((255,255,255))
+        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
+        font.set_bold(True)
+        self.font_image = font.render(self.text,True,text_color,None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.centerx = self.Screen_rect.centerx
+        self.font_rect.centery = 250
+
+    def draw(self):
+        self.Screen.fill((0,0,0))
+        self.Screen.blit(self.image,self.image_rect)
+        self.Screen.blit(self.font_image,self.font_rect)
+        for i in range(len(self.Menus)):
+            self.Menus[i].draw()
 
 class Game_Win_Envelope():
     def __init__(self,Screen,Ctrl_Vars):

@@ -17,6 +17,7 @@ class World():
         #Tile list
         self.Terrain = []
         self.highlighted_list = []
+        self.Doors = []
         #Spawn location
         self.spawn_row = 0
         self.spawn_col = 0
@@ -62,6 +63,9 @@ class World():
                     tile = T.Brick(self.Screen,col,row,cliffs,elevation)
                 elif ID == 101:
                     tile = T.Stairs(self.Screen,col,row,cliffs,elevation)
+                elif ID == 102:
+                    tile = T.Door(self.Screen,col,row,cliffs,elevation)
+                    self.Doors.append(tile)
                 self.Terrain[col].append(tile) 
 
     def find_player_spawn(self):
@@ -95,6 +99,16 @@ class World():
                 return False
             else:
                 return True
+
+    def check_doors(self,MOB,y,x):
+        for door in self.Doors:
+            if door.col == y and door.row == x:
+                if MOB.Stats.keys > 0:
+                    MOB.Stats.keys -= 1
+                    door.Open(self)
+                    return True
+        else:
+            return False
 
 ##Standard Functionalities
     def translate(self,dx,dy):

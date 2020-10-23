@@ -1,5 +1,6 @@
 import pygame.font
 import pygame
+import json
 pygame.font.init()
 
 """A text file is written with dialog in it. It is written in such a way
@@ -255,3 +256,5 @@ def set_setting(Code,Setting):
     File.seek(offset)
     File.writelines("{} = {} ".format(Code,Setting))
     File.close()
+
+#JSON SAVE GAME - MAP READ - SAVED SETTINGS and SEEDS

@@ -42,6 +42,8 @@ class Tile():
         self.highlighted = False
         self.highlight = highlight(Screen)
 
+        #self.Obstacle = None
+
     #check if the block in the foreground in front of the player is tall and needs to be transparent
     def check_tall_block(self,MOB,Ctrl_Vars):
         dZ = self.elevation - MOB.elevation
@@ -78,7 +80,6 @@ class Tile():
         self.elevate()
         self.check_render()
 
-    """EXPIRMENTAL"""
     def set_ledge_draw_height(self,cliffs):
         self.L_num = cliffs[0]
         self.C_num = cliffs[1]
@@ -91,6 +92,8 @@ class Tile():
             self.draw_extended_terrain()
             if self.highlighted:
                 self.highlight.draw(self.Hexagon_rect)
+            """if self.Obstacle != None:
+                self.Obstacle.draw()"""
 
     def draw_extended_terrain(self):
         #clean up this entire thing its gross and redundent
@@ -155,6 +158,10 @@ class Tile():
 
         self.Right_rect.bottom += y
         self.Right_rect.left += x
+
+        """if self.Obstacle != None:
+            self.Obstacle.rect.bottom += y
+            self.Obstacle.rect.left += x"""
 
         self.Character_Spot_Mainx = self.Hexagon_rect.centerx
         self.Character_Spot_Mainy = self.Hexagon_rect.bottom - round(self.Hexagon_rect.height/4)
@@ -291,6 +298,54 @@ class Stairs(Tile):
 
         self.Icon = Icon_Stairs(Screen,col,row,1)
 
+class Door(Tile):
+    def __init__(self,Screen,col,row,cliffs,elevation):
+        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+        self.Hexagon_image = pygame.image.load('Tiles/Brick/H00.png').convert()
+        self.Left_image = pygame.image.load('Tiles/Brick/L00.png').convert()
+        self.Center_image = pygame.image.load('Tiles/Brick/C01.png').convert()
+        self.Right_image = pygame.image.load('Tiles/Brick/R00.png').convert()
+        self.set_colorkey()
+        self.open = False
+
+        self.Icon = Icon_Brick(Screen,col,row,1)
+    
+    def Open(self,World):
+        if not self.open:
+            self.open = True
+            self.change_elevation(-2)
+            self.update_neighbor(World,2)
+            sound = pygame.mixer.Sound("SFX/door open.wav")
+            pygame.mixer.Sound.play(sound)
+    
+    def update_neighbor(self,World,x):
+        y = self.col
+        x = self.row
+        if self.col%2 == 0:
+            World.Terrain[y+1][x].R_num += 2
+            World.Terrain[y+1][x+1].L_num += 2
+        else:
+            World.Terrain[y+1][x-1].R_num += 2
+            World.Terrain[y+1][x].L_num += 2
+
+    def change_elevation(self,x):
+        self.elevation += x
+        self.L_num += x
+        self.C_num += x
+        self.R_num += x
+        self.Hexagon_rect.bottom -= self.Center_rect.height * (x)
+        self.Center_rect.bottom -= self.Center_rect.height * (x) -1
+        self.Left_rect.bottom -= self.Center_rect.height * (x) -2
+        self.Right_rect.bottom -= self.Center_rect.height * (x) -2 
+        self.Character_Spot_Mainy -= self.Center_rect.height * x
+
+    def draw(self):
+        if self.render:
+            self.Screen.blit(self.Hexagon_image, self.Hexagon_rect)
+            self.draw_extended_terrain()
+            if self.highlighted:
+                self.highlight.draw(self.Hexagon_rect)
+
 #Class for the mini map icons, one per tile instance
 class Icon():
     def __init__(self,Screen,col,row):
@@ -369,6 +424,21 @@ class Icon_Sand(Icon):
         self.image = pygame.image.load('Tiles/Beach/Mini00.png').convert()
         self.image.set_colorkey((255,0,255))
 
+#Obstacles
+class Obstacles():
+    def __init__(self,Screen,Tile):
+        self.Screen = Screen
+        self.image = pygame.image.load("Tiles/Obstacles/Tree00.png").convert()
+        self.image.set_colorkey((255,0,255))
+        self.rect = self.image.get_rect()
+        x,y = Tile.get_Character_Spot()
+        self.rect.centerx = x
+        self.rect.bottom = y + 20
+
+    def draw(self):
+        self.Screen.blit(self.image,self.rect)
+
+#Misc
 class highlight():
     def __init__(self,Screen):
         self.Screen = Screen

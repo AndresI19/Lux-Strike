@@ -1,4 +1,4 @@
-debug = False
+debug = True
 #import all modules from directory, as well as pygame lib
 #full modules
 from os import environ
@@ -18,6 +18,7 @@ from World import World
 from Enemies import ENEMIES
 from Drops import Drop_envelope
 from Player import Player
+from Camera import Camera
 
 #initialize clock function, settings, screen window
 clock = pygame.time.Clock()
@@ -83,20 +84,21 @@ while True:
                 Max_parameters = (World.Max_Rows,World.Max_Columns)
                 spawn_coord = (World.spawn_row,World.spawn_col)
                 Player = Player(Screen,spawn_coord)
-                Enemies = ENEMIES(Screen,Max_parameters,World)
+                Enemies = ENEMIES(Screen,Max_parameters,World,Player)
                 HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
                 Drops = Drop_envelope(HUD)
+                Camera = Camera(World,Player,Enemies,Drops)
                 Ctrl_Vars.initialized = True
             else:
-                Engine.new_world_init(Ctrl_Vars,Screen,World,Window,Settings) 
+                Engine.new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera) 
                 Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
-            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
+            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
         #-------------------------------------------------------------------------------------------*
         """Game loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
     else:
         Ctrl_Vars.merge_timer()
         if Ctrl_Vars.phase_active: #animation phase
-            Engine.animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops)
+            Engine.animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera)
             if Ctrl_Vars.TURN_PLAYER:
                 Engine.Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies)   
             elif Ctrl_Vars.TURN_ENEMY:
@@ -104,11 +106,12 @@ while True:
         else: #Ctrl_Vars.phase_active == False, action phase
             if Ctrl_Vars.TURN_PLAYER:
                 Engine.check_drops(Player,Drops)
-                Engine.check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops)
-                Engine.Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars)
+                Engine.check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera)
+                Engine.Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD)
             else:
-                Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies)
+                Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD)
 
-        Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
+        Camera.View(Ctrl_Vars)
+        #Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
     Graphics.scale(Window,Screen,Settings)

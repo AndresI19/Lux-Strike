@@ -37,7 +37,7 @@ class Hexagon_Button():
 
         #Text (Default string and size)
         self.text = "N/A"
-        self.init_text(36)
+        self.init_text()
 
         self.sound = pygame.mixer.Sound("SFX/Button_press.wav")
 
@@ -58,12 +58,56 @@ class Hexagon_Button():
         self.rect.left = self.left
         self.rect.bottom = self.bottom
 
-    def init_text(self,size):
+    def init_text(self):
+        def size_text():
+            font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",self.size)
+            font.set_bold(True)
+            words = self.text.split()
+            largest_word = words[0]
+            if len(words) > 1:
+                for word in words:
+                    if len(word) >= len(largest_word):
+                        largest_word = word
+            TstFntImg = font.render(largest_word,True,text_color,None)
+            rect = TstFntImg.get_rect()
+            while rect.width > self.height - 40 or self.size <= 3:
+                self.size -= 1
+                font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",self.size)
+                font.set_bold(True)
+                TstFntImg = font.render(largest_word,True,text_color,None)
+                rect = TstFntImg.get_rect()
+            self.text_size = (rect.width,rect.height)
+            return font
+            
+        def Make_image():
+            words = self.text.split()
+            image = font.render(words[0],False,text_color,None)
+            if len(words) > 1:
+                surface_rect = (self.text_size[0],self.text_size[1]*len(words))
+                surface = pygame.Surface(surface_rect)
+                surface.fill((255,255,255))
+
+                rect = image.get_rect()
+                rect.centerx = surface_rect[0]//2
+                surface.blit(image,rect)
+                for i in range(len(words)-1):
+                    next_image = font.render(words[i+1],False,text_color,None)
+                    next_rect = next_image.get_rect()
+                    next_rect.top = rect.bottom
+                    next_rect.centerx = surface_rect[0]//2
+                    surface.blit(next_image,next_rect)
+                    rect = next_rect
+                surface.set_colorkey((255,255,255))
+                image = surface
+            else:
+                image = font.render(self.text,True,text_color,None)
+            return image
+        
         #intialize text image using text in self memory
+        self.size = 40
         text_color = ((2,2,70))
-        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
-        font.set_bold(True)
-        self.font_image = font.render(self.text,True,text_color,None)
+        font = size_text()
+        self.font_image = Make_image()
         self.font_rect = self.font_image.get_rect()
         self.font_rect.centerx = self.rect.centerx
         self.font_rect.centery = self.rect.centery
@@ -129,6 +173,7 @@ class Hexagon_Button():
 
     def draw_text(self):
         self.Screen.blit(self.font_image,self.font_rect)
+
 #Mother Folder vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 class Folder(Hexagon_Button):
     """A class of button that holds a foldable submenu of buttons"""
@@ -264,7 +309,7 @@ class Start_Navigation(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
         self.GoTo = GoTo
         self.text = Text
-        self.init_text(30)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -275,7 +320,7 @@ class Menu_Navagation(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,load_type,Text,active = True):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
         self.text = Text
-        self.init_text(36)
+        self.init_text()
         self.load_type = load_type
 
     def functionality(self):
@@ -298,7 +343,7 @@ class Key(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,value):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "{}".format(str(value))
-        self.init_text(44)
+        self.init_text()
         self.value = str(value)
 
     def functionality(self):
@@ -310,7 +355,7 @@ class Del_Key(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Del"
-        self.init_text(44)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -320,7 +365,7 @@ class Enter_Key(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Enter"
-        self.init_text(36)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -334,7 +379,7 @@ class Clear(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Clear"
-        self.init_text(44)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -344,7 +389,7 @@ class Save_seed(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Save Seed"
-        self.init_text(29)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -358,7 +403,7 @@ class Resolution(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = text
         self.value = value
-        self.init_text(30)
+        self.init_text()
         self.Window = Window
         self.Settings = Settings
 
@@ -379,7 +424,7 @@ class Music_Button(Hexagon_Button):
             self.text = self.music_library[N]
         else:
             self.text = 'N/A'
-        self.init_text(30)
+        self.init_text()
 
     def functionality(self):
         if self.N < len(self.music_library):
@@ -396,7 +441,7 @@ class Default_Sound(Hexagon_Button):
         self.clicked = False
         self.Settings = Settings
         self.text = "Set Default"
-        self.init_text(29)
+        self.init_text()
         self.value = False
 
     def reset(self):
@@ -412,7 +457,7 @@ class Save_Settings(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Save"
-        self.init_text(38)
+        self.init_text()
         self.Settings = Settings
 
     def functionality(self):
@@ -425,7 +470,7 @@ class Full_Screen(Hexagon_Button):
         self.Settings = Settings
         self.clicked = False
         self.text = "Full Screen"
-        self.init_text(28)
+        self.init_text()
     
     def functionality(self):
         #activates campaign mode
@@ -437,7 +482,7 @@ class Resume(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Resume"
-        self.init_text(36)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -449,7 +494,7 @@ class Retry(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
         self.clicked = False
         self.text = "Retry"
-        self.init_text(36)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -465,7 +510,7 @@ class Quit(Hexagon_Button):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
         self.clicked = False
         self.text = "Desktop"
-        self.init_text(36)
+        self.init_text()
 
     def functionality(self):
         #activates campaign mode
@@ -478,7 +523,7 @@ class Play(Folder):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Folder.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Play!"
-        self.init_text(36)
+        self.init_text()
 
     def build_submenu(self):
         #Play Options ----
@@ -498,7 +543,7 @@ class Extras(Folder):
     def build_submenu(self):
         #Extras Options ----
         self.text = "Extras!"
-        self.init_text(36)
+        self.init_text()
         self.Buttons = []
         Jukebox_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Jukebox","Jukebox",True)
         Gallary_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
@@ -511,7 +556,7 @@ class Settings(Folder):
     def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
         Folder.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = 'Settings'
-        self.init_text(36)
+        self.init_text()
         
     def build_submenu(self):
         #Settings Options ----
@@ -528,7 +573,7 @@ class Quit_Folder(Folder):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Folder.__init__(self,Screen,Coords,Ctrl_Vars)
         self.text = "Quit"
-        self.init_text(36)
+        self.init_text()
 
     def build_submenu(self):
         #Settings Options ----

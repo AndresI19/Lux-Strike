@@ -1,27 +1,54 @@
 import pygame
 from Player import MOB
-from RNG import seed_random_bound_int
+from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
 import random
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():
-    def __init__(self,Screen,Max_Parameters,World):
+    def __init__(self,Screen,Max_Parameters,World,player):
         self.Group = []
-        self.max_enemies = 15
+        self.max_enemies = 18
         self.Screen = Screen
         self.Max_Parameters = Max_Parameters
-        self.spawn_random(World.seed)
+        self.spawn_random(World.seed,player)
 
-    def spawn_random(self,seed):
-        #finds random spawning locations. TODO: change this into a while loop to prevent spawning on top of eachother
-        for i in range(self.max_enemies):
-            Mx = (0,self.Max_Parameters[0]-1)
-            My = (0,self.Max_Parameters[1]-1)
-            x = seed_random_bound_int(seed,Mx,i)
-            y = seed_random_bound_int(seed,My,i+1)
+    def spawn_random(self,seed,player):
+        enemies_left = self.max_enemies
+        Mx = (0,self.Max_Parameters[0]-1)
+        My = (0,self.Max_Parameters[1]-1)
+        def compare():
+            if not player.compare_spawn([y,x]):
+                return False
+            for Enemy in self.Group:
+                if not Enemy.compare_spawn([y,x]):
+                    return False
+            return True
+
+        count = 0
+        while enemies_left >= 0:
+            x = seed_random_bound_int(seed,Mx,count)
+            y = seed_random_bound_int(seed,My,count+1)
+            count += 2
+            if compare():
+                #Enemy = self.choose_enemy(seed,count,x,y)
+                Enemy = enemy(self.Screen,(y,x))
+                self.Group.append(Enemy)
+                enemies_left -= 1
+            if count > self.max_enemies*3:
+                print("Spawn went too long")
+                return
+
+        i = seed_random_bound_int(seed,(0,self.max_enemies),3)
+        self.Group[i].key = True
+
+    def choose_enemy(self,seed,count,x,y):
+        i = seed_random_choice(seed,[True,False],count - 1)
+        if i:
             Enemy = enemy(self.Screen,(y,x))
-            self.Group.append(Enemy)
+        else:
+            Enemy = nest(self.Screen,(y,x))
+        return Enemy
 
     def update_player_location(self,x,y):
         for i in range(len(self.Group)):
@@ -65,7 +92,8 @@ class ENEMIES():
     def translate(self,x,y):
         for i in range(len(self.Group)):
             self.Group[i].translate(x,y)
-
+            self.Group[i].check_render()
+            
     def Icon_draw(self):
         for i in range(len(self.Group)):
             self.Group[i].Icon.draw()
@@ -86,6 +114,17 @@ class enemy(MOB):
         choice = random.randrange(0,2)
         self.death_SFX = pygame.mixer.Sound("SFX/Death Honk{}.wav".format(choice))
         self.Aware_animation = exclamation_mark()
+
+        self.Screen_rect = self.Screen.get_rect()
+        self.check_render()
+        
+        self.key = False
+
+    def check_render(self):
+        self.render = False
+        if self.MOB_rect.top >= 0 and self.MOB_rect.top <= self.Screen_rect.bottom:
+            if self.MOB_rect.right >= 0 and self.MOB_rect.left <= self.Screen_rect.right:
+                self.render = True
 
     def SFX_death(self):
         pygame.mixer.Sound.play(self.death_SFX)
@@ -188,10 +227,18 @@ class enemy(MOB):
                 )
 ##Standard
     def Draw(self):
-        self.Screen.blit(self.MOB_image, self.MOB_rect)
-        if self.Aware_animation.active:
-            self.Aware_animation.activate((self.MOB_rect.centerx,self.MOB_rect.top)) #refactored for updating
-            self.Aware_animation.draw(self.Screen)
+        if self.render:
+            self.Screen.blit(self.MOB_image, self.MOB_rect)
+            if self.Aware_animation.active:
+                self.Aware_animation.activate((self.MOB_rect.centerx,self.MOB_rect.top)) #refactored for updating
+                self.Aware_animation.draw(self.Screen)
+
+class nest(enemy):
+    def __init__(self,Screen,coordinates):
+        enemy.__init__(self,Screen,coordinates)
+        self.MOB_image = pygame.image.load('Enemies/Swanzai_nest.png').convert()
+        self.MOB_image.set_colorkey((255,0,255))
+        self.MOB_rect = self.MOB_image.get_rect()
 
 class exclamation_mark():
     def __init__(self):
