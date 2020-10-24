@@ -5,9 +5,35 @@ from random import randint
 """We all knew we would get here one day"""
 ##new file, early comments and refactorying
 class Drop_envelope():
-    def __init__(self,HUD):
+    def __init__(self,Screen,Ctrl_Vars,HUD,Stats):
+        self.Screen = Screen
+        self.Ctrl_Vars = Ctrl_Vars
         self.Group = []
+        self.Money_Group = []
         self.HUD = HUD
+        self.Stats = Stats
+
+    def enemy_drop(self,Enemy,coords):
+        if Enemy.key == True:
+            drop = Key(
+                self.Screen,self.Ctrl_Vars,coords,[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
+            )
+            self.Group.append(drop)
+        else:
+            self.build_money(coords,[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom])
+
+    def build_money(self,coords,position):
+        x,y = coords
+        for drop in self.Group:
+            if drop.value >= 0:
+                if  drop.x == x and drop.y == y:
+                    value = drop.value + 100 * (self.Stats.combo + 1)
+                    new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,None,value)
+                    self.Group.remove(drop)
+                    self.Group.append(new_drop)
+                    return
+        new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,self.Stats.combo)
+        self.Group.append(new_drop)
 
     def check_pick_up(self,Player):
         for drop in self.Group:
@@ -53,7 +79,7 @@ class Drops():
 
     def check_render(self):
         self.render = False
-        if self.rect.top >= 0 and self.rect.top <= self.Screen_rect.bottom:
+        if self.rect.bottom >= 0 and self.rect.top <= self.Screen_rect.bottom:
             if self.rect.right >= 0 and self.rect.left <= self.Screen_rect.right:
                 self.render = True
 
@@ -64,17 +90,25 @@ class Drops():
         pygame.mixer.Sound.play(sound)
 
 class Money_drop(Drops):
-    def __init__(self,Screen,Ctrl_Vars,coords,position):
+    def __init__(self,Screen,Ctrl_Vars,coords,position,combo = None,value = None):
         Drops.__init__(self,Screen,coords,position)
         self.Ctrl_Vars = Ctrl_Vars
-        self.value = 1000
-        self.image = pygame.image.load('Drops/Money.png').convert()
+        if value == None:
+            self.value = 100 * (combo + 1)
+            x = combo + 1
+        else:
+            self.value = value
+            x = value//100 
+        if x >= 16:
+            x = 16
+        self.image = pygame.image.load('Drops/Money{}.png'.format(x)
+        ).convert()
         self.image_init()
         self.position(coords,position)
 
     def functionality(self,Player):
         #self.Ctrl_Vars.wallet += self.value
-        Player.Stats.Money += round(self.value * (1 + Player.Stats.combo/2))
+        Player.Stats.Money += self.value#round(self.value * (1 + Player.Stats.combo/2))
 
 class Key(Drops):
     def __init__(self,Screen,Ctrl_Vars,coords,position):

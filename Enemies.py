@@ -3,16 +3,45 @@ from Player import MOB
 from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
 import random
+from Drops import Money_drop,Key
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():
-    def __init__(self,Screen,Max_Parameters,World,player):
+    def __init__(self,Screen,Max_Parameters,World,Player):
         self.Group = []
         self.max_enemies = 18
         self.Screen = Screen
         self.Max_Parameters = Max_Parameters
-        self.spawn_random(World.seed,player)
+        self.spawn_random(World.seed,Player)
+        self.Stats = Player.Stats
 
+###Enemy operations vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    def check_kill(self,Ctrl_Vars,Drops,x,y):
+        for Enemy in self.Group: #Maybe you killed something
+            if Enemy.x == x and Enemy.y == y:
+                Enemy.SFX_death()
+                Drops.enemy_drop(Enemy,[x,y])
+                self.Group.remove(Enemy)
+                self.Stats.combo += 1
+                return True
+        return False
+
+###Other vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    def Enemy_Group_Collsion(self):
+        for i in range(len(self.Group)):
+            for j in range(i + 1, len(self.Group)):
+                self.compare(self.Group[i], self.Group[j])
+
+    def compare(self,Subject,Object):
+        SX = Subject.x + Subject.dx
+        SY = Subject.y + Subject.dy
+        OX = Object.x + Object.dx
+        OY = Object.y + Object.dy
+        if SX == OX and SY == OY:
+            Object.reset_direction()
+            Object.track = []
+
+###Spawning vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def spawn_random(self,seed,player):
         enemies_left = self.max_enemies
         Mx = (0,self.Max_Parameters[0]-1)
@@ -50,28 +79,6 @@ class ENEMIES():
             Enemy = nest(self.Screen,(y,x))
         return Enemy
 
-    def update_player_location(self,x,y):
-        for i in range(len(self.Group)):
-            self.Group[i].update_player_location(x,y)
-
-    def update_Icon(self):
-        for i in range(len(self.Group)):
-            self.Group[i].Icon.update_coo(self.x,self.y)
-
-    def Enemy_Group_Collsion(self):
-        for i in range(len(self.Group)):
-            for j in range(i + 1, len(self.Group)):
-                self.compare(self.Group[i], self.Group[j])
-
-    def compare(self,Subject,Object):
-        SX = Subject.x + Subject.dx
-        SY = Subject.y + Subject.dy
-        OX = Object.x + Object.dx
-        OY = Object.y + Object.dy
-        if SX == OX and SY == OY:
-            Object.reset_direction()
-            Object.track = []
-
 ###Movement vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def choose_direction(self):
         for i in range(len(self.Group)):
@@ -98,6 +105,14 @@ class ENEMIES():
         for i in range(len(self.Group)):
             self.Group[i].Icon.draw()
 
+    def update_player_location(self,x,y):
+        for i in range(len(self.Group)):
+            self.Group[i].update_player_location(x,y)
+
+    def update_Icon(self):
+        for i in range(len(self.Group)):
+            self.Group[i].Icon.update_coo(self.x,self.y)
+
 """Basic Enemy, using swanzie as a place holder --------------------------------------------------------"""
 class enemy(MOB):
     def __init__(self,Screen,coordinates):
@@ -122,7 +137,7 @@ class enemy(MOB):
 
     def check_render(self):
         self.render = False
-        if self.MOB_rect.top >= 0 and self.MOB_rect.top <= self.Screen_rect.bottom:
+        if self.MOB_rect.bottom >= 0 and self.MOB_rect.top <= self.Screen_rect.bottom:
             if self.MOB_rect.right >= 0 and self.MOB_rect.left <= self.Screen_rect.right:
                 self.render = True
 

@@ -1,4 +1,4 @@
-debug = True
+debug = False
 #import all modules from directory, as well as pygame lib
 #full modules
 from os import environ
@@ -86,7 +86,7 @@ while True:
                 Player = Player(Screen,spawn_coord)
                 Enemies = ENEMIES(Screen,Max_parameters,World,Player)
                 HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
-                Drops = Drop_envelope(HUD)
+                Drops = Drop_envelope(Screen,Ctrl_Vars,HUD,Player.Stats)
                 Camera = Camera(World,Player,Enemies,Drops)
                 Ctrl_Vars.initialized = True
             else:

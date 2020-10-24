@@ -2,7 +2,6 @@ import pygame
 import pygame.display
 import sys
 from Graphics import Menu_diplay
-from Drops import Money_drop,Key
 
 """Main Loop *************************************************************************"""
 #Game Engine. (Turn Based Engine) ++++++++++++++++++++++++++++++++++++++++
@@ -112,8 +111,17 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
         Camera.set_pan(4)
         Ctrl_Vars.LSHIFT_DOWN = True
     elif event.key == pygame.K_SPACE:
-        Ctrl_Vars.box_count += 1
-        HUD.Dialog_box.init_box()
+        if Ctrl_Vars.LSHIFT_DOWN == False:
+            Ctrl_Vars.box_count += 1
+            HUD.Dialog_box.init_box()
+        else:
+            if Player.Stats.Laser_Heat < 5:
+                Player.Stats.Laser_Heat += 1
+                HUD.Laser_Gauge.init_charge()
+                laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.x,Player.y],Player.off_center)
+                HUD.Combo.update()
+                Ctrl_Vars.end_phase()
+
     elif event.key == pygame.K_F1:
         #Dev Button
         print("Player Grid Coordinates = X: {}, Y:{}".format(Player.x,Player.y))
@@ -285,74 +293,56 @@ def num_keys(event,Ctrl_Vars):
 
 #Movement Checks vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
-    x = Player.x + Player.dx #projected tile
-    y = Player.y + Player.dy
-    if World.check_bounds(x,y): #in bounds?
+    def thud():
         sound = pygame.mixer.Sound("SFX/hit_wall.wav")
         pygame.mixer.Sound.play(sound)
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
+
+    x = Player.x + Player.dx #projected tile
+    y = Player.y + Player.dy
+    if World.check_bounds(x,y): #in bounds?
+        thud()
         return
     if World.check_doors(Player,y,x):
         Player.reset_direction()
         HUD.Keys.update()
         Ctrl_Vars.set_button_downs()
     if World.check_cliff(Player,y,x): #too high?
-        sound = pygame.mixer.Sound("SFX/hit_wall.wav")
-        pygame.mixer.Sound.play(sound)
-        Player.reset_direction()
-        Ctrl_Vars.set_button_downs()
+        thud()
         return
-    if P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars): #hit an enemy?
+    if Enemies.check_kill(Ctrl_Vars,Drops,x,y): #hit enemy?
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
-        Player.Stats.combo += 1
         HUD.Combo.update()
+        Ctrl_Vars.end_phase()
         return
     else:
         Queue_movement(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
         Ctrl_Vars.end_turn() #end turn
 
 def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
+    def collision(x,y):
+        if Player.x == x and Player.y == y: #hit player?
+            Player.hurt()
+            HUD.Combo.update()
+            return True
+        #TODO: Enemy on enemy collision leaves gaps, might have to do with list ordering
+        for Enemy in Enemies.Group:
+            if (Enemy.x) == x and (Enemy.y) == y:
+                return True
+        return False
+
     x = Enemy.x + Enemy.dx #projected direction
     y = Enemy.y + Enemy.dy
     boundry = World.check_bounds(x,y)
     cliff_obsticle = World.check_cliff(Enemy,y,x)
-    enemy_obsticle = E_check_occupancy(y,x,Player,Enemies,HUD)
+    enemy_obsticle = collision(x,y)
     stop_move = enemy_obsticle or cliff_obsticle or boundry
     if stop_move: #no need to make a thud noise, you dont care what the enemy noise makes
         Enemy.reset_direction()
     else:
         Queue_movement(Enemy,World,Ctrl_Vars.phase_Frames) #make a line
-
-def P_check_occupancy(y,x,Enemies,Drops,Ctrl_Vars):
-    for Enemy in Enemies.Group: #Maybe you killed something
-        if Enemy.x == x and Enemy.y == y:
-            Enemy.SFX_death()
-            if Enemy.key == True:
-                drop = Key(
-                    Enemies.Screen,Ctrl_Vars,[Enemy.x,Enemy.y],[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
-                )
-            else:
-                drop = Money_drop(
-                    Enemies.Screen,Ctrl_Vars,[Enemy.x,Enemy.y],[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
-                )
-            Drops.Group.append(drop)
-            Enemies.Group.remove(Enemy)
-            Ctrl_Vars.end_phase()
-            return True
-    return False
-
-def E_check_occupancy(y,x,Player,Enemies,HUD):
-    if Player.x == x and Player.y == y: #hit player?
-        Player.hurt()
-        HUD.Combo.update()
-        return True
-    #FIXME:enemy on enemy collision: it might be fixed but keep an eye out
-    for Enemy in Enemies.Group:
-        if (Enemy.x) == x and (Enemy.y) == y:
-            return True
-    return False
 
 #Checking/Updating
 def check_stairs(World,Player,Ctrl_Vars):
@@ -402,52 +392,46 @@ def Queue_movement(MOB,World,N):
             x += increment
 
 def Scan_line(World,MOB,Start,stagger):
-    Next = select_line_path(MOB,Start,stagger)
-    off_center = Next[1]
-    Next = Next[0]
-    if check_line(World,Start,Next):    #Else end
-        Scan_line(World,MOB,Next,off_center)
+    def select_line_path(stagger):
+        off_center = stagger
+        Next_x,Next_y = Start
+        if MOB.D == 'S':
+            Next_y -= 2
+        elif MOB.D == 'N':
+            Next_y += 2
+        off_center *= -1
+        if MOB.D == 'NE':
+            Next_y += 1
+            if off_center == -1:
+                Next_x += 1
+        elif MOB.D == 'NW':
+            Next_y += 1
+            if off_center == 1:
+                Next_x -= 1
+        elif MOB.D == 'SW':
+            Next_y -= 1
+            if off_center == 1:
+                Next_x -= 1
+        elif MOB.D == 'SE':
+            Next_y -= 1
+            if off_center == -1:
+                Next_x += 1
+        return [(Next_x,Next_y),off_center]
 
-def select_line_path(MOB,Start,stagger):
-    Next_x = Start[0]
-    Next_y = Start[1]
-    off_center = stagger
-    if MOB.D == 'S':
-        Next_y -= 2
-    elif MOB.D == 'N':
-        Next_y += 2
-    off_center *= -1
-    if MOB.D == 'NE':
-        Next_y += 1
-        if off_center == -1:
-            Next_x += 1
-    elif MOB.D == 'NW':
-        Next_y += 1
-        if off_center == 1:
-            Next_x -= 1
-    elif MOB.D == 'SW':
-        Next_y -= 1
-        if off_center == 1:
-            Next_x -= 1
-    elif MOB.D == 'SE':
-        Next_y -= 1
-        if off_center == -1:
-            Next_x += 1
-    return [(Next_x,Next_y),off_center]
+    def check_line():
+        Next_x,Next_y = Next
+        row_bound = Next_y >= 0 and Next_y < World.Max_Rows
+        col_bound = Next_x >= 0 and Next_x < World.Max_Columns
+        if row_bound and col_bound:
+            if World.Terrain[Next_y][Next_x].elevation == MOB.elevation:
+                World.Terrain[Next_y][Next_x].highlighted = True
+                World.highlighted_list.append([Next_y,Next_x])
+                return True
+        return False
 
-def check_line(World,Start,Next):
-    Start_x,Start_y = Start
-    Next_x,Next_y = Next
-    row_bound = Next_y >= 0 and Next_y < World.Max_Rows
-    col_bound = Next_x >= 0 and Next_x < World.Max_Columns
-    if row_bound and col_bound:
-        DZ = World.Terrain[Next_y][Next_x].elevation - World.Terrain[Start_y][Start_x].elevation
-        if DZ == 0:
-            World.Terrain[Next_y][Next_x].highlighted = True
-            World.highlighted_list.append([Next_y,Next_x])
-            return True
-        else:
-            return False
+    Next,stagger = select_line_path(stagger)
+    if check_line():    #Else end
+        Scan_line(World,MOB,Next,stagger)
 
 ##initialization
 def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
@@ -457,7 +441,7 @@ def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     Player.__init__(Screen,spawn_coord)
     Enemies.__init__(Screen,Max_parameters,World,Player)
     HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
-    Drops.__init__(HUD)
+    Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
 
 def new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera):
     if Ctrl_Vars.Game_Menu_Vars.Random:
@@ -480,3 +464,46 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     Enemies.glue(World)
     pygame.mixer.music.load('Music/Navy Blues.mp3')
     pygame.mixer.music.play(-1)
+
+##Laser action
+def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start,stagger):
+    def select_line_path(stagger):
+        off_center = stagger
+        Next_x,Next_y = Start
+        if MOB.D == 'S':
+            Next_y -= 2
+        elif MOB.D == 'N':
+            Next_y += 2
+        off_center *= -1
+        if MOB.D == 'NE':
+            Next_y += 1
+            if off_center == -1:
+                Next_x += 1
+        elif MOB.D == 'NW':
+            Next_y += 1
+            if off_center == 1:
+                Next_x -= 1
+        elif MOB.D == 'SW':
+            Next_y -= 1
+            if off_center == 1:
+                Next_x -= 1
+        elif MOB.D == 'SE':
+            Next_y -= 1
+            if off_center == -1:
+                Next_x += 1
+        return [(Next_x,Next_y),off_center]
+
+    def check_line():
+        Next_x,Next_y = Next
+        row_bound = Next_y >= 0 and Next_y < World.Max_Rows
+        col_bound = Next_x >= 0 and Next_x < World.Max_Columns
+        if row_bound and col_bound:
+            if World.Terrain[Next_y][Next_x].elevation <= MOB.elevation:
+                World.laser_list.append([Next_y,Next_x])
+                if World.Terrain[Next_y][Next_x].elevation == MOB.elevation:
+                    return not Enemies.check_kill(Ctrl_Vars,Drops,Next_x,Next_y)
+        return False
+
+    Next,stagger = select_line_path(stagger)
+    if check_line():    #Else end
+        laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next,stagger)

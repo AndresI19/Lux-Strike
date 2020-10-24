@@ -17,6 +17,7 @@ class World():
         #Tile list
         self.Terrain = []
         self.highlighted_list = []
+        self.laser_list = []
         self.Doors = []
         #Spawn location
         self.spawn_row = 0

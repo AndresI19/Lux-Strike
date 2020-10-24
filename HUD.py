@@ -16,6 +16,7 @@ class HUD():
         self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
         self.Combo = Combo_meter(Screen,Player.Stats)
         self.Keys = Keys(Screen,Player.Stats)
+        self.Laser_Gauge = Laser_Gauge(Screen,Player.Stats)
         self.init_text(World)
 
     def init_text(self,World):
@@ -68,6 +69,7 @@ class HUD():
         self.Money_bar.draw()
         self.Combo.draw()
         self.Keys.draw()
+        self.Laser_Gauge.draw()
         self.Screen.blit(self.font_image,self.font_rect)
         self.Dialog_box.draw()
         
@@ -362,7 +364,7 @@ class Combo_meter():
                 self.frame = 0
                 self.animate = False
             else:
-                x = 1
+                x = 2
                 if self.frame%2 ==0:
                     x = -1
                 self.rect.right += x*2
@@ -404,6 +406,66 @@ class Keys():
         self.Screen.blit(self.key,self.key_rect)
         self.Screen.blit(self.text_image,self.text_rect)
 
+class Laser_Gauge():
+    def __init__(self,Screen,Stats):
+        self.Screen = Screen
+        self.Screen_rect = Screen.get_rect()
+        self.Stats = Stats
+        self.colors = [(0,0,0),(0,255,217),(187,255,0),(255,255,0),(255,115,0),(255,0,42)]
+        self.init_images()
+        self.init_charge()
+        self.frames = 0
+        self.count = 0
+
+    def init_images(self):
+        self.background = pygame.image.load("HUD/gauge back.png")
+        self.background_rect = self.background.get_rect()
+        self.fore_bar = pygame.image.load("HUD/gauge fore.png").convert()
+        self.fore_bar.set_colorkey((255,0,255))
+        self.bar_rect = self.fore_bar.get_rect()
+
+        self.background_rect.left = self.Screen_rect.left + 30
+        self.background_rect.bottom = self.Screen_rect.bottom - 100
+
+        self.bar_rect.left = self.background_rect.left + 6
+        self.bar_rect.bottom = self.background_rect.bottom - 90
+
+    def init_charge(self):
+        i = self.Stats.Laser_Heat
+        color = self.colors[i]
+        self.charge = pygame.Surface((62,85*i))
+        self.charge.fill(color)
+        self.charge_rect = self.charge.get_rect()
+        self.charge_rect.left = self.background_rect.left + 6
+        self.charge_rect.bottom = self.background_rect.bottom - 10
+        self.set_jiggle()
+
+    def set_jiggle(self):
+        self.loop = False
+        self.frames = 6 + 2 * (self.Stats.Laser_Heat * self.Stats.Laser_Heat)/2
+        self.range = self.Stats.Laser_Heat
+
+    def jiggle(self,):
+        x = self.range
+        if self.frames != 0:
+            if self.count%2 == 0:
+                x *= -1
+            self.background_rect.left += x
+            self.charge_rect.left += x
+            self.bar_rect.left += x
+            self.count += 1
+            if self.count+1  >= self.frames:
+                self.frames = 0
+                self.count = 0
+
+    def draw(self):
+        self.jiggle()
+        self.Screen.blit(self.background,self.background_rect)
+        self.Screen.blit(self.charge,self.charge_rect)
+        for i in range(4):
+            bar = self.bar_rect.copy()
+            bar.bottom -= i * 85
+            self.Screen.blit(self.fore_bar,bar)
 
 
 """#Bottom
