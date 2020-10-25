@@ -37,15 +37,6 @@ class Camera():
         dy = yf - yi
         self.Translate_Screen((dx,dy))
 
-    """def Center_Screen(self,Destination,Center = [960,440]):
-        xf = Center[0]
-        yf = Center[1]
-        xi = Destination[0]
-        yi = Destination[1]
-        dx = xf - xi
-        dy = yf - yi
-        self.Translate_Screen((dx,dy))"""
-
     def set_pan(self,frames,Subject = None,Center = [960,440]):
         if Subject == None:
             #defualt subject is the player

@@ -258,15 +258,15 @@ class Currency_bar():
         self.Screen = Screen
         self.Stats = Stats
         self.Currency_images = []
-        for i in range(14):
+        for i in range(17):
             image = pygame.image.load(
-                'HUD/Currency{}.png'.format(i)
+                'HUD/Money{}.png'.format(i)
                 ).convert()
             image.set_colorkey((255,0,255))
             self.Currency_images.append(image)
         self.Currency_image = self.Currency_images[0]
         self.Currency_rect = self.Currency_image.get_rect()
-        self.position((1720,20))
+        self.position((1735,20))
 
         self.value = self.Stats.Money
         self.display_amount = self.value
@@ -275,7 +275,7 @@ class Currency_bar():
         self.init_text()
 
         self.animate_text = False
-        self.Frames = 14 * 3
+        self.Frames = 17 * 2
         self.frame = 0
         self.frame2 = 0
         
@@ -288,22 +288,22 @@ class Currency_bar():
             str(self.display_amount),True,(255,255,255),None)
         self.font_rect = self.font_image.get_rect()
         self.font_rect.left = self.Currency_rect.right + 10
-        self.font_rect.bottom = self.Currency_rect.bottom
+        self.font_rect.centery = self.Currency_rect.centery
 
     def clock(self):
-        if self.frame + 1 >= self.Frames * 4:
+        if self.frame + 1 >= self.Frames * 5:
             if self.frame2 + 1 >= self.Frames:
                 self.frame = 0
                 self.frame2 = 0
             self.frame2 += 1
         else:
             self.frame += 1
-        self.Currency_image = self.Currency_images[self.frame2//3]
+        self.Currency_image = self.Currency_images[self.frame2//2]
 
     def queue(self):
         self.value = self.Stats.Money
         differance = self.value - self.display_amount
-        self.increment = differance // 60
+        self.increment = differance // 5
         self.animate_text = True
 
     def number_animate(self):

@@ -11,7 +11,7 @@ from Graphics import Menu_diplay
 def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
     if Player.dx != 0 or Player.dy != 0:
         Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD)
-    update_elevation(Player,World)
+    Player.update_elevation(World)
     
     check_tall_block(World,Player,Ctrl_Vars)
     check_stairs(World,Player,Ctrl_Vars)
@@ -26,7 +26,7 @@ def enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD):
             Enemy.choose_direction()
             Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD)
         else:
-            Enemy.scan_radius(Player,4)
+            Enemy.action(Player)
     Enemies.Enemy_Group_Collsion()
     Ctrl_Vars.end_turn()
 
@@ -117,6 +117,8 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
         else:
             if Player.Stats.Laser_Heat < 5:
                 Player.Stats.Laser_Heat += 1
+                if Player.Stats.Laser_Heat == 5:
+                    HUD.Dialog_box.init_dialog('ScortchingHot0')
                 HUD.Laser_Gauge.init_charge()
                 laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.x,Player.y],Player.off_center)
                 HUD.Combo.update()
@@ -318,7 +320,7 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
         Ctrl_Vars.end_phase()
         return
     else:
-        Queue_movement(Player,World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
+        Player.Queue_movement(World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
         Ctrl_Vars.end_turn() #end turn
 
 def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
@@ -342,7 +344,7 @@ def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
     if stop_move: #no need to make a thud noise, you dont care what the enemy noise makes
         Enemy.reset_direction()
     else:
-        Queue_movement(Enemy,World,Ctrl_Vars.phase_Frames) #make a line
+        Enemy.Queue_movement(World,Ctrl_Vars.phase_Frames) #make a line
 
 #Checking/Updating
 def check_stairs(World,Player,Ctrl_Vars):
@@ -361,36 +363,43 @@ def check_death(Player,Ctrl_Vars):
         sound = pygame.mixer.Sound("SFX/game over.wav")
         pygame.mixer.Sound.play(sound)
 
-def update_elevation(MOB,World):
-    MOB.elevation = World.Terrain[MOB.y][MOB.x].elevation
-
 def check_tall_block(World,MOB,Ctrl_Vars):
     World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
     World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)
-#other
-def Queue_movement(MOB,World,N):
-    Initial = World.Terrain[MOB.y][MOB.x].get_Character_Spot()
-    Final = World.Terrain[MOB.y + MOB.dy][MOB.x + MOB.dx].get_Character_Spot()
-    x = Initial[0]
-    y = Initial[1]
-    DX = Final[0]-Initial[0]
-    DY = Final[1]-Initial[1]
-    if DX == 0 and DY == 0:
-        return
-    elif DX == 0:
-        increment = DY/N
-        for i in range(N):
-            y += increment
-            MOB.track.append([x,y])
-    else:
-        m = (DY/DX)
-        b = y - m * x
-        increment = float(DX/N)
-        for i in range(N):
-            y = x*m + b
-            MOB.track.append([round(x),round(y)])
-            x += increment
 
+##initialization
+def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
+    #assuming world has been initialized, this will re initialize everything else
+    Max_parameters = (World.Max_Rows,World.Max_Columns)
+    spawn_coord = (World.spawn_row,World.spawn_col)
+    Player.__init__(Screen,spawn_coord)
+    Enemies.__init__(Screen,Max_parameters,World,Player)
+    HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
+    Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
+
+def new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera):
+    if Ctrl_Vars.Game_Menu_Vars.Random:
+        World.__init__(Screen,None,Window,Settings)
+        Ctrl_Vars.seed = str(World.seed)
+        Ctrl_Vars.Game_Menu_Vars.Random = False
+    elif Ctrl_Vars.Game_Menu_Vars.Custom:
+        Seed = Ctrl_Vars.seed
+        World.__init__(Screen,Seed,Window,Settings)
+        Ctrl_Vars.Game_Menu_Vars.Custom = False
+    elif Ctrl_Vars.restart_world:
+        Ctrl_Vars.restart_world = False
+    Camera.follow = True
+
+def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
+    Ctrl_Vars.Game_Menu_Vars.load_world = False
+    Ctrl_Vars.Game_Menu_Vars.Game_active = True
+    Camera.Center_Screen()
+    Player.glue(World)
+    Enemies.glue(World)
+    pygame.mixer.music.load('Music/Navy Blues.mp3')
+    pygame.mixer.music.play(-1)
+
+##Recursive Line functions
 def Scan_line(World,MOB,Start,stagger):
     def select_line_path(stagger):
         off_center = stagger
@@ -433,39 +442,6 @@ def Scan_line(World,MOB,Start,stagger):
     if check_line():    #Else end
         Scan_line(World,MOB,Next,stagger)
 
-##initialization
-def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
-    #assuming world has been initialized, this will re initialize everything else
-    Max_parameters = (World.Max_Rows,World.Max_Columns)
-    spawn_coord = (World.spawn_row,World.spawn_col)
-    Player.__init__(Screen,spawn_coord)
-    Enemies.__init__(Screen,Max_parameters,World,Player)
-    HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
-    Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
-
-def new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera):
-    if Ctrl_Vars.Game_Menu_Vars.Random:
-        World.__init__(Screen,None,Window,Settings)
-        Ctrl_Vars.seed = str(World.seed)
-        Ctrl_Vars.Game_Menu_Vars.Random = False
-    elif Ctrl_Vars.Game_Menu_Vars.Custom:
-        Seed = Ctrl_Vars.seed
-        World.__init__(Screen,Seed,Window,Settings)
-        Ctrl_Vars.Game_Menu_Vars.Custom = False
-    elif Ctrl_Vars.restart_world:
-        Ctrl_Vars.restart_world = False
-    Camera.follow = True
-
-def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
-    Ctrl_Vars.Game_Menu_Vars.load_world = False
-    Ctrl_Vars.Game_Menu_Vars.Game_active = True
-    Camera.Center_Screen()
-    Player.glue(World)
-    Enemies.glue(World)
-    pygame.mixer.music.load('Music/Navy Blues.mp3')
-    pygame.mixer.music.play(-1)
-
-##Laser action
 def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start,stagger):
     def select_line_path(stagger):
         off_center = stagger

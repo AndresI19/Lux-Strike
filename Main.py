@@ -112,6 +112,5 @@ while True:
                 Engine.enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD)
 
         Camera.View(Ctrl_Vars)
-        #Engine.Camera(Settings,Ctrl_Vars,World,Player,Enemies,Drops)
         Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
     Graphics.scale(Window,Screen,Settings)

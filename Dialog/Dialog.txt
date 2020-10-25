@@ -24,3 +24,7 @@ What use is money to a Swanzai?
 .................................
 {Dr.Navy,DN1,1}Who am I talking to?
 #End
+
+ScortchingHot0.1
+{Dr.Navy,DN1,1}%QOW! That's $Rscortching $Rhot!
+#End

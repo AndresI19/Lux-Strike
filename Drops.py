@@ -25,9 +25,9 @@ class Drop_envelope():
     def build_money(self,coords,position):
         x,y = coords
         for drop in self.Group:
-            if drop.value >= 0:
+            if drop.value > 0:
                 if  drop.x == x and drop.y == y:
-                    value = drop.value + 100 * (self.Stats.combo + 1)
+                    value = drop.value + 10 * (self.Stats.combo + 1)
                     new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,None,value)
                     self.Group.remove(drop)
                     self.Group.append(new_drop)
@@ -94,11 +94,11 @@ class Money_drop(Drops):
         Drops.__init__(self,Screen,coords,position)
         self.Ctrl_Vars = Ctrl_Vars
         if value == None:
-            self.value = 100 * (combo + 1)
+            self.value = 10 * (combo + 1)
             x = combo + 1
         else:
             self.value = value
-            x = value//100 
+            x = value//10 
         if x >= 16:
             x = 16
         self.image = pygame.image.load('Drops/Money{}.png'.format(x)

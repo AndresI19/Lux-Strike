@@ -26,7 +26,7 @@ class MOB():
         self.hitstun = False
 
         self.spawn()
-        
+    
     #spawn player in start location
     def compare_spawn(self,coords):
         row,col = coords
@@ -95,6 +95,27 @@ class MOB():
                     self.update_coordinates(World)
             else:
                 self.update_coordinates(World)
+
+    def Queue_movement(self,World,N):
+        x,y = World.Terrain[self.y][self.x].get_Character_Spot()
+        Fx,Fy = World.Terrain[self.y + self.dy][self.x + self.dx].get_Character_Spot()
+        DX = Fx-x
+        DY = Fy-y
+        if DX == 0 and DY == 0:
+            return
+        elif DX == 0:
+            increment = DY/N
+            for i in range(N):
+                y += increment
+                self.track.append([x,y])
+        else:
+            m = (DY/DX)
+            b = y - m * x
+            increment = float(DX/N)
+            for i in range(N):
+                y = x*m + b
+                self.track.append([round(x),round(y)])
+                x += increment
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
         #To be carried out last frame
@@ -103,6 +124,9 @@ class MOB():
         if abs(self.dy) == 1:
             self.off_center *= -1
         self.reset_direction()
+
+    def update_elevation(self,World):
+        self.elevation = World.Terrain[self.y][self.x].elevation
 
     def glue(self,World):
         self.Icon.update_coo(self.y,self.x)
