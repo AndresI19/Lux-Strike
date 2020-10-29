@@ -1,6 +1,7 @@
 import pygame
 import pygame.font
 import text_reader
+from Tessellation import Animation
 pygame.mixer.init()
 
 #Envelope class containing all border rectangles
@@ -142,9 +143,9 @@ class Mini_map():
         self.scaling_factor = 4
 
     def draw(self):
-        for col in range(len(self.World.Terrain)):
-            for row in range(len(self.World.Terrain[col])):
-                self.World.Terrain[-1-col][row].Icon.draw()
+        for col in range(self.World.num_cols):
+            for row in range(self.World.num_rows):
+                self.World.Map.data(-1-col,row).Icon.draw()
         self.Enemies.Icon_draw()
         self.Player.Icon.draw()
 

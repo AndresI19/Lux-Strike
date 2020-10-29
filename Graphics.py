@@ -8,20 +8,19 @@ def Display(Screen,World,HUD,Player,Enemies,Drops):
     HUD.draw()
 
 def Draw_map(World,Player,Enemies,Drops):
-    Max_Columns = len(World.Terrain)
-    for col in range(Max_Columns):
-        draw_row = Max_Columns - col - 1
-        for row in range(len(World.Terrain[col])):
-            World.Terrain[-1-col][row].draw()
-        if Player.y == draw_row:
+    for row in range(World.num_rows):
+        draw_row = World.num_rows - row - 1
+        for col in range(World.num_cols):
+            World.Map.data(col,draw_row).draw()
+        if Player.row == draw_row:
             Player.Draw()
         for enemy in Enemies.Group:
-            if enemy.y == draw_row:
+            if enemy.row == draw_row:
                 enemy.Draw()
         for drop in Drops.Group:
-            if drop.y == draw_row:
+            if drop.row == draw_row:
                 drop.draw()
-                
+
 def scale(Window,Screen,Settings):
     if not Settings.resolution == 0:
         Screen = transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))

@@ -12,4 +12,3 @@ cx_Freeze.setup(
         }
         ,executables = executables,version = '1.0.0'
 )
-    

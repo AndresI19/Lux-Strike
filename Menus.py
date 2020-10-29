@@ -2,6 +2,7 @@ import pygame
 import Buttons
 from text_reader import word_object
 import time
+from Tessellation import Animation
 
 def menu_select(Screen,Window,Ctrl_Vars,Settings):
     if Ctrl_Vars.Game_Menu_Vars.Start_Screen:
@@ -431,40 +432,24 @@ class Num_Pad():
 class Background():
     def __init__(self,Screen):
         self.Screen = Screen
-
-        self.images = []
-        self.init_images()
-        self.image = self.images[0]
-
-    def init_images(self):
+        images = []
         N = 36
         for i in range(N):
             image = pygame.image.load(
                 'Title/Title{}.png'.format(i)
                 ).convert()
             image.set_colorkey((255,0,255))
-            self.images.append(image)
+            images.append(image)
         for i in range(N):
             image = pygame.image.load(
                 'Title/Title{}.png'.format(N-1)
                 ).convert()
             image.set_colorkey((255,0,255))
-            self.images.append(image)
-
-        self.rate = 4
-        self.Frames = N * 2 * self.rate
-        self.frame = 0
-
-    def clock(self):
-        if self.frame + 1 >= self.Frames:
-            self.frame = 0
-        else:
-            self.frame += 1
-        self.image = self.images[self.frame//self.rate]
+            images.append(image)
+        self.Animation = Animation(self.Screen,images,2)
 
     def draw(self):
-        self.clock()
-        self.Screen.blit(self.image, (0,0))
+        self.Animation.loop((0,0))
 
 """ TODO: #Loading Screen object"""
 class load_world_screen():

@@ -23,10 +23,10 @@ class Drop_envelope():
             self.build_money(coords,[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom])
 
     def build_money(self,coords,position):
-        x,y = coords
+        col,row = coords
         for drop in self.Group:
             if drop.value > 0:
-                if  drop.x == x and drop.y == y:
+                if  drop.col == col and drop.row == row:
                     value = drop.value + 10 * (self.Stats.combo + 1)
                     new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,None,value)
                     self.Group.remove(drop)
@@ -37,7 +37,7 @@ class Drop_envelope():
 
     def check_pick_up(self,Player):
         for drop in self.Group:
-            if Player.x == drop.x and Player.y == drop.y:
+            if Player.col == drop.col and Player.row == drop.row:
                 drop.functionality(Player)
                 self.Group.remove(drop)
                 #Player.Stats.Money += round(drop.value * (1 + Player.Stats.combo/2))
@@ -53,8 +53,8 @@ class Drops():
     def __init__(self,Screen,coords,position):
         self.Screen = Screen #needed for graphics
         self.Screen_rect = Screen.get_rect()
-        self.x = 0
-        self.y = 0
+        self.col = 0
+        self.row = 0
         self.render = True
 
     def image_init(self):
@@ -63,8 +63,7 @@ class Drops():
         self.rect = self.image.get_rect()
     
     def position(self,coords,position):
-        self.x = coords[0]
-        self.y = coords[1]
+        self.col,self.row = coords
         self.rect.centerx = position[0]
         self.rect.bottom = position[1]
 

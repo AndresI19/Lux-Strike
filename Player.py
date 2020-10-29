@@ -7,8 +7,8 @@ class MOB():
         self.Screen = Screen
 
         #Row column information
-        self.y = 0
-        self.x = 0
+        self.col = 0
+        self.row = 0
         self.off_center = 1
 
         #relative grid location
@@ -19,8 +19,7 @@ class MOB():
 
         #pixel coordinate information
         self.coordinates = [0,0]
-        self.spawn_row = spawn_coord[0]
-        self.spawn_col = spawn_coord[1]
+        self.spawn_col,self.spawn_row = spawn_coord
 
         self.track = []
         self.hitstun = False
@@ -29,7 +28,7 @@ class MOB():
     
     #spawn player in start location
     def compare_spawn(self,coords):
-        row,col = coords
+        col,row = coords
         allow = True
         if row == self.spawn_row:
             if col == self.spawn_col:
@@ -37,53 +36,60 @@ class MOB():
         return allow
 
     def spawn(self):
-        self.y = self.spawn_col
-        self.x = self.spawn_row
-        if self.y%2 == 1:
+        self.col = self.spawn_col
+        self.row = self.spawn_row
+        if self.row%2 == 0:
             self.off_center *= -1
 
 ###Movement vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     """moving on a hexagon grid is complicated, as the columns go up and contain a list of staggard rows. The way to maneuver this is to
     give the game knowledge of the player location and call every other row staggard. Hence, if the players row value goes up (y) then the off_center value
     is flipped. Moving up or down requires a row change of plus or minus 2. At each possible control a check_move is preformed."""
-    def set_NE(self):
-        if self.off_center == 1:
-            self.set_direction(1,1,'NE')
-        elif self.off_center == -1:
-            self.set_direction(0,1,'NE')
+    def set_NE(self,World):
+        coords = World.Map.get_NE([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'NE')
 
-    def set_N(self):
-        self.set_direction(0,2,'N')
+    def set_N(self,World):
+        #self.set_direction(0,2,'N')
+        coords = World.Map.get_N([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'N')
 
-    def set_NW(self):
-        if self.off_center == 1:
-            self.set_direction(0,1,'NW')
-        elif self.off_center == -1:
-            self.set_direction(-1,1,'NW')
+    def set_NW(self,World):
+        coords = World.Map.get_NW([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'NW')
 
-    def set_SW(self):
-        if self.off_center == 1:
-            self.set_direction(0,-1,'SW')
-        elif self.off_center == -1:
-            self.set_direction(-1,-1,'SW')
+    def set_SW(self,World):
+        coords = World.Map.get_SW([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'SW')
 
-    def set_S(self):
-        self.set_direction(0,-2,'S')
+    def set_S(self,World):
+        coords = World.Map.get_S([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'S')
 
-    def set_SE(self):
-        if self.off_center == 1:
-            self.set_direction(1,-1,'SE')
-        elif self.off_center == -1:
-            self.set_direction(0,-1,'SE')
+    def set_SE(self,World):
+        coords = World.Map.get_SE([self.col,self.row])
+        if coords != False:
+            col,row = coords
+            self.set_direction(col,row,'SE')
 
-    def set_direction(self,dx,dy,D):
-        self.dx = dx
-        self.dy = dy
+    def set_direction(self,col,row,D):
+        self.dx =  col
+        self.dy =  row
         self.sprite_direction(D)
 
     def reset_direction(self):
-        self.dx = 0
-        self.dy = 0
+        self.dx = self.col
+        self.dy = self.row
 
     def move_line(self,World,frame):
         if len(self.track) > 0:
@@ -97,8 +103,8 @@ class MOB():
                 self.update_coordinates(World)
 
     def Queue_movement(self,World,N):
-        x,y = World.Terrain[self.y][self.x].get_Character_Spot()
-        Fx,Fy = World.Terrain[self.y + self.dy][self.x + self.dx].get_Character_Spot()
+        x,y = World.Map.data(self.col,self.row).get_Character_Spot()
+        Fx,Fy = World.Map.data(self.dx,self.dy).get_Character_Spot()
         DX = Fx-x
         DY = Fy-y
         if DX == 0 and DY == 0:
@@ -119,21 +125,19 @@ class MOB():
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_coordinates(self,World):
         #To be carried out last frame
-        self.y += self.dy
-        self.x += self.dx
-        if abs(self.dy) == 1:
-            self.off_center *= -1
-        self.reset_direction()
+        self.col = self.dx
+        self.row = self.dy
 
     def update_elevation(self,World):
-        self.elevation = World.Terrain[self.y][self.x].elevation
+        #self.elevation = World.Terrain[self.y][self.x].elevation
+        self.elevation = World.Map.data(self.col,self.row).elevation
 
     def glue(self,World):
-        self.Icon.update_coo(self.y,self.x)
+        self.Icon.update_coo(self.col,self.row)
         self.track = []
-        coordinates = World.Terrain[self.y][self.x].get_Character_Spot()
-        self.MOB_rect.centerx = coordinates[0]
-        self.MOB_rect.bottom = coordinates[1]
+        #coordinates = World.Terrain[self.y][self.x].get_Character_Spot()
+        coordinates = World.Map.data(self.col,self.row).get_Character_Spot()
+        self.MOB_rect.centerx,self.MOB_rect.bottom = coordinates
 
     #Image translation
     def translate(self,x,y):
@@ -145,6 +149,9 @@ class MOB():
 
     def get_coords(self):
         return [self.MOB_rect.centerx,self.MOB_rect.centery]
+
+    def get_position(self):
+        return [self.col,self.row]
     #Draw functions and animation loops for world entities
     def Draw(self):
         self.Screen.blit(self.MOB_image, self.MOB_rect)
@@ -162,7 +169,7 @@ class Player(MOB):
 
         self.frame = 0
         self.max_frames = 0
-        self.Icon = Icon_Player(self.Screen,self.y,self.x)
+        self.Icon = Icon_Player(self.Screen,self.col,self.row)
 
         self.damage_SFX = pygame.mixer.Sound("SFX/damage.wav")
         self.last_heart_SXF = pygame.mixer.Sound("SFX/last heart.wav")

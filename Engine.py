@@ -9,7 +9,7 @@ from Graphics import Menu_diplay
 #Not that Player input engine gets called brefore this.
 
 def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
-    if Player.dx != 0 or Player.dy != 0:
+    if Player.dx != Player.col or Player.dy != Player.row:
         Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD)
     Player.update_elevation(World)
     
@@ -18,12 +18,12 @@ def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
     check_death(Player,Ctrl_Vars)
 
 def enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD):
-    x = Player.x + Player.dx
-    y = Player.y + Player.dy
+    col = Player.dx
+    row = Player.dy
     for Enemy in Enemies.Group:
-        Enemy.update_player_location(x,y)    #update knowledge of player projected location
+        Enemy.update_player_location(col,row)    #update knowledge of player projected location
         if Enemy.aware:
-            Enemy.choose_direction()
+            Enemy.choose_direction(World)
             Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD)
         else:
             Enemy.action(Player)
@@ -48,7 +48,7 @@ def Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies):
 
 #Player input engine vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 def check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
-    hold_keys(Ctrl_Vars,Player)
+    hold_keys(Ctrl_Vars,Player,World)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
@@ -120,60 +120,60 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
                 if Player.Stats.Laser_Heat == 5:
                     HUD.Dialog_box.init_dialog('ScortchingHot0')
                 HUD.Laser_Gauge.init_charge()
-                laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.x,Player.y],Player.off_center)
+                laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.col,Player.row])
                 HUD.Combo.update()
                 Ctrl_Vars.end_phase()
 
     elif event.key == pygame.K_F1:
         #Dev Button
-        print("Player Grid Coordinates = X: {}, Y:{}".format(Player.x,Player.y))
-        Spot = World.Terrain[Player.y][Player.x].get_Character_Spot()
-        print("Player Pixel Cordinates = X: {}, Y:{}".format(Spot[0],Spot[1]))
+        print("Player Grid Coordinates = Col:{},Row:{}".format(Player.col,Player.row))
+        Spot = World.Map.data(Player.col,Player.row).get_Character_Spot()
+        print("Player Pixel Coordinates = X: {}, Y:{}".format(Spot[0],Spot[1]))
         HUD.Dialog_box.init_dialog('Tutorial1')
     elif event.key == pygame.K_F2:
-        World.Terrain[Player.y][Player.x].Hexagon_image.set_alpha(50)
+        World.Map.data(Player.col,Player.row).Hexagon_image.set_alpha(50)
         for door in World.Doors:
             door.Open(World)
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
-            move_event(event,Ctrl_Vars,Player)
+            move_event(event,Ctrl_Vars,Player,World)
         else:
             face_direction(event,Ctrl_Vars,World,Player)
 
-def move_event(event,Ctrl_Vars,Player):
+def move_event(event,Ctrl_Vars,Player,World):
     if event.key == pygame.K_q:
-        Player.set_NW()
+        Player.set_NW(World)
         Ctrl_Vars.q_down = True
     elif event.key == pygame.K_w:
-        Player.set_N()
+        Player.set_N(World)
         Ctrl_Vars.w_down = True
     elif event.key == pygame.K_e:
-        Player.set_NE()
+        Player.set_NE(World)
         Ctrl_Vars.e_down = True
     elif event.key == pygame.K_d:
-        Player.set_SE()
+        Player.set_SE(World)
         Ctrl_Vars.d_down = True
     elif event.key == pygame.K_s:
-        Player.set_S()
+        Player.set_S(World)
         Ctrl_Vars.s_down = True
     elif event.key == pygame.K_a:
-        Player.set_SW()
+        Player.set_SW(World)
         Ctrl_Vars.a_down = True
 
-def hold_keys(Ctrl_Vars,Player):
+def hold_keys(Ctrl_Vars,Player,World):
     if Ctrl_Vars.q_down == True:
-        Player.set_NW()
+        Player.set_NW(World)
     elif Ctrl_Vars.w_down == True:
-        Player.set_N()
+        Player.set_N(World)
     elif Ctrl_Vars.e_down == True:
-        Player.set_NE()
+        Player.set_NE(World)
     elif Ctrl_Vars.d_down == True:
-        Player.set_SE()
+        Player.set_SE(World)
     elif Ctrl_Vars.s_down == True:
-        Player.set_S()
+        Player.set_S(World)
     elif Ctrl_Vars.a_down == True:
-        Player.set_SW()
+        Player.set_SW(World)
 
 def face_direction(event,Ctrl_Vars,World,Player):
     if event.key == pygame.K_q:
@@ -188,7 +188,7 @@ def face_direction(event,Ctrl_Vars,World,Player):
         Player.sprite_direction('S')
     elif event.key == pygame.K_a:
         Player.sprite_direction('SW')
-    Scan_line(World,Player,[Player.x,Player.y],Player.off_center)
+    Scan_line(World,Player,[Player.col,Player.row])
 
 def MouseDown(event,Ctrl_Vars):
     """event buttons 1 and 2 refer to mouse bindings"""
@@ -301,19 +301,19 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
 
-    x = Player.x + Player.dx #projected tile
-    y = Player.y + Player.dy
-    if World.check_bounds(x,y): #in bounds?
+    col = Player.dx #projected tile
+    row = Player.dy
+    if World.check_bounds(col,row): #in bounds?
         thud()
         return
-    if World.check_doors(Player,y,x):
+    if World.check_doors(Player,col,row):
         Player.reset_direction()
         HUD.Keys.update()
         Ctrl_Vars.set_button_downs()
-    if World.check_cliff(Player,y,x): #too high?
+    if World.check_cliff(Player,col,row): #too high?
         thud()
         return
-    if Enemies.check_kill(Ctrl_Vars,Drops,x,y): #hit enemy?
+    if Enemies.check_kill(Ctrl_Vars,Drops,col,row): #hit enemy?
         Player.reset_direction()
         Ctrl_Vars.set_button_downs()
         HUD.Combo.update()
@@ -324,22 +324,22 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
         Ctrl_Vars.end_turn() #end turn
 
 def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
-    def collision(x,y):
-        if Player.x == x and Player.y == y: #hit player?
+    def collision(col,row):
+        if Player.col == col and Player.row == row: #hit player?
             Player.hurt()
             HUD.Combo.update()
             return True
         #TODO: Enemy on enemy collision leaves gaps, might have to do with list ordering
         for Enemy in Enemies.Group:
-            if (Enemy.x) == x and (Enemy.y) == y:
+            if Enemy.col == col and Enemy.row == row:
                 return True
         return False
 
-    x = Enemy.x + Enemy.dx #projected direction
-    y = Enemy.y + Enemy.dy
-    boundry = World.check_bounds(x,y)
-    cliff_obsticle = World.check_cliff(Enemy,y,x)
-    enemy_obsticle = collision(x,y)
+    col = Enemy.dx #projected direction
+    row = Enemy.dy
+    boundry = World.check_bounds(col,row)
+    cliff_obsticle = World.check_cliff(Enemy,col,row)
+    enemy_obsticle = collision(col,row)
     stop_move = enemy_obsticle or cliff_obsticle or boundry
     if stop_move: #no need to make a thud noise, you dont care what the enemy noise makes
         Enemy.reset_direction()
@@ -348,8 +348,8 @@ def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
 
 #Checking/Updating
 def check_stairs(World,Player,Ctrl_Vars):
-    y,x = World.stairs[0],World.stairs[1]
-    if Player.x == x and Player.y == y:
+    col,row = World.stairs[0],World.stairs[1]
+    if Player.col == col and Player.row == row:
         Ctrl_Vars.Game_Menu_Vars.Menu_reset()
         Ctrl_Vars.Game_Menu_Vars.Game_Win = True
 
@@ -364,13 +364,16 @@ def check_death(Player,Ctrl_Vars):
         pygame.mixer.Sound.play(sound)
 
 def check_tall_block(World,MOB,Ctrl_Vars):
-    World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
-    World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)
+    """World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
+    World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)"""
+    col, row = Ctrl_Vars.foreground_list
+    World.Map.data(col,row).reset_alpha()
+    World.Map.data(MOB.col,MOB.row-2).check_tall_block(MOB,Ctrl_Vars)
 
 ##initialization
 def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     #assuming world has been initialized, this will re initialize everything else
-    Max_parameters = (World.Max_Rows,World.Max_Columns)
+    Max_parameters = (World.num_cols,World.num_rows)
     spawn_coord = (World.spawn_row,World.spawn_col)
     Player.__init__(Screen,spawn_coord)
     Enemies.__init__(Screen,Max_parameters,World,Player)
@@ -400,86 +403,59 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     pygame.mixer.music.play(-1)
 
 ##Recursive Line functions
-def Scan_line(World,MOB,Start,stagger):
-    def select_line_path(stagger):
-        off_center = stagger
-        Next_x,Next_y = Start
-        if MOB.D == 'S':
-            Next_y -= 2
-        elif MOB.D == 'N':
-            Next_y += 2
-        off_center *= -1
-        if MOB.D == 'NE':
-            Next_y += 1
-            if off_center == -1:
-                Next_x += 1
-        elif MOB.D == 'NW':
-            Next_y += 1
-            if off_center == 1:
-                Next_x -= 1
-        elif MOB.D == 'SW':
-            Next_y -= 1
-            if off_center == 1:
-                Next_x -= 1
+def Scan_line(World,MOB,Start):
+    def Path():
+        if MOB.D == 'N':
+            Next = World.Map.get_N(Start)
+        elif MOB.D == 'NE':
+            Next = World.Map.get_NE(Start)
         elif MOB.D == 'SE':
-            Next_y -= 1
-            if off_center == -1:
-                Next_x += 1
-        return [(Next_x,Next_y),off_center]
+            Next = World.Map.get_SE(Start)
+        elif MOB.D == 'S':
+            Next = World.Map.get_S(Start)
+        elif MOB.D == 'SW':
+            Next = World.Map.get_SW(Start)
+        elif MOB.D == 'NW':
+            Next = World.Map.get_NW(Start)
+        return Next
 
-    def check_line():
-        Next_x,Next_y = Next
-        row_bound = Next_y >= 0 and Next_y < World.Max_Rows
-        col_bound = Next_x >= 0 and Next_x < World.Max_Columns
-        if row_bound and col_bound:
-            if World.Terrain[Next_y][Next_x].elevation == MOB.elevation:
-                World.Terrain[Next_y][Next_x].highlighted = True
-                World.highlighted_list.append([Next_y,Next_x])
-                return True
+    def Act(Next):
+        col,row = Next
+        if World.Map.data(col,row).elevation == MOB.elevation:
+            World.Map.data(col,row).highlighted = True
+            World.highlighted_list.append([col,row])
+            return True
         return False
 
-    Next,stagger = select_line_path(stagger)
-    if check_line():    #Else end
-        Scan_line(World,MOB,Next,stagger)
+    Next = Path()
+    if Next != False:
+        if Act(Next):    #Else end
+            Scan_line(World,MOB,Next)
 
-def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start,stagger):
-    def select_line_path(stagger):
-        off_center = stagger
-        Next_x,Next_y = Start
-        if MOB.D == 'S':
-            Next_y -= 2
-        elif MOB.D == 'N':
-            Next_y += 2
-        off_center *= -1
-        if MOB.D == 'NE':
-            Next_y += 1
-            if off_center == -1:
-                Next_x += 1
-        elif MOB.D == 'NW':
-            Next_y += 1
-            if off_center == 1:
-                Next_x -= 1
-        elif MOB.D == 'SW':
-            Next_y -= 1
-            if off_center == 1:
-                Next_x -= 1
+def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start):
+    def Path():
+        if MOB.D == 'N':
+            Next = World.Map.get_N(Start)
+        elif MOB.D == 'NE':
+            Next = World.Map.get_NE(Start)
         elif MOB.D == 'SE':
-            Next_y -= 1
-            if off_center == -1:
-                Next_x += 1
-        return [(Next_x,Next_y),off_center]
+            Next = World.Map.get_SE(Start)
+        elif MOB.D == 'S':
+            Next = World.Map.get_S(Start)
+        elif MOB.D == 'SW':
+            Next = World.Map.get_SW(Start)
+        elif MOB.D == 'NW':
+            Next = World.Map.get_NW(Start)
+        return Next
 
-    def check_line():
-        Next_x,Next_y = Next
-        row_bound = Next_y >= 0 and Next_y < World.Max_Rows
-        col_bound = Next_x >= 0 and Next_x < World.Max_Columns
-        if row_bound and col_bound:
-            if World.Terrain[Next_y][Next_x].elevation <= MOB.elevation:
-                World.laser_list.append([Next_y,Next_x])
-                if World.Terrain[Next_y][Next_x].elevation == MOB.elevation:
-                    return not Enemies.check_kill(Ctrl_Vars,Drops,Next_x,Next_y)
+    def Act(Next):
+        col,row = Next
+        if World.Map.data(col,row).elevation <= MOB.elevation:
+            World.laser_list.append([col,row])
+            if World.Map.data(col,row).elevation == MOB.elevation:
+                return not Enemies.check_kill(Ctrl_Vars,Drops,col,row)
         return False
 
-    Next,stagger = select_line_path(stagger)
-    if check_line():    #Else end
-        laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next,stagger)
+    Next = Path()
+    if Act(Next) != False:    #Else end
+        laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next)

@@ -112,9 +112,9 @@ class Tile():
 
     #initialize position based on location in matrix
     def build(self):
-        self.Hexagon_rect.bottom = self.Screen_rect.bottom - self.col * ((self.height / 2)-1)
-        self.Hexagon_rect.left = self.row * (self.width + self.side_length - 4)
-        if self.col%2 == 0:
+        self.Hexagon_rect.bottom = self.Screen_rect.bottom - self.row * ((self.height / 2)-1)
+        self.Hexagon_rect.left = self.col * (self.width + self.side_length - 4)
+        if self.row%2 == 0:
             self.Hexagon_rect.left += self.offset - 2
 
 
@@ -319,14 +319,12 @@ class Door(Tile):
             pygame.mixer.Sound.play(sound)
     
     def update_neighbor(self,World,x):
-        y = self.col
-        x = self.row
-        if self.col%2 == 0:
-            World.Terrain[y+1][x].R_num += 2
-            World.Terrain[y+1][x+1].L_num += 2
-        else:
-            World.Terrain[y+1][x-1].R_num += 2
-            World.Terrain[y+1][x].L_num += 2
+        coords = World.Map.get_NW([self.col,self.row])
+        if coords != False:
+            World.Map.data(coords[0],coords[1]).R_num += 2
+        coords = World.Map.get_NE([self.col,self.row])
+        if coords != False:
+            World.Map.data(coords[0],coords[1]).L_num += 2
 
     def change_elevation(self,x):
         self.elevation += x
@@ -364,9 +362,9 @@ class Icon():
         height = 13
         offset = 2*width/3
 
-        self.image_rect.bottom = self.Screen_rect.bottom - self.col * (trunc(height/2)) - 32
-        self.image_rect.left = self.row * (width + offset/2) + 1550
-        if self.col%2 == 0:
+        self.image_rect.bottom = self.Screen_rect.bottom - self.row * (trunc(height/2)) - 32
+        self.image_rect.left = self.col * (width + offset/2) + 1550
+        if self.row%2 == 0:
             self.image_rect.left += offset
 
     def draw(self):

@@ -4,6 +4,7 @@ from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
 import random
 from Drops import Money_drop,Key
+from Tessellation import Animation
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():
@@ -17,11 +18,11 @@ class ENEMIES():
         self.spawn_random(World,Player)
 
 ###Enemy operations vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    def check_kill(self,Ctrl_Vars,Drops,x,y):
+    def check_kill(self,Ctrl_Vars,Drops,col,row):
         for Enemy in self.Group: #Maybe you killed something
-            if Enemy.x == x and Enemy.y == y:
+            if Enemy.col == col and Enemy.row == row:
                 Enemy.SFX_death()
-                Drops.enemy_drop(Enemy,[x,y])
+                Drops.enemy_drop(Enemy,[col,row])
                 self.Group.remove(Enemy)
                 self.Stats.combo += 1
                 return True
@@ -34,11 +35,7 @@ class ENEMIES():
                 self.compare(self.Group[i], self.Group[j])
 
     def compare(self,Subject,Object):
-        SX = Subject.x + Subject.dx
-        SY = Subject.y + Subject.dy
-        OX = Object.x + Object.dx
-        OY = Object.y + Object.dy
-        if SX == OX and SY == OY:
+        if Subject.dx == Object.dx and Subject.dy == Object.dy:
             Object.reset_direction()
             Object.track = []
 
@@ -49,37 +46,36 @@ class ENEMIES():
         Mx = (0,self.Max_Parameters[0]-1)
         My = (0,self.Max_Parameters[1]-1)
         def compare():
-            if not player.compare_spawn([y,x]):
+            if not player.compare_spawn([col,row]):
                 return False
             for Enemy in self.Group:
-                if not Enemy.compare_spawn([y,x]):
+                if not Enemy.compare_spawn([col,row]):
                     return False
-            if x == World.stairs[0] and y == World.stairs[1]:
+            if col == World.stairs[0] and row == World.stairs[1]:
                 return False
             return True
 
         count = 0
         while enemies_left >= 0:
-            x = seed_random_bound_int(seed,Mx,count)
-            y = seed_random_bound_int(seed,My,count+1)
+            col = seed_random_bound_int(seed,Mx,count)
+            row = seed_random_bound_int(seed,My,count+1)
             count += 2
             if compare():
-                self.choose_enemy(seed,count,x,y)
-                #Enemy = swanzai(self.Screen,(y,x))
+                self.choose_enemy(World,seed,count,col,row)
                 enemies_left -= 1
             if count > self.max_enemies*3:
                 print("Spawn went too long")
                 return
 
-        i = seed_random_bound_int(seed,(0,self.max_enemies),3)
+        i = seed_random_bound_int(seed,(0,self.max_enemies-1),3)
         self.Group[i].key = True
 
-    def choose_enemy(self,seed,count,x,y):
+    def choose_enemy(self,World,seed,count,col,row):
         def enemy_return(enemy_type):
             if enemy_type == 'swanzai':
-                Enemy = swanzai(self.Screen,(y,x))
+                Enemy = swanzai(self.Screen,World,(col,row))
             elif enemy_type == 'nest':
-                Enemy = nest(self.Screen,(y,x))
+                Enemy = nest(self.Screen,World,self,(col,row))
             return Enemy
             
         for i in range(len(self.quotas)):
@@ -123,23 +119,24 @@ class ENEMIES():
 
     def update_Icon(self):
         for i in range(len(self.Group)):
-            self.Group[i].Icon.update_coo(self.x,self.y)
+            self.Group[i].Icon.update_coo(self.col,self.row)
 
 """Basic Enemy, using swanzie as a place holder --------------------------------------------------------"""
 class enemy(MOB):
-    def __init__(self,Screen,coordinates):
+    def __init__(self,Screen,World,coordinates):
         MOB.__init__(self,Screen,coordinates)
         self.MOB_image = pygame.image.load('Enemies/Swanzai.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
+        self.Map = World.Map
         
         self.direction = 'S'
-        self.Icon = Icon_Enemy(self.Screen,self.y,self.x)
+        self.Icon = Icon_Enemy(self.Screen,self.col,self.row)
 
         self.Player_location = (0,0)
         self.aware = False
         self.death_SFX = pygame.mixer.Sound("SFX/Critical Hit 1.wav")
-        self.Aware_animation = exclamation_mark()
+        self.Aware_animation = exclamation_mark(self.Screen)
 
         self.Screen_rect = self.Screen.get_rect()
         self.check_render()
@@ -155,46 +152,32 @@ class enemy(MOB):
     def SFX_death(self):
         pygame.mixer.Sound.play(self.death_SFX)
 
-    def update_player_location(self,x,y):
-        self.Player_location = (x,y)
+    def update_player_location(self,col,row):
+        self.Player_location = (col,row)
 
-    def choose_direction(self):
+    def choose_direction(self,World):
         #Zombie AI: simply move to toward the player location
-        Rx = self.Player_location[0] - self.x
-        Ry = self.Player_location[1] - self.y
-        if Rx == 0 and Ry%2 == 0:
-            #verticle
-            if Ry < 0:
-                self.set_S()
-            else:
-                self.set_N()
-        elif Rx < 0: #if Rx is less than 0 that means that the player is on the left
-            #west
-            if Ry < 0: #if Ry is less than 0 that means that the player is below
-                self.set_SW()
-            else:
-                self.set_NW()
-        elif Rx > 0:
-            #east
-            if Ry < 0:
-                self.set_SE()
-            else:
-                self.set_NE()
-        elif Rx == 0:
-            if Ry < 0:
-                if self.off_center == 1:
-                    self.set_SW()
-                else:
-                    self.set_SE()
-            else:
-                if self.off_center == 1:
-                    self.set_NW()
-                else:
-                    self.set_NE()
+        direction = World.Map.get_direction([self.col,self.row],self.Player_location)
+        coords = [self.col,self.row]
+        if direction == 'N':
+            coords = World.Map.get_N(coords)
+        elif direction == 'NE':
+            coords = World.Map.get_NE(coords)
+        elif direction == 'SE':
+            coords = World.Map.get_SE(coords)
+        elif direction == 'S':
+            coords = World.Map.get_S(coords)
+        elif direction == 'SW':
+            coords = World.Map.get_SW(coords)
+        elif direction == 'NW':
+            coords = World.Map.get_NW(coords)
+        self.set_direction(coords,direction)
 
-    def set_direction(self,dx,dy,D):
-        self.dx = dx
-        self.dy = dy
+
+    def set_direction(self,coords,D):
+        Dcol, Drow = coords
+        self.dx = Dcol
+        self.dy = Drow
         self.D = D
 
 ###Action Functions.........................."""
@@ -203,15 +186,15 @@ class enemy(MOB):
             self.choose_direction()
         else:
             self.scan(Player,4)
-        x = Player.x
-        y = Player.y
-        self.update_player_location(x,y)
+        col = Player.col
+        row = Player.row
+        self.update_player_location(col,row)
 
     def scan(self,Player,r):
-        def check(rel_coord):
-            y = self.y + rel_coord[1]
-            x = self.x + rel_coord[0]
-            if Player.x == x and Player.y == y:
+        Points = self.Map.get_circle(self.col,self.row,r)
+        for point in Points:
+            col,row = point
+            if Player.col == col and Player.row == row:
                 self.aware = True
                 sound = pygame.mixer.Sound("SFX/aware.wav")
                 pygame.mixer.Sound.play(sound)
@@ -219,53 +202,19 @@ class enemy(MOB):
                     (self.MOB_rect.centerx,self.MOB_rect.top)
                     )
 
-        def Recursion(dy,dx):
-            if dy < dy_min:
-                return
-            y = -dy + 1
-            for i in range(dy):
-                if dx == 0:
-                    check([dx,y])
-                else:
-                    if self.off_center == 1:
-                        if dy%2 == 1:
-                            x2 = -dx
-                        else:
-                            x2 = -(dx)+1
-                        check([dx,y])
-                        check([x2,y])
-                    else:
-                        if dy%2 == 1:
-                            x2 = dx
-                        else:
-                            x2 = dx-1
-                        check([-dx,y])
-                        check([x2,y])
-                y += 2
-            dy -= 1
-            if dy%2 ==0:
-                dx += 1
-            Recursion(dy,dx)
-
-        Player = Player
-        dy_max = (2*r + 1)
-        dy_min = r + 1
-        dx = 0
-        Recursion(dy_max,dx)
-
 ##Standard
     def Draw(self):
         if self.render:
             self.Screen.blit(self.MOB_image, self.MOB_rect)
-            if self.Aware_animation.active:
+            if self.Aware_animation.Animation.active:
                 self.Aware_animation.activate((self.MOB_rect.centerx,self.MOB_rect.top)) #refactored for updating
                 self.Aware_animation.draw(self.Screen)
 
 class swanzai(enemy):
     """This will be a basic enemy that uses the most basic AI patter, it simply goes to the player
     by the shortest line. It does minimum damage and gets trapped on things easily. Dies easy too. Tutorial level"""
-    def __init__(self,Screen,coordinates):
-        enemy.__init__(self,Screen,coordinates)
+    def __init__(self,Screen,World,coordinates):
+        enemy.__init__(self,Screen,World,coordinates)
         self.MOB_image = pygame.image.load('Enemies/Swanzai.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
@@ -273,46 +222,62 @@ class swanzai(enemy):
         self.death_SFX = pygame.mixer.Sound("SFX/Death Honk{}.wav".format(choice))
 
 class nest(enemy):
-    def __init__(self,Screen,coordinates):
-        enemy.__init__(self,Screen,coordinates)
+    def __init__(self,Screen,World,Enemies,coordinates):
+        enemy.__init__(self,Screen,World,coordinates)
         self.MOB_image = pygame.image.load('Enemies/Swanzai_nest.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
+        self.Group = Enemies.Group
+        self.Clutch = []
+        self.Max_Clutch = 3
+        self.Action_speed = 4
+        self.Turn_count = 0
+        self.jiggle_frame = 0
+        self.jiggle = True
 
     def Queue_movement(self,World,n):
         return
 
     def action(self,player):
+        """TODO: FIXME: this function is untested: should spawn in 
+        an open space near the nest. Requires hex logic"""
         return
 
+    def animate(self,x = 1):
+        if self.jiggle:
+            if self.jiggle_frame +1 >= 12:
+                self.jiggle_frame = 0
+                self.jiggle = False
+            else:
+                self.jiggle_frame += 1
+            if self.jiggle_frame%2 == 0:
+                x *= -1
+            self.MOB_rect.left += x
+
+    def Draw(self):
+        self.animate(4)
+        self.Screen.blit(self.MOB_image, self.MOB_rect)
+
 class exclamation_mark():
-    def __init__(self):
-        self.images = []
+    def __init__(self,Screen):
+        images = []
         for i in range(3):
             image = pygame.image.load(
                 'Enemies/!{}.png'.format(i)).convert()
             image.set_colorkey((255,0,255))
-            self.images.append(image)
-        self.images.append(image)
-        self.images.append(image)
-        self.image = self.images[0]
-        self.rect = self.image.get_rect()
-        self.Frames = 10
-        self.frame = 0
-        self.active = False
+            images.append(image)
+        images.append(image)
+        images.append(image)
+        image = images[0]
+        self.rect = image.get_rect()
+
+        self.Animation = Animation(Screen,images,2)
 
     def draw(self,screen):
-        screen.blit(self.image,self.rect)
-        self.clock()
+        self.Animation.once(self.rect)
 
     def activate(self,coord):
         self.rect.centerx = coord[0]
         self.rect.bottom = coord[1]
         self.active = True
-
-    def clock(self):
-        if self.frame + 1 >= self.Frames:
-            self.active = False
-        else:
-            self.frame += 1
-        self.image = self.images[self.frame//2]
+        self.Animation.active = True

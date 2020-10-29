@@ -81,8 +81,8 @@ while True:
             #Initialization of major game objects
             if not Ctrl_Vars.initialized:
                 World = world_init(Ctrl_Vars,Screen,Window,Settings)
-                Max_parameters = (World.Max_Rows,World.Max_Columns)
-                spawn_coord = (World.spawn_row,World.spawn_col)
+                Max_parameters = [World.num_cols,World.num_rows]
+                spawn_coord = [World.spawn_col,World.spawn_row]
                 Player = Player(Screen,spawn_coord)
                 Enemies = ENEMIES(Screen,Max_parameters,World,Player)
                 HUD = HUD(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
