@@ -409,10 +409,10 @@ class Resolution(Hexagon_Button):
 
     def functionality(self):
         #activates campaign mode
-        if self.Settings.resolution != self.value:
-            self.Settings.resolution = self.value
+        if self.Settings.settings['Resolution'] != self.value:
+            self.Settings.settings['Resolution'] = self.value
             self.Settings.init_Screen()
-            self.Window = self.Settings.create_window(self.Window)
+            self.Window = self.Settings.create_window()
 
 #Extras ------------------
 class Music_Button(Hexagon_Button):
@@ -444,13 +444,9 @@ class Default_Sound(Hexagon_Button):
         self.init_text()
         self.value = False
 
-    def reset(self):
-        self.On = False
-        self.value = False
-
     def functionality(self):
-        #activates campaign mode
-        self.value = True
+        self.Settings.default_volume()
+        self.value = True #Sends a signal to menus loop to init sliders
 
 class Save_Settings(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
@@ -461,8 +457,8 @@ class Save_Settings(Hexagon_Button):
         self.Settings = Settings
 
     def functionality(self):
-        #activates campaign mode
-        self.Settings.save_volume()
+        self.Settings.Save_settings()
+        print("Saved")
 
 class Full_Screen(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,Settings,active):
@@ -473,7 +469,6 @@ class Full_Screen(Hexagon_Button):
         self.init_text()
     
     def functionality(self):
-        #activates campaign mode
         self.Settings.toggle_fullscreen()
   
 #In game: play-------------

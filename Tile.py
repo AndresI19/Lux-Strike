@@ -238,7 +238,9 @@ class Grass(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
         Tile.__init__(self,Screen,col,row,cliffs,elevation)
         #randomize grass environement 
-        Choice = choice(range(4),1,False,[.55,.35,.05,.05])
+        #probs = [.49,.34,.07,.06,.04]
+        probs = [.55,.35,.05,.05]
+        Choice = choice(range(4),1,False,probs)
         self.Hexagon_image = pygame.image.load(
             'Tiles/Grass/H0{}.png'.format(Choice[0])
             ).convert()

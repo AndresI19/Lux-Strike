@@ -1,69 +1,78 @@
 import pygame.display
-import text_reader as tr
+import json
 
-#class for player set variables
+#Class for display,sound and TODO: control variables
 class Settings():
     def __init__(self):
-        #Initialize games static settings.
-        # Screen settings
-        self.resolution_list = ((1920,1080),(1600,900),(1280,720),(640,480))
-        self.resolution = 1
-        self.init_Screen()
-
+        self.path = 'Saved_Worlds/Settings.json'
+        self.settings = {           #These are default settings, this dictionary gets implemented but in case something fails its here
+            "Master volume" : 100,
+            "SFX volume" : 100,
+            "Music volume" : 100,
+            "Voice volume" : 100,
+            "Resolution" : [1600,900],
+            "Full Screen" : False
+        }
         self.drag_sensativity = 1
-        self.fullscreen = False
-
-        self.set_settings_from_file()
+        self.Load_settings()
+        self.init_Screen()
         
         self.box = 0
 
     def init_Screen(self):
-        self.Screen_width = self.resolution_list[self.resolution][0]
-        self.Screen_height = self.resolution_list[self.resolution][1]
+        self.Screen_width, self.Screen_height = self.settings['Resolution']
         self.Screen_center = [self.Screen_width//2,self.Screen_height//2]
         self.mouseX_scaling = 1920/self.Screen_width
         self.mouseY_scaling = 1080/self.Screen_height
-
-    def create_window(self,window):
-        Window = pygame.display.set_mode((self.Screen_width,self.Screen_height))
-        return Window
-
-    def set_settings_from_file(self):
-        self.master_volume = tr.get_settings('master_volume')
-        self.SFX_volume = tr.get_settings('SFX_volume')
-        self.music_volume = tr.get_settings('music_volume')
-        self.voice_volume = tr.get_settings('voice_volume')
-
-    def set_default_settings(self):
-        self.master_volume = 100
-        self.SFX_volume = 100
-        self.music_volume = 100
-        self.voice_volume = 100
-
-    def set_master_volume(self,value):
-        value = round(value)
-        self.master_volume = value
-        self.SFX_volume *= value
-        self.music_volume *= value
-        self.voice_volume *= value
-
-    #simple full screen toggle
-    def toggle_fullscreen(self):
-        if self.fullscreen:
-            self.fullscreen = False
-            self.resolution = 1
-            self.init_Screen()
-            pygame.display.set_mode((
-                self.resolution_list[self.resolution]))
+    
+    def create_window(self):
+        if self.settings['Full Screen']:
+            window = pygame.display.set_mode(self.settings['Resolution'],pygame.FULLSCREEN)
         else:
-            self.fullscreen = True
-            self.resolution = 0
-            self.init_Screen()
-            pygame.display.set_mode((
-                self.resolution_list[self.resolution]),pygame.FULLSCREEN)
+            window = pygame.display.set_mode((self.Screen_width,self.Screen_height))
 
-    def save_volume(self):
-        tr.set_setting('master_volume',self.master_volume)
-        tr.set_setting('SFX_volume',self.SFX_volume)
-        tr.set_setting('music_volume',self.music_volume)
-        tr.set_setting('voice_volume',self.voice_volume)
+        return window
+
+    def default_resolution(self):
+        self.settings['Resolution'] = [1600,900]
+        self.settings['Full Screen'] = False
+
+    def toggle_fullscreen(self):
+        if self.settings['Full Screen']:
+            self.settings['Full Screen'] = False
+            self.settings['Resolution'] = [1600,900]
+            self.init_Screen()
+            pygame.display.set_mode(self.settings['Resolution'])
+        else:
+            self.settings['Full Screen'] = True
+            self.settings['Resolution'] = [1920,1080]
+            self.init_Screen()
+            pygame.display.set_mode(self.settings['Resolution'],pygame.FULLSCREEN)
+
+    def default_volume(self):
+        self.settings["Master volume"] = 100
+        self.settings["SFX volume"] = 100
+        self.settings["Music volume"] = 100
+        self.settings["Voice volume"] = 100
+
+    def Save_settings(self):
+        data = {
+            "Master volume" : self.settings['Master volume'],
+            "SFX volume" : self.settings['SFX volume'],
+            "Music volume" : self.settings['Music volume'],
+            "Voice volume" : self.settings['Voice volume'],
+            "Resolution" : self.settings['Resolution'],
+            "Full Screen" : self.settings['Full Screen']
+        }
+        with open (self.path,'w') as Save_file:
+            json.dump(data,Save_file)
+
+    def Load_settings(self):
+        with open (self.path,'r') as Save_file:
+            data = json.load(Save_file)
+        self.settings['Master volume'] = data["Master volume"]
+        self.settings['SFX volume'] = data["SFX volume"]
+        self.settings['Music volume'] = data["Music volume"]
+        self.settings['Voice volume'] = data["Voice volume"]
+        self.settings['Resolution'] = data["Resolution"]
+        self.settings['Full Screen'] = data["Full Screen"]

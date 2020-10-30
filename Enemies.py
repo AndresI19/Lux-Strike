@@ -1,8 +1,7 @@
-import pygame
+import pygame,random
 from Player import MOB
 from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
-import random
 from Drops import Money_drop,Key
 from Tessellation import Animation
 
@@ -14,7 +13,7 @@ class ENEMIES():
         self.Group = []
         self.Max_Parameters = Max_Parameters
         self.max_enemies = 18
-        self.quotas = [['swanzai', self.max_enemies - 1],['nest',1]]
+        self.quotas = [['swanzai', self.max_enemies - 3],['nest',1],['rabbo',2]]
         self.spawn_random(World,Player)
 
 ###Enemy operations vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -76,6 +75,8 @@ class ENEMIES():
                 Enemy = swanzai(self.Screen,World,(col,row))
             elif enemy_type == 'nest':
                 Enemy = nest(self.Screen,World,self,(col,row))
+            elif enemy_type == 'rabbo':
+                Enemy = rabbit(self.Screen,World,(col,row))
             return Enemy
             
         for i in range(len(self.quotas)):
@@ -173,12 +174,12 @@ class enemy(MOB):
             coords = World.Map.get_NW(coords)
         self.set_direction(coords,direction)
 
-
     def set_direction(self,coords,D):
-        Dcol, Drow = coords
-        self.dx = Dcol
-        self.dy = Drow
-        self.D = D
+        if coords != False:
+            Dcol, Drow = coords
+            self.dx = Dcol
+            self.dy = Drow
+            self.D = D
 
 ###Action Functions.........................."""
     def action(self,Player):
@@ -230,22 +231,57 @@ class nest(enemy):
         self.Group = Enemies.Group
         self.Clutch = []
         self.Max_Clutch = 3
-        self.Action_speed = 4
+        self.Action_speed = 7
         self.Turn_count = 0
         self.jiggle_frame = 0
         self.jiggle = True
+        self.spawn_circle = World.Map.get_circle(self.col,self.row,1)
+        for point in self.spawn_circle:
+            col,row = point
+            if World.Map.check_bounds(col,row) == False:
+                self.spawn_circle.remove([col,row])
+        self.spawn_circle.remove([self.col,self.row])
+        self.World = World
 
     def Queue_movement(self,World,n):
         return
 
     def action(self,player):
-        """TODO: FIXME: this function is untested: should spawn in 
-        an open space near the nest. Requires hex logic"""
-        return
+        def compare(coords):
+            col, row = coords
+            if player.col == col and player.row == row:
+                return False
+            for Enemy in self.Group:
+                if Enemy.col == col and Enemy.row == row:
+                    return False
+            return True
+
+        def choose_spawn():
+            active = True
+            temp = self.spawn_circle.copy()
+            while active:
+                choice = random.choice(temp)
+                if compare(choice):
+                    active = False
+                    new_mob = swanzai(self.Screen,self.World,choice)
+                    self.Group.append(new_mob)
+                    self.Clutch.append(new_mob)
+                else:
+                    temp.remove(choice)
+                    if len(temp) == 0:
+                        active = False
+
+        if self.Turn_count + 1 >= self.Action_speed:
+            self.Turn_count = 0
+            choose_spawn()
+        else:
+            if self.Turn_count + 1 == self.Action_speed - 1:
+                self.jiggle = True
+            self.Turn_count += 1
 
     def animate(self,x = 1):
         if self.jiggle:
-            if self.jiggle_frame +1 >= 12:
+            if self.jiggle_frame +1 >= 32:
                 self.jiggle_frame = 0
                 self.jiggle = False
             else:
@@ -257,6 +293,31 @@ class nest(enemy):
     def Draw(self):
         self.animate(4)
         self.Screen.blit(self.MOB_image, self.MOB_rect)
+
+class rabbit(enemy):
+    def __init__(self,Screen,World,coordinates):
+        enemy.__init__(self,Screen,World,coordinates)
+        self.MOB_image = pygame.image.load('Enemies/Rabbo.png').convert()
+        self.MOB_image.set_colorkey((255,0,255))
+        self.MOB_rect = self.MOB_image.get_rect()
+
+    def choose_direction(self,World):
+        #Zombie AI: simply move to toward the player location
+        direction = World.Map.get_direction([self.col,self.row],self.Player_location)
+        coords = [self.col,self.row]
+        if direction == 'N':
+            coords = World.Map.get_S(coords)
+        elif direction == 'NE':
+            coords = World.Map.get_SW(coords)
+        elif direction == 'SE':
+            coords = World.Map.get_NW(coords)
+        elif direction == 'S':
+            coords = World.Map.get_N(coords)
+        elif direction == 'SW':
+            coords = World.Map.get_NE(coords)
+        elif direction == 'NW':
+            coords = World.Map.get_SE(coords)
+        self.set_direction(coords,direction)
 
 class exclamation_mark():
     def __init__(self,Screen):
@@ -271,7 +332,7 @@ class exclamation_mark():
         image = images[0]
         self.rect = image.get_rect()
 
-        self.Animation = Animation(Screen,images,2)
+        self.Animation = Animation(Screen,images,3)
 
     def draw(self,screen):
         self.Animation.once(self.rect)

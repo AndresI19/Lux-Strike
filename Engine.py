@@ -1,6 +1,4 @@
-import pygame
-import pygame.display
-import sys
+import sys, pygame, pygame.display
 from Graphics import Menu_diplay
 
 """Main Loop *************************************************************************"""
@@ -380,14 +378,14 @@ def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
     HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
     Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
 
-def new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera):
+def new_world_init(Ctrl_Vars,Screen,World,Camera):
     if Ctrl_Vars.Game_Menu_Vars.Random:
-        World.__init__(Screen,None,Window,Settings)
+        World.__init__(Screen,None)
         Ctrl_Vars.seed = str(World.seed)
         Ctrl_Vars.Game_Menu_Vars.Random = False
     elif Ctrl_Vars.Game_Menu_Vars.Custom:
         Seed = Ctrl_Vars.seed
-        World.__init__(Screen,Seed,Window,Settings)
+        World.__init__(Screen,Seed)
         Ctrl_Vars.Game_Menu_Vars.Custom = False
     elif Ctrl_Vars.restart_world:
         Ctrl_Vars.restart_world = False

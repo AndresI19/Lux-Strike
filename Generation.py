@@ -2,7 +2,6 @@
 import math
 import RNG as rng
 from pygame import display
-from Menus import load_world_screen as loading_screen
 import numpy
 import random
 import sys
@@ -11,7 +10,7 @@ sys.setrecursionlimit(2000)
 limit = sys.getrecursionlimit()
 
 class generation():
-    def __init__(self,Seed,Max_parameters,Screen,Window,Settings):
+    def __init__(self,Seed,Max_parameters,Screen):
         #Seed for world gen!
         if type(Seed) == str:
             self.seed = Seed
@@ -22,9 +21,6 @@ class generation():
         #set max height 
         self.total_tiers = rng.seed_random_bound_int(
             self.seed, (3,6), 0)
-        #Loading
-        N = 1
-        self.Loading_screen = loading_screen(Window,Screen,Settings,N)
 
         #start -----------
         self.center = [0,0]

@@ -1,6 +1,4 @@
-import pygame.font
-import pygame
-import json
+import pygame.font,pygame,json
 pygame.font.init()
 
 """A text file is written with dialog in it. It is written in such a way
@@ -143,6 +141,179 @@ def fill_to_x(line,count,x):
             name += char
     return name
 
+#JSON SAVE GAME - MAP READ - SAVED SETTINGS and SEEDS
+#Saving World -------------------------------------------------------------
+
+def Save_world(name,World,Player,Enemies,Drops):
+    path = 'Saved Worlds/Saved.json'
+    Save_map(name,World)
+    stats = [Player.Stats.Health_Points,Player.Stat.Laser_Heat,Player.Stats.Money,Player.combo,Player.keys]
+    info = [Player.col,Player.row,Player.elevation,stats]
+    for Enemy in Enemies:
+        other = Enemy.get_info()
+        info = [Enemy.ID,[Enemy.col,Enemy.row],Enemy.elevation,other]
+    for Drop in Drops:
+        info = [type(Drop),[Drop.col,Drop.row],Drop.value]
+
+def Save_map(name,World,save_state = None):
+    path = 'Saved Worlds/Saved.json'
+    Matrix = [[None for x in range(World.num_cols)] for y in range(World.num_rows)]
+    for col in World.num_cols:
+        for row in World.num_rows:
+            tile = World.Map.get_data(col,row)
+            info = [tile.ID,tile.elevation,tile.cliffs]
+            Matrix[col][row] = info
+    spawn = [World.spawn_col,World.spawn_row]
+
+class Dialog_box():
+    def __init__(self,Screen,Ctrl_Vars):
+        self.path = 'Dialog/Dialog.json'
+        self.Screen = Screen
+        self.Screen_rect = self.Screen.get_rect()
+        self.Ctrl_Vars = Ctrl_Vars
+        color,alpha = (2,2,70),185
+        self.init_background(color,alpha)
+
+        self.dialog_x,self.dialog_y = self.background_rect.left + 40, self.background_rect.top + 20
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",25)
+        self.font.set_bold(True)
+
+        self.character_name = ''
+
+        self.frame = 0
+        self.box = []
+        self.dialog = []
+        self.dialog_play = False
+        self.SFX = pygame.mixer.Sound("SFX/new dialog box.wav")
+
+    def init_dialog(self,Code):
+        File = "Dialog/Dialog.txt"
+        self.dialog = text_reader.load_text(Code,File)
+        self.init_box()
+        self.dialog_play = True
+
+    ##Initializing Dialog Box
+    def init_background(self,color,alpha):
+        self.background_image = pygame.Surface(
+            (self.Screen_rect.width//2,self.Screen_rect.height//5)
+            )
+        self.background_image.convert()
+        self.background_image.fill(color)
+        self.background_image.set_alpha(alpha)
+        self.background_rect = self.background_image.get_rect()
+        self.background_rect.centerx = self.Screen_rect.centerx
+        self.background_rect.bottom = self.Screen_rect.bottom - 100
+
+    def init_box(self):
+        if self.Ctrl_Vars.box_count < len(self.dialog):
+            count = self.Ctrl_Vars.box_count
+            profile = self.dialog[count][0]
+            self.character_name = profile['Character']
+            self.init_character_text()
+            self.image_path = profile['Image_Code']
+            self.portrait_side = profile['Side']
+            self.init_portraits()
+            self.box = self.dialog[count][1]
+            pygame.mixer.Sound.play(self.SFX)
+
+    def init_character_text(self):
+        self.font_image = self.font.render(self.character_name,True,(255,255,255),None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.right = self.background_rect.right - 15
+        self.font_rect.bottom = self.background_rect.bottom - 10
+
+    def init_portraits(self):
+        self.portrait = pygame.image.load("Portraits/{}.png".format(
+            self.image_path)).convert()
+        self.portrait.set_colorkey((255,0,255))
+        self.portrait_rect = self.portrait.get_rect()
+        self.portrait_rect.centery = self.background_rect.centery
+        self.portrait_rect.centerx = (self.background_rect.centerx - (
+            int(self.portrait_side)*(self.background_rect.right - self.background_rect.centerx + 75))
+            )
+        if int(self.portrait_side) == -1:
+            self.portrait = pygame.transform.flip(self.portrait, True, False)
+    ##Drawing Dialog Box
+    def draw(self):
+        if self.dialog_play:
+            if self.Ctrl_Vars.box_count < len(self.dialog):
+                self.Screen.blit(self.background_image, self.background_rect)
+                self.Screen.blit(self.font_image, self.font_rect)
+                self.text_scroll()
+                self.Screen.blit(self.portrait, self.portrait_rect)
+            else:
+                self.dialog_play = False
+                self.Ctrl_Vars.box_count = 0
+
+    def text_scroll(self):
+        x = self.dialog_x
+        y = self.dialog_y
+        for line in self.box:
+            for word in line:
+                word.draw(self.Screen,(x,y))
+                if word.full == False:
+                    break
+                x += word.font_rect.right
+            if not line[-1].full:
+                break
+            y += word.font_rect.bottom
+            x = self.dialog_x
+
+#EXAMPLE OF DOCUMENT______________________________________________________________________________________________
+"""dialog = {                           |                                                                         |
+    'Event':[                           |Event code, which dialog event to look for. As many as there are events. |
+        {                               |For each even there is: The name of the speaker, their picture path,     |
+        'Speaker' = 'Dr.Navy',          |and the actual dialog                                                    |
+        'Portrait' = 'Code',            |                                                                         |
+        'Dialog' = []                   |Each entry in this list is a string, there should be may say 4 maximum.  |
+        },                              |This gets converted into word objects.                                   |
+        {                               |                                                                         |
+        'Speaker' = 'Swanzai',          | path =  'Dialog/Dialog.json'                                            |
+        'Portrait' = 'Code2',           |                                                                         |
+        'Dialog' = []                   |    TODO: Maybe there will need to be voice file codes in the future     |
+        }                               |                                                                         |
+    ]                                   |                                                                         |
+}"""#___________________________________|_________________________________________________________________________|
+
+dialog = {
+    'Event':[                      
+        {                      
+        'Speaker' : 'Dr.Navy',
+        'Portrait' : 'Code',
+        'Dialog' : ['Wah']               
+        },
+        {                             
+        'Speaker' : 'Swanzai',
+        'Portrait' : 'Code2',
+        'Dialog' : []
+        }
+    ]
+}
+
+#TODO:NEXT INSTRUCTIONS:
+#Run each entry of dialog list into a word object conversion. Find a way to pace this to the class object.
+#Craft a code that will handle playing all the data simultaniusly. Instead of blitting to the screen, blit to the box.
+
+def load_event(Event_Code):
+    path =  'Dialog/Dialog.json'
+    with open(path,'r') as File:
+        Events = json.load(File)
+        event = Events[Event_Code]
+    for Page in event:
+        Speaker = Page['Speaker']
+        Portrait = Page['Portrait']
+        Dialog = Page['Dialog']
+        print(Speaker)
+        print(Portrait)
+        print(Dialog)
+
+"""path =  'Dialog/Dialog.json'
+with open(path,'w') as File:
+    json.dump(dialog,File)
+load_event('Event')"""
+
+
+
 class word_object():
     #Word object, is nothing more than a rendered text object, with the ability to display in a certain way
     def __init__(self,word,tags):
@@ -151,8 +322,7 @@ class word_object():
         self.text = ""
         self.frame = 0
         self.full = False
-        self.quake = False
-        self.flash = False
+        self.quake,self.flash = False,False
         self.set_tags(tags)
         font_size = 28
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
@@ -187,9 +357,9 @@ class word_object():
         y = coordinates[1]
         if self.quake:
             if self.frame%4 == 0:
-                y += 1
+                y += 2
             elif self.frame%4 == 2:
-                y -= 1
+                y -= 2
         if self.flash:
             if self.frame%40 == 0:
                 self.font_image = self.font.render(self.text,True,self.color,None)
@@ -198,7 +368,7 @@ class word_object():
         return (x,y)
 
     def draw(self,Screen,coordinates):
-        if self.frame >= len(self.word):
+        if self.frame >= self.length:
             self.full = True
             pass
         else:
@@ -211,50 +381,3 @@ class word_object():
 
     def print(self):#for testing. will delete
         print(self.word)
-
-#Settings,_________________________________________________________________
-"""The following are functions that allow you load and save settings to file."""
-def find(Lines,Code):
-    #works just like load_text, at least the first step, could be refactored. suggested to be refactored actually
-    line_count = 0
-    offset = 0
-    for line in Lines:
-        search = line[0:len(Code)]
-        if search == Code:
-            return [line_count,offset]
-        offset += len(line)
-        line_count += 1
-
-def recieve_setting(Lines,location,Code):
-    #gets a value from file
-    line = Lines[location]
-    start = len(Code)+3
-    setting = ''
-    for char in line[start:]:
-        setting += char
-    return setting.strip()
-
-"""main calls %%%%%%%%%%%%%%%%%%%%%"""
-def get_settings(Code):
-    #parces file, this file v for a setting by code, to retrieve data.
-    File = 'Saved_Worlds/Settings.txt'
-    File = open(File,"r+")
-    Lines = File.readlines()
-    location = find(Lines,Code)
-    line_location = location[0]
-    setting = recieve_setting(Lines,line_location,Code)
-    File.close()
-    return int(setting)
-
-def set_setting(Code,Setting):
-    #saves current settings to file, well, saves passed arguement. intended for settings
-    File = 'Saved_Worlds/Settings.txt'
-    File = open(File,"r+")
-    Lines = File.readlines()
-    location = find(Lines,Code)
-    offset = location[1]
-    File.seek(offset)
-    File.writelines("{} = {} ".format(Code,Setting))
-    File.close()
-
-#JSON SAVE GAME - MAP READ - SAVED SETTINGS and SEEDS

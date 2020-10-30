@@ -116,13 +116,13 @@ class Sound_Menu():
         self.init_slider_values()
 
     def init_slider_values(self):
-        self.MasterV_Slider.value = self.Settings.master_volume
+        self.MasterV_Slider.value = self.Settings.settings["Master volume"]
         self.MasterV_Slider.set_Knob()
-        self.MusicV_slider.value = self.Settings.music_volume
+        self.MusicV_slider.value = self.Settings.settings["Music volume"]
         self.MusicV_slider.set_Knob()
-        self.SFX_slider.value = self.Settings.SFX_volume
+        self.SFX_slider.value = self.Settings.settings["SFX volume"]
         self.SFX_slider.set_Knob()
-        self.Voice_slider.value = self.Settings.voice_volume
+        self.Voice_slider.value = self.Settings.settings["Voice volume"]
         self.Voice_slider.set_Knob()
 
     def init_buttons(self):
@@ -136,13 +136,13 @@ class Sound_Menu():
     ##Standard
     def update(self):
         if self.Default.value:
-            self.Settings.set_default_settings()
             self.init_slider_values()
-        self.Settings.master_volume = self.MasterV_Slider.value
-        self.Settings.music_volume = self.MusicV_slider.value
-        self.Settings.SFX_volume = self.SFX_slider.value
-        self.Settings.voice_volume = self.Voice_slider.value
-        pygame.mixer.music.set_volume(self.Settings.master_volume/100)
+            self.Default.value = False
+        self.Settings.settings["Master volume"] = self.MasterV_Slider.value
+        self.Settings.settings["Music volume"] = self.MusicV_slider.value
+        self.Settings.settings["SFX volume"] = self.SFX_slider.value
+        self.Settings.settings["Voice volume"] = self.Voice_slider.value
+        pygame.mixer.music.set_volume(self.Settings.settings["Master volume"]/100)
 
     def draw(self):
         self.update()
@@ -168,14 +168,15 @@ class Display_Menu():
 
     def init_buttons(self):
         #Buttons
-        #TODO: self.Menus.append(Buttons.Save_Settings(Screen,9,1,Ctrl_Vars,Settings,True)) #commit
+        Save = Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings) #commit
         Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)
         Full_Screen = Buttons.Full_Screen(self.Screen,[4,2],self.Ctrl_Vars,self.Settings,True)
-        R1920X1080 = Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,0,"1920X1080")
-        R1600X900 = Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,1,"1600X900")
-        R1280X720 = Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,2,"1280X720")
-        R640X480 = Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,3,"640X480")
+        R1920X1080 = Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,[1920,1080],"1920X1080")
+        R1600X900 = Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,[1600,900],"1600X900")
+        R1280X720 = Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,[1280,720],"1280X720")
+        R640X480 = Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,[640,480],"640X480")
 
+        self.Menus.append(Save)
         self.Menus.append(Back_Nav) #back button
         self.Menus.append(Full_Screen)
         self.Menus.append(R1920X1080)
@@ -450,69 +451,3 @@ class Background():
 
     def draw(self):
         self.Animation.loop((0,0))
-
-""" TODO: #Loading Screen object"""
-class load_world_screen():
-    def __init__(self,Window,Screen,Settings,N):
-        #loading screen variables
-        self.Window = Window
-        self.Settings = Settings
-        self.Screen = Screen
-        self.screen_rect = self.Screen.get_rect()
-
-        self.bar_size = (self.screen_rect.width * 9) // 10
-        self.bar_left = self.screen_rect.width/20 + 2
-        self.bar_top = self.screen_rect.bottom * (9/10) - 100
-        self.bar = pygame.image.load('HUD/Bar.png')
-
-        self.N = N
-        self.i = float(1/N) * 100 * 2
-        self.requirement = self.bar_size/self.N
-
-
-        self.count = 0 #dynamic
-        self.bar_frame = pygame.image.load('HUD/Load_Bar.png').convert()
-        self.bar_frame.set_colorkey((255,0,255))
-        self.Screen.blit(self.bar_frame,(0,self.bar_top-9))
-
-        self.init_text()
-        self.scale_draw()
-
-    def scale_draw(self):
-        if not self.Settings.resolution == 0:
-            Screen = pygame.transform.scale(
-                self.Screen,(self.Settings.Screen_width,self.Settings.Screen_height))
-        else:
-            Screen = self.Screen
-        self.Window.blit(Screen,(0,0))
-        pygame.display.flip()
-
-    def Update(self):
-        self.count += self.i
-        if self.count >= self.requirement:
-            self.count = 0
-            self.bar_left += 2
-            if self.bar_left <= (1826):
-                self.Screen.blit(self.bar,(self.bar_left,self.bar_top))
-            self.scale_draw()
-        
-    def init_text(self):
-        text = "Loading..."
-        font_size = 45
-        text_color = ((255,255,255))
-        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
-        font.set_bold(True)
-
-        font_image = font.render(text,True,text_color,None)
-        font_rect = font_image.get_rect()
-        surface = pygame.Surface((font_rect.right,font_rect.bottom))
-        font_rect.right = self.screen_rect.right - 50
-        font_rect.centery = self.bar_top - 40
-
-        surface_rect = surface.get_rect()
-
-        surface.fill((0, 0, 0))
-        surface.blit(font_image, surface_rect)
-        surface.set_alpha(105)
-
-        self.Screen.blit(surface,font_rect)

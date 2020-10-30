@@ -1,5 +1,4 @@
-import pygame
-import pygame.font
+import pygame,pygame.font
 import text_reader
 from Tessellation import Animation
 pygame.mixer.init()

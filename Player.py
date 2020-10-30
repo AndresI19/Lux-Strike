@@ -11,10 +11,8 @@ class MOB():
         self.row = 0
         self.off_center = 1
 
-        #relative grid location
+        #info
         self.D = 'SW'
-        self.dy = 0
-        self.dx = 0
         self.elevation = 0
 
         #pixel coordinate information
@@ -25,6 +23,8 @@ class MOB():
         self.hitstun = False
 
         self.spawn()
+        self.dx = self.col
+        self.dy = self.row
     
     #spawn player in start location
     def compare_spawn(self,coords):

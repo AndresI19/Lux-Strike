@@ -4,12 +4,8 @@ debug = False
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,30)
-import sys
-import pygame
-import time
-import Engine
-import Graphics
-import Menus
+import sys,pygame,time
+import Engine,Graphics,Menus
 #objects
 from Settings import Settings
 from Control_variables import Ctrl_Vars
@@ -30,11 +26,11 @@ pygame.mixer.pre_init(22050, -16, 2, 1024)
 pygame.init()
 pygame.mixer.quit()
 pygame.mixer.init(22050, -16, 2, 1024)
-pygame.mixer.music.set_volume(Settings.master_volume/100)
+pygame.mixer.music.set_volume(Settings.settings["Master volume"]/100)
 
 ##Window
 Screen = pygame.Surface((1920,1080))
-Window = pygame.display.set_mode((Settings.Screen_width,Settings.Screen_height))
+Window = Settings.create_window()
 pygame.display.set_caption("Lux Strike")
 Icon = pygame.image.load('HUD/Icon.png').convert()
 Icon.set_colorkey((255,0,255))
@@ -45,20 +41,22 @@ studio = pygame.image.load('Title/Studio.png')
 Screen.blit(studio,(0,0))
 Graphics.scale(Window,Screen,Settings)
 pygame.display.flip()
+N = 2
+#Loading = Graphics.Load_Screen(Window,Screen,Settings,N)
 #--
 
 #initialize control variables
 Ctrl_Vars = Ctrl_Vars(debug)
 
 #initialization swtich menu: Can probobaly move to world module
-def world_init(Ctrl_Vars,Screen,Window,Settings):
+def world_init(Ctrl_Vars,Screen):
     if Ctrl_Vars.Game_Menu_Vars.Random:
-        world = World(Screen,None,Window,Settings)
+        world = World(Screen,None)
         Ctrl_Vars.seed = str(world.seed)
         Ctrl_Vars.Game_Menu_Vars.Random = False
     elif Ctrl_Vars.Game_Menu_Vars.Custom:
         Seed = Ctrl_Vars.seed
-        world = World(Screen,Seed,Window,Settings)
+        world = World(Screen,Seed)
         Ctrl_Vars.Game_Menu_Vars.Custom = False
     return world
 
@@ -80,7 +78,7 @@ while True:
             pygame.display.flip()
             #Initialization of major game objects
             if not Ctrl_Vars.initialized:
-                World = world_init(Ctrl_Vars,Screen,Window,Settings)
+                World = world_init(Ctrl_Vars,Screen)
                 Max_parameters = [World.num_cols,World.num_rows]
                 spawn_coord = [World.spawn_col,World.spawn_row]
                 Player = Player(Screen,spawn_coord)
@@ -90,7 +88,7 @@ while True:
                 Camera = Camera(World,Player,Enemies,Drops)
                 Ctrl_Vars.initialized = True
             else:
-                Engine.new_world_init(Ctrl_Vars,Screen,World,Window,Settings,Camera) 
+                Engine.new_world_init(Ctrl_Vars,Screen,World,Camera) 
                 Engine.re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
             Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
         #-------------------------------------------------------------------------------------------*
