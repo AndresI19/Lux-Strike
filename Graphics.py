@@ -35,7 +35,7 @@ def Menu_diplay(Menu):
 #graphics master loops ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """ TODO: #Loading Screen object"""
 class Load_Screen():
-    def __init__(self,Window,Screen,Settings,N):
+    def __init__(self,Window,Screen,Settings):
         #loading screen variables
         self.Window = Window
         self.Settings = Settings
@@ -47,11 +47,6 @@ class Load_Screen():
         self.bar_top = self.screen_rect.bottom * (9/10) - 100
         self.bar = pygame.image.load('HUD/Bar.png')
 
-        self.N = N
-        self.i = float(1/N) * 100 * 2
-        self.requirement = self.bar_size/self.N
-
-
         self.count = 0 #dynamic
         self.bar_frame = pygame.image.load('HUD/Load_Bar.png').convert()
         self.bar_frame.set_colorkey((255,0,255))
@@ -59,6 +54,10 @@ class Load_Screen():
 
         self.init_text()
         self.scale_draw()
+
+    def set_steps(self,N):
+        self.i = float(1/N) * 100 * 2
+        self.requirement = self.bar_size/N
 
     def scale_draw(self):
         if not self.Settings.settings['Resolution'] == [1920,1080]:
@@ -98,3 +97,70 @@ class Load_Screen():
         surface.set_alpha(105)
 
         self.Screen.blit(surface,font_rect)
+
+class word_object():
+    #Word object, is nothing more than a rendered text object, with the ability to display in a certain way
+    def __init__(self,word,tags):
+        self.word = word
+        self.length = len(self.word)
+        self.text = ""
+        self.frame = 0
+        self.full = False
+        self.quake,self.flash = False,False
+        self.set_tags(tags)
+        font_size = 30
+        self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
+        self.font.set_bold(True)
+        self.sound = pygame.mixer.Sound("SFX/letter type.wav")
+
+    def init_text(self):
+        self.font_image = self.font.render(self.text,True,self.color,None)
+        self.font_rect = self.font_image.get_rect()
+
+    def set_tags(self,tags):
+        #/ - New line || $ - Color || % - Effect
+        self.color = (255,255,255)
+        for tag in tags:
+            if tag[0] == '$':
+                if tag[1] == 'R':
+                    self.color = (255,0,0)
+                elif tag[1] == 'G':
+                    self.color = (0,255,0)
+                elif tag[1] == 'B':
+                    self.color = (0,0,255)
+                elif tag[1] == 'Y':
+                    self.color = (255,255,0)
+            elif tag[0] == '%':
+                if tag[1] == 'Q':
+                    self.quake = True
+                elif tag[1] == 'F':
+                    self.flash = True
+
+    def after_effects(self,coordinates):
+        x = coordinates[0]
+        y = coordinates[1]
+        if self.quake:
+            if self.frame%4 == 0:
+                y += 2
+            elif self.frame%4 == 2:
+                y -= 2
+        if self.flash:
+            if self.frame%40 == 0:
+                self.font_image = self.font.render(self.text,True,self.color,None)
+            elif self.frame%40 == 20:
+                self.font_image = self.font.render(self.text,True,(0,0,0),None)
+        return (x,y)
+
+    def draw(self,Screen,coordinates):
+        if self.frame >= self.length:
+            self.full = True
+        else:
+            self.text += self.word[self.frame]
+            self.init_text()
+            pygame.mixer.Sound.play(self.sound)
+        self.frame += 1
+        coordinates = self.after_effects(coordinates)
+        Screen.blit(self.font_image,coordinates)
+
+    def print(self):#for testing. will delete
+        print(self.word)

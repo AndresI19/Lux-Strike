@@ -301,6 +301,15 @@ class rabbit(enemy):
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
 
+    def action(self,Player):
+        if self.aware:
+            self.choose_direction()
+        else:
+            self.scan(Player,2)
+        col = Player.col
+        row = Player.row
+        self.update_player_location(col,row)
+
     def choose_direction(self,World):
         #Zombie AI: simply move to toward the player location
         direction = World.Map.get_direction([self.col,self.row],self.Player_location)

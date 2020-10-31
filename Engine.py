@@ -110,13 +110,13 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
         Ctrl_Vars.LSHIFT_DOWN = True
     elif event.key == pygame.K_SPACE:
         if Ctrl_Vars.LSHIFT_DOWN == False:
-            Ctrl_Vars.box_count += 1
-            HUD.Dialog_box.init_box()
+            Ctrl_Vars.page_count += 1
+            HUD.Dialog_box.init_page()
         else:
             if Player.Stats.Laser_Heat < 5:
                 Player.Stats.Laser_Heat += 1
                 if Player.Stats.Laser_Heat == 5:
-                    HUD.Dialog_box.init_dialog('ScortchingHot0')
+                    HUD.Dialog_box.load_event('ScortchingHot')
                 HUD.Laser_Gauge.init_charge()
                 laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.col,Player.row])
                 HUD.Combo.update()
@@ -127,7 +127,7 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
         print("Player Grid Coordinates = Col:{},Row:{}".format(Player.col,Player.row))
         Spot = World.Map.data(Player.col,Player.row).get_Character_Spot()
         print("Player Pixel Coordinates = X: {}, Y:{}".format(Spot[0],Spot[1]))
-        HUD.Dialog_box.init_dialog('Tutorial1')
+        HUD.Dialog_box.load_event('Test')
     elif event.key == pygame.K_F2:
         World.Map.data(Player.col,Player.row).Hexagon_image.set_alpha(50)
         for door in World.Doors:
@@ -256,36 +256,35 @@ def check_hover(Settings,Buttons):
         Buttons[i].check_contained(x,y)
 
 def num_keys(event,Ctrl_Vars):
-    if len(Ctrl_Vars.seed) <= 18:
-        if len(Ctrl_Vars.seed) < 18:
-            if event.key == pygame.K_1:
-                Ctrl_Vars.seed += "1"
-            elif event.key == pygame.K_2:
-                Ctrl_Vars.seed += "2"
-            elif event.key == pygame.K_3:
-                Ctrl_Vars.seed += "3"
-            elif event.key == pygame.K_4:
-                Ctrl_Vars.seed += "4"
-            elif event.key == pygame.K_5:
-                Ctrl_Vars.seed += "5"
-            elif event.key == pygame.K_6:
-                Ctrl_Vars.seed += "6"
-            elif event.key == pygame.K_7:
-                Ctrl_Vars.seed += "7"
-            elif event.key == pygame.K_8:
-                Ctrl_Vars.seed += "8"
-            elif event.key == pygame.K_9:
-                Ctrl_Vars.seed += "9"
-            elif event.key == pygame.K_0:
-                Ctrl_Vars.seed += "0"
-        elif event.key == pygame.K_BACKSPACE:
-            Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
-        elif event.key == pygame.K_KP_ENTER:
-            if len(Ctrl_Vars.seed) >= 18:
-                Ctrl_Vars.seed_menu = False
-                Ctrl_Vars.load_world = True
-                Ctrl_Vars.set_seed = True
-                Ctrl_Vars.Start_Screen = False
+    if len(Ctrl_Vars.seed) < 18:
+        if event.key == pygame.K_1:
+            Ctrl_Vars.seed += "1"
+        elif event.key == pygame.K_2:
+            Ctrl_Vars.seed += "2"
+        elif event.key == pygame.K_3:
+            Ctrl_Vars.seed += "3"
+        elif event.key == pygame.K_4:
+            Ctrl_Vars.seed += "4"
+        elif event.key == pygame.K_5:
+            Ctrl_Vars.seed += "5"
+        elif event.key == pygame.K_6:
+            Ctrl_Vars.seed += "6"
+        elif event.key == pygame.K_7:
+            Ctrl_Vars.seed += "7"
+        elif event.key == pygame.K_8:
+            Ctrl_Vars.seed += "8"
+        elif event.key == pygame.K_9:
+            Ctrl_Vars.seed += "9"
+        elif event.key == pygame.K_0:
+            Ctrl_Vars.seed += "0"
+    elif len(Ctrl_Vars.seed) >= 18:
+        if event.key == 13:
+            Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+            Ctrl_Vars.Game_Menu_Vars.load_world = True
+            Ctrl_Vars.Game_Menu_Vars.menu_select = False
+            Ctrl_Vars.Game_Menu_Vars.Custom = True
+    if event.key == pygame.K_BACKSPACE:
+        Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
         sound = pygame.mixer.Sound("SFX/Button_press.wav")
         pygame.mixer.Sound.play(sound)
 

@@ -6,6 +6,7 @@ class Ctrl_Vars():
         self.initialized = False #memory used to know if game objects have already been loaded and dont need to be re initialized
 
         self.box_count = 0
+        self.page_count = 0
 
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.

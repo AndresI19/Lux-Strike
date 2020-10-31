@@ -1,1 +1,62 @@
-{"Event": [{"Speaker": "Dr.Navy", "Portrait": "Code", "Dialog": ["Wah"]}, {"Speaker": "Swanzai", "Portrait": "Code2", "Dialog": []}]}
+{
+    "Test": [{
+            "Speaker": "Tutorial",
+            "Portrait": "T0.1",
+            "Dialog": [
+                "Press the $RE button to move $Gnorthwest."
+            ]
+        },
+        {
+            "Speaker": "Dr.Navy",
+            "Portrait": "DN1.1",
+            "Dialog": [
+                "Oh my! What is that?"
+            ]
+        },
+        {
+            "Speaker": "???",
+            "Portrait": "SW1.-1",
+            "Dialog": [
+                "%QHHOOOooooooooonnk!"
+            ]
+        },
+        {
+            "Speaker": "Dr.Navy",
+            "Portrait": "DN1.1",
+            "Dialog": [
+                "%FMy god...", "...", "no."
+            ]
+        },
+        {
+            "Speaker": "Dr.Navy",
+            "Portrait": "DN1.1",
+            "Dialog": [
+                "Dont do that again.",
+                "This looks like a hybrid between a swan and a tree?",
+                ".................",
+                "$GSWANZAI"
+            ]
+        },
+        {
+            "Speaker": "Swanzai",
+            "Portrait": "SW1.-1",
+            "Dialog": [
+                "HooooooonnnnnKKK!"
+            ]
+        },
+        {
+            "Speaker": "Dr.Navy",
+            "Portrait": "DN1.1",
+            "Dialog": [
+                "It did it again!", "I will defeat you! Hear me Swanzai foe!"
+            ]
+        }
+    ],
+    "ScortchingHot": [{
+        "Speaker": "Dr.Navy",
+        "Portrait": "DN1.1",
+        "Dialog": [
+            "%QOW! That's $Rscortching $Rhot!"
+        ]
+    }]
+}

@@ -37,12 +37,11 @@ Icon.set_colorkey((255,0,255))
 pygame.display.set_icon(Icon)
 
 #Present start up screen --
+Loading = Graphics.Load_Screen(Window,Screen,Settings)
 studio = pygame.image.load('Title/Studio.png')
 Screen.blit(studio,(0,0))
 Graphics.scale(Window,Screen,Settings)
 pygame.display.flip()
-N = 2
-#Loading = Graphics.Load_Screen(Window,Screen,Settings,N)
 #--
 
 #initialize control variables

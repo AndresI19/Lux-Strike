@@ -361,20 +361,6 @@ class Del_Key(Hexagon_Button):
         #activates campaign mode
         self.Ctrl_Vars.seed = self.Ctrl_Vars.seed[:-1]
 
-class Enter_Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = "Enter"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        if len(self.Ctrl_Vars.seed) >= 18:
-            self.Ctrl_Vars.seed_menu = False
-            self.Ctrl_Vars.load_world = True
-            self.Ctrl_Vars.set_seed = True
-            self.Ctrl_Vars.Start_Screen = False
-
 class Clear(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)

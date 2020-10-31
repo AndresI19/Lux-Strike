@@ -1,6 +1,7 @@
 import pygame,pygame.font
-import text_reader
+from Graphics import word_object
 from Tessellation import Animation
+import json
 pygame.mixer.init()
 
 #Envelope class containing all border rectangles
@@ -13,6 +14,7 @@ class HUD():
         self.Player_Stats = Player_Stats(Screen,Player.Stats)
         self.Money_bar = Currency_bar(Screen,Player.Stats)
         self.Mini_map = Mini_map(Screen,World,Player,Enemies)
+        #self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
         self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
         self.Combo = Combo_meter(Screen,Player.Stats)
         self.Keys = Keys(Screen,Player.Stats)
@@ -150,87 +152,141 @@ class Mini_map():
 
 class Dialog_box():
     def __init__(self,Screen,Ctrl_Vars):
+        self.path = 'Dialog/Dialog.json'
         self.Screen = Screen
         self.Screen_rect = self.Screen.get_rect()
         self.Ctrl_Vars = Ctrl_Vars
+        self.color,self.alpha = (2,2,70),185
         self.init_background()
 
-        self.dialog_x = self.background_rect.left + 30
-        self.dialog_y = self.background_rect.top + 10
-
-        self.character_name = ''
+        self.dialog_x,self.dialog_y = self.background_rect.left + 40, self.background_rect.top + 20
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",25)
         self.font.set_bold(True)
 
-        self.frame = 0
-        self.box = []
-        self.dialog = []
-        self.dialog_play = False
         self.SFX = pygame.mixer.Sound("SFX/new dialog box.wav")
 
-    def init_dialog(self,Code):
-        File = "Dialog/Dialog.txt"
-        self.dialog = text_reader.load_text(Code,File)
-        self.init_box()
-        self.dialog_play = True
+        self.event = None
+        self.page_count = 0
+        self.play = False
 
-##Initializing Dialog Box
+#EXAMPLE OF DOCUMENT__________________________________________________________________________________________________.
+    """                                     |                                                                         |
+    dialog = {                              |                                                                         |
+        'Event':[                           |Event code, which dialog event to look for. As many as there are events. |
+            {                               |For each even there is: The name of the speaker, their picture path,     |
+            'Speaker' = 'Dr.Navy',          |and the actual dialog                                                    |
+            'Portrait' = 'Code.side',       |                                                                         |
+            'Dialog' = []                   |Each entry in this list is a string, there should be may say 4 maximum.  |
+            },                              |This gets converted into word objects.                                   |
+            {                               |                                                                         |
+            'Speaker' = 'Swanzai',          | path =  'Dialog/Dialog.json'                                            |
+            'Portrait' = 'Code2.side',      |                                                                         |
+            'Dialog' = []                   |    TODO: Maybe there will need to be voice file codes in the future     |
+            }                               |                                                                         |
+        ]                                   |                                                                         |
+    }                                       |                                                                         |"""               
+#___________________________________________|_________________________________________________________________________|
+
+    def load_event(self,Event_Code):
+        with open(self.path,'r') as File:
+            Events = json.load(File)
+            event = Events[Event_Code]
+        self.event = event
+        self.play = True
+        self.init_page()
+
     def init_background(self):
         self.background_image = pygame.Surface(
             (self.Screen_rect.width//2,self.Screen_rect.height//5)
             )
         self.background_image.convert()
-        self.background_image.fill((2,2,70))
-        self.background_image.set_alpha(185)
+        self.background_image.fill(self.color)
+        self.background_image.set_alpha(self.alpha)
         self.background_rect = self.background_image.get_rect()
         self.background_rect.centerx = self.Screen_rect.centerx
         self.background_rect.bottom = self.Screen_rect.bottom - 100
 
-    def init_box(self):
-        if self.Ctrl_Vars.box_count < len(self.dialog):
-            count = self.Ctrl_Vars.box_count
-            profile = self.dialog[count][0]
-            self.character_name = profile['Character']
-            self.init_character_text()
-            self.image_path = profile['Image_Code']
-            self.portrait_side = profile['Side']
-            self.init_portraits()
-            self.box = self.dialog[count][1]
+    def init_page(self):
+        if self.event != None:
             pygame.mixer.Sound.play(self.SFX)
+            if self.Ctrl_Vars.page_count >= len(self.event):
+                self.stop()
+                return
+            self.init_speaker_text()
+            self.init_portrait()
+            self.init_dialog()
+    
+    def stop(self):
+        self.event = None
+        self.Ctrl_Vars.page_count = 0
+        self.background_image.fill(self.color)
+        self.play = False
+        del self.speaker_image
+        del self.speaker_rect
+        del self.portrait
+        del self.portrait_rect
+        del self.page
 
-    def init_character_text(self):
-        self.font_image = self.font.render(self.character_name,True,(255,255,255),None)
-        self.font_rect = self.font_image.get_rect()
-        self.font_rect.right = self.background_rect.right - 15
-        self.font_rect.bottom = self.background_rect.bottom - 10
+    def init_dialog(self):
+        page = self.event[self.Ctrl_Vars.page_count]['Dialog']
+        self.page = []
+        for line in page:
+            sentence = self.load_sentence(line)
+            self.page.append(sentence)
 
-    def init_portraits(self):
+    def load_sentence(self,string):
+        #creates a list of word objects that form a sentence, gives each word customizability
+        def flag_tags(word):
+            count  = 0
+            tags = []
+            for char in word:
+                if char == '$' or char == '%':
+                    #/ - New line || $ - Color || % - Effect
+                    tag = word[count:count+2]
+                    tags.append(tag)
+                    word = word[2:]
+                count += 1
+            return [word,tags]
+
+        sentence = []
+        words = string.split(" ")
+        for word in words:
+            word,tags = flag_tags(word)
+            sentence.append(word_object(word + " ",tags))
+        return sentence
+
+    def init_speaker_text(self):
+        name = self.event[self.Ctrl_Vars.page_count]['Speaker']
+        self.speaker_image = self.font.render(name,True,(255,255,255),None)
+        self.speaker_rect = self.speaker_image.get_rect()
+        self.speaker_rect.right = self.background_rect.right - 15
+        self.speaker_rect.bottom = self.background_rect.bottom - 10
+
+    def init_portrait(self):
+        code,side = self.event[self.Ctrl_Vars.page_count]['Portrait'].split(".")
         self.portrait = pygame.image.load("Portraits/{}.png".format(
-            self.image_path)).convert()
+            code)).convert()
         self.portrait.set_colorkey((255,0,255))
         self.portrait_rect = self.portrait.get_rect()
         self.portrait_rect.centery = self.background_rect.centery
         self.portrait_rect.centerx = (self.background_rect.centerx - (
-            int(self.portrait_side)*(self.background_rect.right - self.background_rect.centerx + 75))
+            int(side)*(self.background_rect.right - self.background_rect.centerx + 75))
             )
-        if int(self.portrait_side) == -1:
+        if int(side) == -1:
             self.portrait = pygame.transform.flip(self.portrait, True, False)
-##Drawing Dialog Box
+
+    ##Drawing Dialog Box
     def draw(self):
-        if self.dialog_play:
-            if self.Ctrl_Vars.box_count < len(self.dialog):
-                self.Screen.blit(self.background_image, self.background_rect)
-                self.Screen.blit(self.font_image, self.font_rect)
-                self.text_scroll()
-                self.Screen.blit(self.portrait, self.portrait_rect)
-            else:
-                self.dialog_play = False
-                self.Ctrl_Vars.box_count = 0
+        if self.play:
+            self.Screen.blit(self.background_image, self.background_rect)
+            self.Screen.blit(self.speaker_image, self.speaker_rect)
+            self.text_scroll()
+            self.Screen.blit(self.portrait, self.portrait_rect)
 
     def text_scroll(self):
         x = self.dialog_x
         y = self.dialog_y
-        for line in self.box:
+        for line in self.page:
             for word in line:
                 word.draw(self.Screen,(x,y))
                 if word.full == False:
@@ -240,7 +296,7 @@ class Dialog_box():
                 break
             y += word.font_rect.bottom
             x = self.dialog_x
-        
+
 #When worlds become sufficiently large this will be necessary but it would need to be accompanied by rendering function and would require defined space
 """TODO:    def translate(self,x,y):
         for col in range(len(self.World.Terrain)):

@@ -1,6 +1,6 @@
 import pygame
 import Buttons
-from text_reader import word_object
+from Graphics import word_object
 import time
 from Tessellation import Animation
 

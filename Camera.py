@@ -11,6 +11,7 @@ class Camera():
         self.increment = []
         self.frames = 0
         self.count = 0
+        self.Center_Screen()
 
     def View(self,Ctrl_Vars):
         if self.follow:
@@ -29,8 +30,7 @@ class Camera():
         self.Drops.translate(dx,dy)
 
     def Center_Screen(self,center = [960,440]):
-        xf = center[0]
-        yf = center[1]
+        xf,yf = center
         xi = self.Player.MOB_rect.centerx
         yi = self.Player.MOB_rect.centery
         dx = xf - xi
