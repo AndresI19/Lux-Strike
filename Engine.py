@@ -1,5 +1,6 @@
 import sys, pygame, pygame.display
-from Graphics import Menu_diplay
+from Graphics import Menu_diplay,Load_Screen
+import Save
 
 """Main Loop *************************************************************************"""
 #Game Engine. (Turn Based Engine) ++++++++++++++++++++++++++++++++++++++++
@@ -132,6 +133,8 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
         World.Map.data(Player.col,Player.row).Hexagon_image.set_alpha(50)
         for door in World.Doors:
             door.Open(World)
+    elif event.key == pygame.K_F3:
+        Save_game(World,Player,Enemies,Drops)
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
@@ -245,38 +248,29 @@ def Menu_check_events(Settings,Ctrl_Vars,Buttons):
             if event.key == pygame.K_ESCAPE:
                 if Ctrl_Vars.Start_Screen:
                     sys.exit(0)
+            elif event.key == pygame.K_LSHIFT:
+                Ctrl_Vars.LSHIFT_DOWN = True
             if Ctrl_Vars.Start_Vars.Num_pad:
                 num_keys(event,Ctrl_Vars)
+            elif Ctrl_Vars.Start_Vars.Load_pad:
+                typing(event,Ctrl_Vars,Ctrl_Vars.world_name)
+
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_LSHIFT:
+                Ctrl_Vars.LSHIFT_DOWN = False
 
 def check_hover(Settings,Buttons):
-    mouse_position = pygame.mouse.get_pos()
+    x,y = pygame.mouse.get_pos()
+    x *= Settings.mouseX_scaling
+    y *= Settings.mouseY_scaling
     for i in range(len(Buttons)):
-        x = mouse_position[0] * Settings.mouseX_scaling
-        y = mouse_position[1] * Settings.mouseY_scaling
         Buttons[i].check_contained(x,y)
 
 def num_keys(event,Ctrl_Vars):
     if len(Ctrl_Vars.seed) < 18:
-        if event.key == pygame.K_1:
-            Ctrl_Vars.seed += "1"
-        elif event.key == pygame.K_2:
-            Ctrl_Vars.seed += "2"
-        elif event.key == pygame.K_3:
-            Ctrl_Vars.seed += "3"
-        elif event.key == pygame.K_4:
-            Ctrl_Vars.seed += "4"
-        elif event.key == pygame.K_5:
-            Ctrl_Vars.seed += "5"
-        elif event.key == pygame.K_6:
-            Ctrl_Vars.seed += "6"
-        elif event.key == pygame.K_7:
-            Ctrl_Vars.seed += "7"
-        elif event.key == pygame.K_8:
-            Ctrl_Vars.seed += "8"
-        elif event.key == pygame.K_9:
-            Ctrl_Vars.seed += "9"
-        elif event.key == pygame.K_0:
-            Ctrl_Vars.seed += "0"
+        if event.key >= 48 and event.key <= 57: #Type any number between 0 and 9
+            Ctrl_Vars.seed += chr(event.key)
+
     elif len(Ctrl_Vars.seed) >= 18:
         if event.key == 13:
             Ctrl_Vars.Game_Menu_Vars.Menu_reset()
@@ -287,6 +281,20 @@ def num_keys(event,Ctrl_Vars):
         Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
         sound = pygame.mixer.Sound("SFX/Button_press.wav")
         pygame.mixer.Sound.play(sound)
+
+def typing(event,Ctrl_Vars,string):
+    char = chr(event.key)
+    if event.key >= 48 and event.key <= 57 or event.key == 32: #Type any number between 0 and 9 or a space
+        string += char
+    elif event.key >= 97 and event.key <= 122: #Type any number between 0 and 9
+        if Ctrl_Vars.LSHIFT_DOWN:
+            char = char.capitalize()
+        string += char
+    if event.key == pygame.K_BACKSPACE:
+        string = string[:-1]
+        sound = pygame.mixer.Sound("SFX/Button_press.wav")
+        pygame.mixer.Sound.play(sound)
+    Ctrl_Vars.world_name = string
 
 """Main Loop end *************************************************************************"""
 
@@ -367,29 +375,6 @@ def check_tall_block(World,MOB,Ctrl_Vars):
     World.Map.data(col,row).reset_alpha()
     World.Map.data(MOB.col,MOB.row-2).check_tall_block(MOB,Ctrl_Vars)
 
-##initialization
-def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD):
-    #assuming world has been initialized, this will re initialize everything else
-    Max_parameters = (World.num_cols,World.num_rows)
-    spawn_coord = (World.spawn_row,World.spawn_col)
-    Player.__init__(Screen,spawn_coord)
-    Enemies.__init__(Screen,Max_parameters,World,Player)
-    HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
-    Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
-
-def new_world_init(Ctrl_Vars,Screen,World,Camera):
-    if Ctrl_Vars.Game_Menu_Vars.Random:
-        World.__init__(Screen,None)
-        Ctrl_Vars.seed = str(World.seed)
-        Ctrl_Vars.Game_Menu_Vars.Random = False
-    elif Ctrl_Vars.Game_Menu_Vars.Custom:
-        Seed = Ctrl_Vars.seed
-        World.__init__(Screen,Seed)
-        Ctrl_Vars.Game_Menu_Vars.Custom = False
-    elif Ctrl_Vars.restart_world:
-        Ctrl_Vars.restart_world = False
-    Camera.follow = True
-
 def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     Ctrl_Vars.Game_Menu_Vars.load_world = False
     Ctrl_Vars.Game_Menu_Vars.Game_active = True
@@ -456,3 +441,7 @@ def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start):
     Next = Path()
     if Act(Next) != False:    #Else end
         laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next)
+
+def Save_game(World,Player,Enemies,Drops):
+    name = input("Type name: ")
+    Save.Save_world(name,World,Player,Enemies,Drops)

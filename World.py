@@ -1,7 +1,8 @@
 import Tile as T
 import random
 import Tessellation
-from Generation import generation,Post_Generation
+import RNG as rng
+from Generation import generation,Post_Generation,Hexagon
 
 #World Object!
 """This is the most big baby mamma of all the objects! This object will contain a grid of every tile object int he world,
@@ -9,29 +10,47 @@ and each tile contains its individual properties. The World starts with size par
 and by association the world generation time. A genertaion object is used to create a world case by case, so reinitializing this object
 hence creates a new world."""
 class World():
-    def __init__(self,Screen,Seed):
+    def __init__(self,Screen,Seed,Loading,DATA = None):
         self.Screen = Screen
-        #Size Parameters
-        self.num_cols = 18   #width
-        self.num_rows = 35      #height
-
-        #Tile list
-        self.Map = Tessellation.Hex_Grid(self.num_cols,self.num_rows)
         self.highlighted_list = []
         self.laser_list = []
         self.Doors = []
-        #Spawn location
-        self.spawn_col = 0
-        self.spawn_row = 0
+        if DATA == None:
+            #Size Parameters
+            self.num_cols = 18   #width
+            self.num_rows = 35   #height
 
-        self.generate_map(Seed)
-        self.find_player_spawn()
+            #Tile list
+            self.Map = Tessellation.Hex_Grid(self.num_cols,self.num_rows)
+            #Spawn location
+            self.spawn_col = 0
+            self.spawn_row = 0
+
+            self.generate_map(Seed,Loading)
+            self.find_player_spawn()
+        else:
+            Matrix = DATA['Map']['Matrix']
+            self.num_cols = len(Matrix)
+            self.num_rows = len(Matrix[0])
+            self.master_grid = Tessellation.Hex_Grid(self.num_cols,self.num_rows)
+            self.Map = Tessellation.Hex_Grid(self.num_cols,self.num_rows)
+            for col in range(self.num_cols):
+                for row in range(self.num_rows):
+                    ID,Elevation,Cliffs = Matrix[col][row]
+                    tile = Hexagon(col,row,ID,Elevation,Cliffs)
+                    self.master_grid.Matrix[col][row] = tile
+            self.spawn_col,self.spawn_row = DATA['Map']['spawn']
+            self.transcribe_grid()
+            #TODO: Seed should be the world name
+            self.seed = self.seed = rng.generate_Xdegit_seed(18)
+            
+
 
 ###MAP GENERATION/ INITIALIZATION vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    def generate_map(self,Seed):
+    def generate_map(self,Seed,Loading):
         #initialize generation object, creates a new world --------------------------------------
         max_parameters = [self.num_cols,self.num_rows]
-        Generation = generation(Seed,max_parameters,self.Screen)
+        Generation = generation(Seed,max_parameters,Loading)
         #save seed for display and copy paste use
         self.seed = Generation.seed
         self.total_tiers = Generation.total_tiers
@@ -39,7 +58,7 @@ class World():
         #pass master grid object
         """self.master_grid = generation.MSTR_Grid"""
         post_generation = Post_Generation(Generation.MSTR_Grid,self.seed)
-        self.stairs = post_generation.stairs
+        #self.stairs = post_generation.stairs
 
         #create world using matrix information ---------------------------------------------------
         self.master_grid = post_generation.grid
@@ -64,6 +83,7 @@ class World():
                     tile = T.Brick(self.Screen,col,row,cliffs,elevation)
                 elif ID == 101:
                     tile = T.Stairs(self.Screen,col,row,cliffs,elevation)
+                    self.stairs = [col,row]
                 elif ID == 102:
                     tile = T.Door(self.Screen,col,row,cliffs,elevation)
                     self.Doors.append(tile)

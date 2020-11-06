@@ -5,13 +5,21 @@ from random import randint
 """We all knew we would get here one day"""
 ##new file, early comments and refactorying
 class Drop_envelope():
-    def __init__(self,Screen,Ctrl_Vars,HUD,Stats):
+    def __init__(self,Screen,Ctrl_Vars,HUD,Stats,DATA = None):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
         self.Group = []
         self.Money_Group = []
         self.HUD = HUD
         self.Stats = Stats
+        if DATA != None:
+            for data in DATA['Drops']:
+                ID,coords,position,value = data
+                if ID == 0:
+                    drop = Money_drop(Screen,Ctrl_Vars,coords,position,None,value)
+                elif ID == 1:
+                    drop = Key(Screen,Ctrl_Vars,coords,position)
+                self.Group.append(drop)
 
     def enemy_drop(self,Enemy,coords):
         if Enemy.key == True:
@@ -91,6 +99,7 @@ class Drops():
 class Money_drop(Drops):
     def __init__(self,Screen,Ctrl_Vars,coords,position,combo = None,value = None):
         Drops.__init__(self,Screen,coords,position)
+        self.ID = 0
         self.Ctrl_Vars = Ctrl_Vars
         if value == None:
             self.value = 10 * (combo + 1)
@@ -112,6 +121,7 @@ class Money_drop(Drops):
 class Key(Drops):
     def __init__(self,Screen,Ctrl_Vars,coords,position):
         Drops.__init__(self,Screen,coords,position)
+        self.ID = 1
         self.Ctrl_Vars = Ctrl_Vars
         self.image = pygame.image.load('Drops/Key.png').convert()
         self.image_init()

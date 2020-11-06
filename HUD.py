@@ -6,7 +6,7 @@ pygame.mixer.init()
 
 #Envelope class containing all border rectangles
 class HUD():
-    def __init__(self,Settings,Screen,Ctrl_Vars,World,Player,Enemies):
+    def __init__(self,Settings,Screen,Ctrl_Vars,World,Player,Enemies,DATA=None):
         self.Screen = Screen
         self.Screen_rect = Screen.get_rect()
         self.Settings = Settings

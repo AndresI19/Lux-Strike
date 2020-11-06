@@ -5,18 +5,24 @@ class Ctrl_Vars():
         self.set_button_downs()
         self.initialized = False #memory used to know if game objects have already been loaded and dont need to be re initialized
 
-        self.box_count = 0
         self.page_count = 0
 
         self.foreground_list = [0,0] #to rework and delete
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
+        self.world_name = ""
         self.Start_Vars = Start_Menu_vars()
         self.Game_Menu_Vars = Game_Menu_vars(debug)
+        self.WC_Tools = WC_tools()
         self.restart_world = False
+
+        #TODO: Expirmental
+        self.main = True
+        self.world_creator = False
+        self.WC_initialized = False
+
 
 ##Dynamic game stats
         self.wallet = 0
-        self.keys = 0
 #Key Controls _____________________________________________
 #HOLD KEYS____________________________________________________________
         self.Left_MouseDown = False
@@ -100,6 +106,7 @@ class Game_Menu_vars():
         self.load_world = False #the bool called to load a new world
         self.Random = False
         self.Custom = False
+        self.Load = False
         if debug == True:
             self.menu_select = False
             self.Start_Screen = False
@@ -122,6 +129,7 @@ class Start_Menu_vars():
         self.load_menu = True
 
         self.Num_pad = False
+        self.Load_pad = False
         self.Jukebox = False
         self.Display_Settings = False
         self.Sound_Settings = False
@@ -131,6 +139,7 @@ class Start_Menu_vars():
 
         self.Title = False
         self.Num_pad = False
+        self.Load_pad = False
         self.Jukebox = False
         self.Display_Settings = False
         self.Sound_Settings = False
@@ -140,9 +149,22 @@ class Start_Menu_vars():
             self.Title = True
         elif Menu == "Num_Pad":
             self.Num_pad = True
+        elif Menu == "Load_Pad":
+            self.Load_pad = True
         elif Menu == "Jukebox":
             self.Jukebox = True
         elif Menu == "Display_Settings":
             self.Display_Settings = True
         elif Menu == "Sound_Settings":
             self.Sound_Settings = True
+
+class WC_tools():
+    def __init__(self):
+        self.ID = 1
+        self.HUD_Visable = True
+
+    def toggle_HUD(self):
+        if self.HUD_Visable:
+            self.HUD_Visable = False
+        else:
+            self.HUD_Visable = True

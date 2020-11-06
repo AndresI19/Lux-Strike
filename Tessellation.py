@@ -62,7 +62,7 @@ class Hex_Grid():
             if row%2 == 0:
                 x = "S_" + x
             print(x)
-
+#directionals
     def get_NE(self,coords):
         col,row = coords
         stagger = self.check_stagger(row)
@@ -126,7 +126,7 @@ class Hex_Grid():
             return [C,R]
         else:
             return False
-
+#
     def check_stagger(self,row):
         if row%2 == 0:
             stagger = 1 #True
@@ -224,6 +224,13 @@ class Animation():
             self.image = self.reel[self.count//self.speed]
             self.count += 1
         self.Screen.blit(self.image,rect)
+
+    def clock(self,rect):
+        if self.count + 1 >= self.frames:
+            self.count = 0
+        else:
+            self.image = self.reel[self.count//self.speed]
+            self.count += 1
 
     def once(self,rect):
         if self.count + 1 >= self.frames:

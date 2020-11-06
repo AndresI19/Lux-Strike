@@ -9,7 +9,6 @@ class MOB():
         #Row column information
         self.col = 0
         self.row = 0
-        self.off_center = 1
 
         #info
         self.D = 'SW'
@@ -38,8 +37,6 @@ class MOB():
     def spawn(self):
         self.col = self.spawn_col
         self.row = self.spawn_row
-        if self.row%2 == 0:
-            self.off_center *= -1
 
 ###Movement vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     """moving on a hexagon grid is complicated, as the columns go up and contain a list of staggard rows. The way to maneuver this is to
@@ -98,9 +95,9 @@ class MOB():
             going_up = self.D == 'N' or self.D == 'NW' or self.D == 'NE'
             if going_up:
                 if frame + 1 == len(self.track):
-                    self.update_coordinates(World)
+                    self.update_coordinates()
             else:
-                self.update_coordinates(World)
+                self.update_coordinates()
 
     def Queue_movement(self,World,N):
         x,y = World.Map.data(self.col,self.row).get_Character_Spot()
@@ -123,7 +120,7 @@ class MOB():
                 self.track.append([round(x),round(y)])
                 x += increment
 ###Standard Functionality vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    def update_coordinates(self,World):
+    def update_coordinates(self):
         #To be carried out last frame
         self.col = self.dx
         self.row = self.dy
@@ -158,13 +155,13 @@ class MOB():
 
 """Class for player character.-----------------------------------------------------------------------------"""
 class Player(MOB):
-    def __init__(self,Screen,spawn_coord):
+    def __init__(self,Screen,spawn_coord,DATA = None):
         MOB.__init__(self,Screen,spawn_coord)
         self.MOB_images = []
         self.MOB_image = pygame.image.load('Player/SW00.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
-        self.Stats = Stats()
+        self.Stats = Stats(DATA)
         self.hitstun = False
 
         self.frame = 0
@@ -173,6 +170,10 @@ class Player(MOB):
 
         self.damage_SFX = pygame.mixer.Sound("SFX/damage.wav")
         self.last_heart_SXF = pygame.mixer.Sound("SFX/last heart.wav")
+
+        if DATA != None:
+            self.col,self.row,self.elevation = DATA['Player']
+            self.dx,self.dy = self.col,self.row
 
     def sprite_direction(self,D):
         self.D = D
@@ -218,9 +219,13 @@ class Player(MOB):
 
 #class for dynamic game statistics
 class Stats():
-    def __init__(self):
-        self.Health_Points = 10
-        self.Laser_Heat = 0
-        self.Money = 0
-        self.combo = 0
-        self.keys = 0
+    def __init__(self,DATA):
+        if DATA == None:
+            self.Health_Points = 10
+            self.Laser_Heat = 0
+            self.Money = 0
+            self.combo = 0
+            self.keys = 0
+        else:
+            Stats = DATA['Stats']
+            self.Health_Points,self.Laser_Heat,self.Money,self.combo,self.keys = Stats

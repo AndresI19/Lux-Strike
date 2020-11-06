@@ -331,6 +331,14 @@ class Menu_Navagation(Hexagon_Button):
             self.Ctrl_Vars.Game_Menu_Vars.Custom = True
         elif self.load_type == "Random":
             self.Ctrl_Vars.Game_Menu_Vars.Random = True
+        elif self.load_type == "Load":
+            self.Ctrl_Vars.Game_Menu_Vars.Load = True
+        elif self.load_type == "World Creator":
+            self.Ctrl_Vars.Game_Menu_Vars.Game_active = True
+            self.Ctrl_Vars.main = False
+            self.Ctrl_Vars.world_creator = True
+            self.menu_select = False
+            self.Ctrl_Vars.Game_Menu_Vars.load_world = False
         else:
             self.Ctrl_Vars.Game_Menu_Vars.load_world = False
             self.Ctrl_Vars.Game_Menu_Vars.Game_active = False
@@ -509,12 +517,12 @@ class Play(Folder):
     def build_submenu(self):
         #Play Options ----
         self.Buttons = []
-        campaign_Button = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Random","Random",False)
+        random_Button = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Random","Random",False)
         #campaign_Button = Campaign(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        Endless_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
+        load_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Load_Pad","Load World",False)
         seed_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Num_Pad","Custom",False)
-        self.Buttons.append(campaign_Button)
-        self.Buttons.append(Endless_Button)
+        self.Buttons.append(random_Button)
+        self.Buttons.append(load_Button)
         self.Buttons.append(seed_Button)
 
 class Extras(Folder):
@@ -527,10 +535,10 @@ class Extras(Folder):
         self.init_text()
         self.Buttons = []
         Jukebox_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Jukebox","Jukebox",True)
-        Gallary_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
+        World_Creator = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"World Creator","World Creator ~~Alpha~~",False)
         Store_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
+        self.Buttons.append(World_Creator)
         self.Buttons.append(Jukebox_Button)
-        self.Buttons.append(Gallary_Button)
         self.Buttons.append(Store_Button)
 
 class Settings(Folder):
@@ -663,6 +671,20 @@ class Slider_Knob():
         self.rect = self.image.get_rect()
         self.rect.left = x
         self.rect.top = y
+
+    def draw(self):
+        self.Screen.blit(self.image,self.rect)
+
+class Typing_Box():
+    def __init__(self,Screen,Ctrl_Vars):
+        self.Screen = Screen #needed for graphics
+        self.Screen_rect = self.Screen.get_rect()
+        self.image = pygame.Surface((1000,200))
+        self.image.fill((0,0,0))
+        self.image.set_alpha(185)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = self.Screen_rect.centerx
+        self.rect.centery = self.Screen_rect.centery
 
     def draw(self):
         self.Screen.blit(self.image,self.rect)

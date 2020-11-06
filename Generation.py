@@ -10,12 +10,12 @@ sys.setrecursionlimit(2000)
 limit = sys.getrecursionlimit()
 
 class generation():
-    def __init__(self,Seed,Max_parameters,Screen):
+    def __init__(self,Seed,Max_parameters,Loading):
         #Seed for world gen!
-        if type(Seed) == str:
-            self.seed = Seed
-        else:
+        if Seed == None:
             self.seed = rng.generate_Xdegit_seed(18)
+        else:
+            self.seed = Seed
         #set size parameters from arguments
         self.Max_Params = Max_parameters
         #set max height 
@@ -24,6 +24,9 @@ class generation():
 
         #start -----------
         self.center = [0,0]
+        self.Loading = Loading
+        N = self.total_tiers * 700
+        self.Loading.set_steps(N)
         self.generate_master_grid()
         #------------------
 
@@ -45,6 +48,7 @@ class generation():
                         x,y = point
                         Hex = HG.data(col,row)
                         Hex.check_contained(x,y)
+                self.Loading.Update()
 
         def condence_tiers():
             for col in range(Cols):
@@ -334,7 +338,7 @@ class Post_Generation():
 
 class Hexagon():
     #perfect hexagon class, use as a means to derive a map
-    def __init__(self,col,row):
+    def __init__(self,col,row,ID=None,elevation=None,cliffs=None):
         self.col = col
         self.row = row
         self.height = 52
@@ -342,12 +346,16 @@ class Hexagon():
         self.side_length = self.width/2
         self.offset = (self.side_length*(3/2))
 
-        self.off_center = False
-        self.position()
+        if ID == None:
+            self.ID = 0
+            self.elevation = 0
+            self.cliffs = []
 
-        self.ID = 0
-        self.elevation = 0
-        self.cliffs = []
+            self.position()
+        else:
+            self.ID = ID
+            self.elevation = elevation
+            self.cliffs = cliffs
 
     def position(self):
         self.bottom = self.row * (self.height / 2)

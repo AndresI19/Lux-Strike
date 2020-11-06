@@ -39,27 +39,26 @@ class Start_Envelope():
         self.Display_Screen = Display_Menu(Screen,Window,Ctrl_Vars,Settings)
         self.JukeBox_Screen = Jukebox_Menu(Screen,Ctrl_Vars)
         self.Num_Pad = Num_Pad(Screen,Ctrl_Vars)
+        self.Load_pad = Load_Pad(Screen,Ctrl_Vars)
         self.Sub_menu_select()
 
     def Sub_menu_select(self): #a menu select for everything in the start menu
         if self.Start_vars.load_menu:
             if self.Start_vars.Title:
                 self.Active_Menu = self.Title_Screen
-                time.sleep(0.5)
             elif self.Start_vars.Sound_Settings:
                 self.Active_Menu = self.Volume_Screen
                 pygame.mixer.music.load('Music/Bad KpR.mp3')
                 pygame.mixer.music.play(-1)
-                time.sleep(0.5)
             elif self.Start_vars.Num_pad:
                 self.Active_Menu = self.Num_Pad
-                time.sleep(0.5)
+            elif self.Start_vars.Load_pad:
+                self.Active_Menu = self.Load_pad
             elif self.Start_vars.Display_Settings:
                 self.Active_Menu = self.Display_Screen
-                time.sleep(0.5)
             elif self.Start_vars.Jukebox:
                 self.Active_Menu = self.JukeBox_Screen
-                time.sleep(0.5)
+            time.sleep(0.5)
             self.Start_vars.load_menu = False
             self.Menus = self.Active_Menu.Menus
         
@@ -363,7 +362,7 @@ class Game_Win_Envelope():
             self.Menus[i].draw()
 
 class Num_Pad():
-    #TODO: Makes a number pad like on a phone for entering numbers. The functionality of this one can and should be generalized
+    #Makes a number pad like on a phone for entering numbers. The functionality of this one can and should be generalized
     def __init__(self,Screen,Ctrl_Vars):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
@@ -429,6 +428,67 @@ class Num_Pad():
         self.num_left.draw(self.Screen,(1550,285))
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
+
+#TODO: WORLD_LOADING
+class Load_Pad():
+    def __init__(self,Screen,Ctrl_Vars):
+        self.Screen = Screen
+        self.Ctrl_Vars = Ctrl_Vars
+        self.Screen = Screen
+        self.Screen_rect = Screen.get_rect()
+        self.init_curtain()
+
+        name = self.Ctrl_Vars.world_name
+        self.text = "{}".format(name)
+        num = "~" + str(18 - len(name))
+        self.num_left = word_object(num,['$R'])
+        self.text_area = Buttons.Typing_Box(Screen,Ctrl_Vars)
+        self.init_text()
+        self.Menus_init()
+
+    def Menus_init(self):
+        self.Menus = []
+        #arranging 0 and functional keys by hand
+        self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars)) 
+        Enter = Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Load","Enter")
+        self.Menus.append(Enter)
+        self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars))
+        self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")) #back button
+
+    def init_text(self):
+        font_size = 100
+        text_color = ((255,255,255))
+        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
+        font.set_bold(True)
+
+        self.font_image = font.render(self.text,True,text_color,None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.centerx = self.Screen_rect.centerx
+        self.font_rect.centery = 270
+
+    def update_text(self):
+        name = self.Ctrl_Vars.world_name
+        self.text = "{}".format(name)
+        self.init_text()
+        self.num_left.text = "~" + str(18 - len(name))
+        self.num_left.init_text()
+
+    def draw(self):
+        self.Screen.blit(self.curtain,self.curtain_rect)
+        self.update_text()
+        self.Screen.blit(self.font_image,self.font_rect)
+        self.text_area.draw()
+        for i in range(len(self.Menus)):
+            self.Menus[i].draw()
+        self.num_left.draw(self.Screen,(1550,285))
+
+    def init_curtain(self):
+        self.curtain = pygame.Surface((1350,125))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(185)
+        self.curtain_rect = self.curtain.get_rect()
+        self.curtain_rect.centerx = self.Screen_rect.centerx
+        self.curtain_rect.centery = 270
 
 class Background():
     def __init__(self,Screen):
