@@ -15,14 +15,15 @@ def check_events(Settings,Ctrl_Vars,Map,HUD):
             MouseUp(event,Ctrl_Vars)
         #camera controls
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(event,Settings,Ctrl_Vars,Map)
+            MouseMotion(event,Settings,Ctrl_Vars,Map,HUD)
         elif event.type == pygame.KEYDOWN:
             KEYDOWN(event,Ctrl_Vars,HUD)
 
-def check_mouse_position(Settings,Ctrl_Vars,Map):
+def check_mouse_position(Settings,Ctrl_Vars,Map,HUD):
     x,y = pygame.mouse.get_pos()
     x *= Settings.mouseX_scaling
     y *= Settings.mouseY_scaling
+    HUD.Inventory.collision(x,y)
     for col in range(Map.num_cols):
         for row in range(Map.num_rows):
             hover = Map.data(col,row).check_contained(x,y)
@@ -47,21 +48,27 @@ def MouseUp(event,Ctrl_Vars):
     elif event.button == 3:
         Ctrl_Vars.Right_MouseDown = False
 
-def MouseMotion(event,Settings,Ctrl_Vars,Map):
+def MouseMotion(event,Settings,Ctrl_Vars,Map,HUD):
     #handles relative movement of the mouse
     if Ctrl_Vars.Right_MouseDown:
         #drag
-        dx = Settings.drag_sensativity*event.rel[0]
-        dy = Settings.drag_sensativity*event.rel[1]
-        for col in range(Map.num_cols):
-            for row in range(Map.num_rows):
-                Map.data(col,row).translate(dx,dy)
+        dx,dy = event.rel
+        if Ctrl_Vars.WC_Tools.move_inv:
+            HUD.Inventory.translate(dx,dy)
+        else:
+            for col in range(Map.num_cols):
+                for row in range(Map.num_rows):
+                    Map.data(col,row).translate(dx,dy)
 
 def KEYDOWN(event,Ctrl_Vars,HUD):
     if event.key == pygame.K_ESCAPE:
-        return_home(Ctrl_Vars)
+        Ctrl_Vars.WC_Tools.Pause = True
+        Ctrl_Vars.Game_Menu_Vars.Game_active = False
+        Ctrl_Vars.Game_Menu_Vars.menu_select = True
     elif event.key == pygame.K_F1:
         Ctrl_Vars.WC_Tools.toggle_HUD()
+    elif event.key == pygame.K_e:
+        HUD.Inventory.toggle()
     else:
         if event.key == pygame.K_1:
             Ctrl_Vars.WC_Tools.ID = 1
@@ -77,7 +84,7 @@ def KEYDOWN(event,Ctrl_Vars,HUD):
             Ctrl_Vars.WC_Tools.ID = 102
         elif event.key == pygame.K_0:
             Ctrl_Vars.WC_Tools.ID = 0
-        HUD.hotbar.init_text()
+        #HUD.hotbar.init_text()
     
 def initialization(Screen,Ctrl_Vars):
     HUD = WC_HUD(Screen,Ctrl_Vars)
@@ -117,6 +124,7 @@ def return_home(Ctrl_Vars):
     Ctrl_Vars.Game_Menu_Vars.Game_active = False
     Ctrl_Vars.Game_Menu_Vars.Start_Screen = True
     Ctrl_Vars.Game_Menu_Vars.menu_select = True
+
 
 class WC_tile(Hexagon):
     def __init__(self,Screen,col,row):

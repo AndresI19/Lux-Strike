@@ -161,7 +161,6 @@ while True:
             pygame.display.flip()
             #Initialization of major game objects
             if not Ctrl_Vars.initialized:
-                #World = world_init(Ctrl_Vars,Screen)
                 World,Player,Enemies,HUD,Drops,Camera = world_init(Ctrl_Vars,Screen)
             else:
                 new_world_init(Ctrl_Vars,Screen,World,Camera,Window,Settings)
@@ -178,7 +177,7 @@ while True:
                 HUD,Map = WC_Engine.initialization(Screen,Ctrl_Vars)
                 Ctrl_Vars.WC_initialized = True
             WC_Engine.check_events(Settings,Ctrl_Vars,Map,HUD)
-            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map)
+            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,HUD)
             WC_Engine.Display(Screen,HUD,Map)
     
     Graphics.scale(Window,Screen,Settings)

@@ -162,6 +162,9 @@ class WC_tools():
     def __init__(self):
         self.ID = 1
         self.HUD_Visable = True
+        self.Pause = False
+
+        self.move_inv = False
 
     def toggle_HUD(self):
         if self.HUD_Visable:

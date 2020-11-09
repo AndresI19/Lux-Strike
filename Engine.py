@@ -208,8 +208,7 @@ def MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     #handles relative movement of the mouse
     if Ctrl_Vars.Left_MouseDown:
         #drag
-        dx = Settings.drag_sensativity*event.rel[0]
-        dy = Settings.drag_sensativity*event.rel[1]
+        dx,dy = event.rel
         Camera.Translate_Screen((dx,dy))
         Camera.follow = False
 

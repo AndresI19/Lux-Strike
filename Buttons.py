@@ -477,6 +477,7 @@ class Resume(Hexagon_Button):
         #activates campaign mode
         self.Ctrl_Vars.Game_Menu_Vars.Game_active = True
         self.Ctrl_Vars.Game_Menu_Vars.Pause = False
+        self.Ctrl_Vars.WC_Tools.Pause = True
 
 class Retry(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars):

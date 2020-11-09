@@ -10,6 +10,8 @@ def menu_select(Screen,Window,Ctrl_Vars,Settings):
         time.sleep(0.5)
     elif Ctrl_Vars.Game_Menu_Vars.Pause:
         Active_Menu = Pause_Envelope(Screen,Ctrl_Vars)
+    elif Ctrl_Vars.WC_Tools.Pause:
+        Active_Menu = WC_Pause_Envelope(Screen,Ctrl_Vars)
     elif Ctrl_Vars.Game_Menu_Vars.Game_Win:
         Active_Menu = Game_Win_Envelope(Screen,Ctrl_Vars)
         time.sleep(0.5)
@@ -511,3 +513,41 @@ class Background():
 
     def draw(self):
         self.Animation.loop((0,0))
+
+"""%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+~~~~~~~~~~~~~~~ WORLD CREATOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
+class WC_Pause_Envelope():
+    def __init__(self,Screen,Ctrl_Vars):
+        self.Screen = Screen
+        self.Screen_rect = self.Screen.get_rect()
+        self.text = "Paused"
+        self.init_text(100)
+
+        #Main options
+        """These are folders, each contain a few more options within them"""
+        self.Menus = []
+        self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
+        self.Menus.append(Buttons.Resume(Screen,[4,3],Ctrl_Vars))
+
+        self.Curtain()
+
+    def Curtain(self):
+        self.curtain = pygame.Surface((self.Screen_rect.right,self.Screen_rect.bottom))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(255)
+
+    def init_text(self,size):
+        text_color = ((255,255,255))
+        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
+        font.set_bold(True)
+        self.font_image = font.render(self.text,True,text_color,None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.centerx = self.Screen_rect.centerx
+        self.font_rect.centery = 250
+
+    def draw(self):
+        self.Screen.blit(self.curtain,self.Screen_rect)
+        self.Screen.blit(self.font_image,self.font_rect)
+        for i in range(len(self.Menus)):
+            self.Menus[i].draw()
