@@ -1,3 +1,4 @@
+import json
 #class for player input variables; ei knowing the mouse is down or what menu is on
 class Ctrl_Vars():
     def __init__(self,debug):
@@ -161,10 +162,25 @@ class Start_Menu_vars():
 class WC_tools():
     def __init__(self):
         self.ID = 1
+        self.Type = 'Tile'
         self.HUD_Visable = True
         self.Pause = False
 
+        self.hotbar = [{'Type':None,'ID':None} for i in range(10)]
+
         self.move_inv = False
+
+    def set_hotbar(self,index,Type,ID):
+        self.hotbar[index]['Type'] = Type
+        self.hotbar[index]['ID'] = ID
+
+    def set_TypeID(self,index):
+        self.Type = self.hotbar[index]['Type']
+        self.ID = self.hotbar[index]['ID']
+
+    def remove_hotbar(self,index):
+        self.hotbar[index]['Type'] = None
+        self.hotbar[index]['ID'] = None
 
     def toggle_HUD(self):
         if self.HUD_Visable:

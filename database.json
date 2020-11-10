@@ -1,0 +1,145 @@
+{
+    "Tile":{
+        "Water":{
+            "ID":0,
+            "Path":"Tiles/Water/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":8,"Choice":false},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Grass":{
+            "ID":1,
+            "Path":"Tiles/Grass/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":4,"Choice":[0.55,0.35,0.05,0.05]},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Beach":{
+            "ID":2,
+            "Path":"Tiles/Beach/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":4,"Choice":[0.75,0.10,0.10,0.05]},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Mountain":{
+            "ID":3,
+            "Path":"Tiles/Mountain/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":1,"Choice":false},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Brick":{
+            "ID":100,
+            "Path":"Tiles/Brick/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":1,"Choice":false},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Stairs":{
+            "ID":101,
+            "Path":"Tiles/Brick/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"HS","Total":8,"Choice":false},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"C","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        },
+        "Door":{
+            "ID":102,
+            "Path":"Tiles/Brick/",
+            "Inventory":false,
+            "World Creator":true,
+            "Icon":true,
+            "Isometric":{
+                "Hexagon":{"Path":"H","Total":8,"Choice":false},
+                "Left":{"Path":"L","Total":1},
+                "Center":{"Path":"CD","Total":1},
+                "Right":{"Path":"R","Total":1}
+            }
+        }
+    },
+
+
+
+    "Enemies" : {
+        "Swanzai":{
+            "ID":0,
+            "Path":"Enemies/Swanzai",
+            "Inventory":false,
+            "World Creator":false,
+            "Isometric":true
+        },
+        "Nest":{
+            "ID":1,
+            "Path":"Enemies/Swanzai_Nest",
+            "Inventory":false,
+            "World Creator":false,
+            "Isometric":true
+        },
+        "Rabbo":{
+            "ID":2,
+            "Path":"Enemies/Rabbo",
+            "Inventory":false,
+            "World Creator":false,
+            "Isometric":true
+        }
+    },
+
+
+
+    "Drops" : {
+        "Money":{
+            "ID":0,
+            "Isometric":"Drops/Money",
+            "Inventory":false,
+            "World Creator":false
+        },
+        "Key":{
+            "ID":1,
+            "Isometric":"Drops/Key",
+            "Inventory":false,
+            "World Creator":false
+        }
+    },
+
+
+    "Game" : {
+        "Spawn":{
+            "ID":0
+        }
+    }
+}

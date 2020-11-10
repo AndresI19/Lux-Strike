@@ -174,10 +174,10 @@ while True:
             Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
         elif Ctrl_Vars.world_creator:
             if not Ctrl_Vars.WC_initialized:
-                HUD,Map = WC_Engine.initialization(Screen,Ctrl_Vars)
+                HUD,Map,Elements = WC_Engine.initialization(Screen,Ctrl_Vars)
                 Ctrl_Vars.WC_initialized = True
-            WC_Engine.check_events(Settings,Ctrl_Vars,Map,HUD)
-            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,HUD)
-            WC_Engine.Display(Screen,HUD,Map)
+            WC_Engine.check_events(Settings,Ctrl_Vars,Map,Elements,HUD)
+            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,Elements,HUD)
+            WC_Engine.Display(Screen,HUD,Map,Elements)
     
     Graphics.scale(Window,Screen,Settings)

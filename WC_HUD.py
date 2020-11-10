@@ -1,6 +1,7 @@
 #World creator HUD
 import pygame
 import pygame.font
+import json
 
 class WC_HUD():
     def __init__(self,Screen,Ctrl_Vars):
@@ -26,6 +27,8 @@ class Hotbar():
         Screen_rect = Screen.get_rect()
         self.rect.centerx = Screen_rect.centerx
         self.rect.bottom = Screen_rect.bottom - 50
+
+        self.items = self.Ctrl_Vars.WC_Tools.hotbar
 
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",20)
         self.font.set_bold(True)
@@ -70,11 +73,18 @@ class Inventory():
 
     def init_boxs(self):
         self.inventory = []
-        for i in range(4):
-            Boxs = []
-            for i in range(20-i):
-                Boxs.append(Box(self.Screen,self.Ctrl_Vars,self.rect,i,str(i)))
-            self.inventory.append(Boxs)
+        with open("database.json",'r') as File:
+            data = json.load(File)
+            for Type in data:
+                Boxs = []
+                num = 0
+                for item in data[Type]:
+                    ID = data[Type][item]['ID']
+                    box = Box(self.Screen,self.Ctrl_Vars,self.rect,Type,ID,num)
+                    Boxs.append(box)
+                    num += 1
+                self.inventory.append(Boxs)
+            
         self.current = self.inventory[0]
 
     def switch(self,ID):
@@ -149,6 +159,17 @@ class Tab():
         self.rect.top = Menu_rect.top + 10
 
         self.active = False
+        self.set_Type()
+
+    def set_Type(self):
+        if self.ID == 0:
+            self.Type = 'Tile'
+        elif self.ID == 1:
+            self.Type = 'Enemies'
+        elif self.ID == 2:
+            self.Type = 'Drops'
+        elif self.ID == 3:
+            self.Type = 'Game'
 
     def off(self):
         self.active = False
@@ -157,7 +178,6 @@ class Tab():
     def on(self):
         self.active = True
         self.image = self.images[1]
-
 
     def translate(self,dx,dy):
         self.rect.left += dx
@@ -176,22 +196,26 @@ class Tab():
         self.Screen.blit(self.image,self.rect)
 
 class Box():
-    def __init__(self,Screen,Ctrl_Vars,Menu_rect,ID,text):
+    def __init__(self,Screen,Ctrl_Vars,Menu_rect,Type,ID,num):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
+        self.Type = Type
         self.ID = ID
         self.hide_text = False
         self.image = pygame.image.load("WC_Hex/EmptyItem.png")
         self.rect = self.image.get_rect()
 
-        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",20)
-        text = font.render(text,True,(0,0,0),None)
-        text_rect = text.get_rect()
-        text_rect.centerx = self.rect.centerx
-        text_rect.centery = self.rect.centery
-        self.image.blit(text,text_rect)
+        self.set_image()
+        self.position(Menu_rect,num)
 
-        self.position(Menu_rect,ID)
+    def set_image(self):
+        image = pygame.image.load(
+            "WC_Hex/" + self.Type + str(self.ID) + ".png"
+            ).convert()
+        image.set_colorkey((255,0,255))
+        image_rect = image.get_rect()
+        image_rect.centerx,image_rect.centery = self.rect.centerx,self.rect.centery
+        self.image.blit(image,image_rect)
 
     def position(self,Menu_rect,ID):
         x = ID%6
@@ -208,6 +232,7 @@ class Box():
             if y <= self.rect.bottom and y >= self.rect.top:
                 if self.Ctrl_Vars.Left_MouseDown:
                     self.Ctrl_Vars.Left_MouseDown = False
+                    self.Ctrl_Vars.WC_Tools.Type = self.Type
                     self.Ctrl_Vars.WC_Tools.ID = self.ID
 
     def draw(self):
