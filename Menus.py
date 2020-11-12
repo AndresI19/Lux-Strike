@@ -3,6 +3,7 @@ import Buttons
 from Graphics import word_object
 import time
 from Tessellation import Animation
+import json
 
 def menu_select(Screen,Window,Ctrl_Vars,Settings):
     if Ctrl_Vars.Game_Menu_Vars.Start_Screen:
@@ -41,7 +42,7 @@ class Start_Envelope():
         self.Display_Screen = Display_Menu(Screen,Window,Ctrl_Vars,Settings)
         self.JukeBox_Screen = Jukebox_Menu(Screen,Ctrl_Vars)
         self.Num_Pad = Num_Pad(Screen,Ctrl_Vars)
-        self.Load_pad = Load_Pad(Screen,Ctrl_Vars)
+        self.Load_pad = World_load(Settings,Screen,Ctrl_Vars)
         self.Sub_menu_select()
 
     def Sub_menu_select(self): #a menu select for everything in the start menu
@@ -432,65 +433,45 @@ class Num_Pad():
             self.Menus[i].draw()
 
 #TODO: WORLD_LOADING
-class Load_Pad():
-    def __init__(self,Screen,Ctrl_Vars):
+class World_load():
+    def __init__(self,Settings,Screen,Ctrl_Vars):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
         self.Screen = Screen
+        self.Settings = Settings
         self.Screen_rect = Screen.get_rect()
-        self.init_curtain()
 
-        name = self.Ctrl_Vars.world_name
-        self.text = "{}".format(name)
-        num = "~" + str(18 - len(name))
-        self.num_left = word_object(num,['$R'])
-        self.text_area = Buttons.Typing_Box(Screen,Ctrl_Vars)
-        self.init_text()
         self.Menus_init()
+        self.World_list = world_list(Screen)
 
     def Menus_init(self):
         self.Menus = []
         #arranging 0 and functional keys by hand
         self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars)) 
-        Enter = Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Load","Enter")
-        self.Menus.append(Enter)
         self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars))
         self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")) #back button
 
-    def init_text(self):
-        font_size = 100
-        text_color = ((255,255,255))
-        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
-        font.set_bold(True)
+    def navigation(self):
+        self.Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+        self.Ctrl_Vars.Game_Menu_Vars.load_world = True
+        self.Ctrl_Vars.Game_Menu_Vars.menu_select = False
+        self.Ctrl_Vars.Game_Menu_Vars.Load = True
 
-        self.font_image = font.render(self.text,True,text_color,None)
-        self.font_rect = self.font_image.get_rect()
-        self.font_rect.centerx = self.Screen_rect.centerx
-        self.font_rect.centery = 270
-
-    def update_text(self):
-        name = self.Ctrl_Vars.world_name
-        self.text = "{}".format(name)
-        self.init_text()
-        self.num_left.text = "~" + str(18 - len(name))
-        self.num_left.init_text()
+    def collision(self):
+        x,y = pygame.mouse.get_pos()
+        x *= self.Settings.mouseX_scaling
+        y *= self.Settings.mouseY_scaling
+        value = self.World_list.collision(x,y)
+        if value != False:
+            if self.Ctrl_Vars.Left_MouseDown:
+                self.Ctrl_Vars.seed = value
+                self.navigation()
 
     def draw(self):
-        self.Screen.blit(self.curtain,self.curtain_rect)
-        self.update_text()
-        self.Screen.blit(self.font_image,self.font_rect)
-        self.text_area.draw()
+        self.collision()
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
-        self.num_left.draw(self.Screen,(1550,285))
-
-    def init_curtain(self):
-        self.curtain = pygame.Surface((1350,125))
-        self.curtain.fill((0,0,0))
-        self.curtain.set_alpha(185)
-        self.curtain_rect = self.curtain.get_rect()
-        self.curtain_rect.centerx = self.Screen_rect.centerx
-        self.curtain_rect.centery = 270
+        self.World_list.draw()
 
 class Background():
     def __init__(self,Screen):
@@ -551,3 +532,62 @@ class WC_Pause_Envelope():
         self.Screen.blit(self.font_image,self.font_rect)
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
+
+class world_list():
+    def __init__(self,Screen):
+        self.world_names = []
+        with open('Saved_Worlds/Saves.json','r') as File:
+            data = json.load(File)
+            count = 0
+            for name in data:
+                world_name = list_item(Screen,name,count)
+                self.world_names.append(world_name)
+                count += 1
+
+    def collision(self,x,y):
+        for item in self.world_names:
+            value = item.collision(x,y)
+            if value != False:
+                return value
+        return False
+        
+    def draw(self):
+        for item in self.world_names:
+            item.draw()
+
+class list_item():
+    def __init__(self,Screen,name,order):
+        self.name = name
+        self.Screen = Screen
+
+        font_size = 65
+        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",font_size)
+        font.set_bold(True)
+        text = font.render(self.name,True,(0,0,0),None)
+        text_rect = text.get_rect()
+
+        self.images = [pygame.image.load('HUD/WorldName0.png'),pygame.image.load('HUD/WorldName1.png')]
+        self.rect = self.images[0].get_rect()
+
+        text_rect.centerx = self.rect.centerx
+        text_rect.centery = self.rect.centery
+
+        self.images[0].blit(text,text_rect)
+        text = font.render(self.name,True,(255,255,255),None)
+        self.images[1].blit(text,text_rect)
+        self.image = self.images[0]
+
+        Screen_rect = self.Screen.get_rect()
+        self.rect.centerx = Screen_rect.centerx
+        self.rect.top = Screen_rect.top + (self.rect.height + 10) * order + 350
+
+    def collision(self,x,y):
+        if x >= self.rect.left and x <= self.rect.right:
+            if y >= self.rect.top and y <= self.rect.bottom:
+                self.image = self.images[1]
+                return self.name
+        self.image = self.images[0]
+        return False
+
+    def draw(self):
+        self.Screen.blit(self.image,self.rect)

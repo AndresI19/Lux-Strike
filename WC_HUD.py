@@ -21,7 +21,6 @@ class Hotbar():
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
         self.image = pygame.image.load("WC_Hex/Toolbar.png")
-        #self.image.fill((55,37,40))
         self.rect = self.image.get_rect()
 
         Screen_rect = Screen.get_rect()
@@ -35,6 +34,44 @@ class Hotbar():
 
         self.init_text()
 
+        self.tool_images = [None for i in range(10)]
+
+        self.highlighted = False
+        self.highlight_image = pygame.image.load("WC_Hex/Tool_Highlight.png")
+        self.highlight_rect = self.highlight_image.get_rect()
+
+    def set_tool(self,index,Type,ID):
+        image = pygame.image.load(
+            "WC_Hex/" + Type + str(ID) + ".png"
+            ).convert()
+        image.set_colorkey((255,0,255))
+        rect = image.get_rect()
+        rect.left = self.rect.left + index * 116 + 11
+        rect.centery = self.rect.centery
+        for i in range(10):
+            if self.tool_images[i] != None:
+                if self.tool_images[i][2] == Type and self.tool_images[i][3] == ID:
+                    self.remove_tool(i)
+        self.tool_images[index] = [image,rect,Type,ID]
+
+    def remove_tool(self,index):
+        self.tool_images[index] = None
+
+    def highlight(self,index):
+        self.highlighted = True
+        self.highlight_rect.left = self.rect.left + index * (self.highlight_rect.width + 2)
+        self.highlight_rect.top = self.rect.top
+
+    def unhighlight(self):
+        self.highlighted = False
+
+    def draw_tool_images(self):
+        for i in range(10):
+            item = self.tool_images[i]
+            if item != None:
+                image,rect = item[0],item[1]
+                self.Screen.blit(image,rect)
+
     def init_text(self):
         self.text = self.font.render(str(self.Ctrl_Vars.WC_Tools.ID),True,(255,255,255),None)
         self.text_rect = self.text.get_rect()
@@ -44,6 +81,9 @@ class Hotbar():
     def draw(self):
         self.init_text()
         self.Screen.blit(self.image,self.rect)
+        if self.highlighted:
+            self.Screen.blit(self.highlight_image,self.highlight_rect)
+        self.draw_tool_images()
         self.Screen.blit(self.text,self.text_rect)
 
 class Inventory():
@@ -131,6 +171,14 @@ class Inventory():
             Tab.collision(self,x,y)
         for box in self.current:
             box.collision(x,y)
+
+    def get_collision(self,x,y):
+        if self.active:
+            for box in self.current:
+                result = box.get_collision(x,y)
+                if result != False:
+                    return result
+        return False
 
     def toggle(self):
         if self.active:
@@ -234,6 +282,12 @@ class Box():
                     self.Ctrl_Vars.Left_MouseDown = False
                     self.Ctrl_Vars.WC_Tools.Type = self.Type
                     self.Ctrl_Vars.WC_Tools.ID = self.ID
+
+    def get_collision(self,x,y):
+        if x <= self.rect.right and x >= self.rect.left:
+            if y <= self.rect.bottom and y >= self.rect.top:
+                return [self.Type,self.ID]
+        return False
 
     def draw(self):
         self.Screen.blit(self.image,self.rect)

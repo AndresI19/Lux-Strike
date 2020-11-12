@@ -83,7 +83,7 @@ def world_init(Ctrl_Vars,Screen):
         player,enemies,hud,drops,camera = initialize_entities(world)
         Ctrl_Vars.Game_Menu_Vars.Custom = False
     elif Ctrl_Vars.Game_Menu_Vars.Load:
-        name = input()
+        name = Ctrl_Vars.seed
         DATA = Load_map(name)
         world = World(Screen,None,Loading,DATA)
         player,enemies,hud,drops,camera = load_entities(world,DATA)
@@ -118,7 +118,7 @@ def new_world_init(Ctrl_Vars,Screen,World,Camera,Window,Settings):
         re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
         Ctrl_Vars.Game_Menu_Vars.Custom = False
     elif Ctrl_Vars.Game_Menu_Vars.Load:
-        name = input()
+        name = Ctrl_Vars.seed
         DATA = Load_map(name)
         World.__init__(Screen,None,Loading,DATA)
         re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD,DATA)
@@ -174,10 +174,10 @@ while True:
             Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
         elif Ctrl_Vars.world_creator:
             if not Ctrl_Vars.WC_initialized:
-                HUD,Map,Elements = WC_Engine.initialization(Screen,Ctrl_Vars)
+                HUD,Map,Elements,Cursor = WC_Engine.initialization(Screen,Ctrl_Vars)
                 Ctrl_Vars.WC_initialized = True
             WC_Engine.check_events(Settings,Ctrl_Vars,Map,Elements,HUD)
             WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,Elements,HUD)
-            WC_Engine.Display(Screen,HUD,Map,Elements)
+            WC_Engine.Display(Screen,HUD,Map,Elements,Cursor)
     
     Graphics.scale(Window,Screen,Settings)

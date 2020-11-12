@@ -3,6 +3,9 @@ import json
 #JSON SAVE GAME - MAP READ - SAVED SETTINGS and SEEDS
 #Saving World -------------------------------------------------------------
 def Save_world(name,World,Player,Enemies,Drops):
+    if name_collision(name):
+        print("Cannot")
+        return
     def find_drop_position(col,row):
         #if the drops ever start spawning in wierd loactions, itll be because of thise function. 100%
         width,height = 120,73
@@ -32,16 +35,17 @@ def Save_world(name,World,Player,Enemies,Drops):
         info = [Drop.ID,[Drop.col,Drop.row],[posx,posy],Drop.value]
         Drop_info.append(info)
     save_data = {
-        name : {
             'Map': Map_info,
             'Player': Player_info,
             'Stats': Stats,
             'Enemies' : Enemy_info,
             'Drops' : Drop_info
-        }
     }
+    with open(path,'r') as Save_file:
+        all_data = json.load(Save_file)
+        all_data[name] = save_data
     with open(path,'w') as Save_file:
-        json.dump(save_data,Save_file)
+        json.dump(all_data,Save_file)
 
 def Save_map(World):
     Matrix = [[None for x in range(World.num_rows)] for y in range(World.num_cols)]
@@ -60,4 +64,14 @@ def Load_map(name):
     with open(path,'r') as Save_file:
         All_SAVES = json.load(Save_file)
         World = All_SAVES[name]
+    Save_file.close()
     return World
+
+def name_collision(name1):
+    path = 'Saved_Worlds/Saves.json'
+    with open(path,'r') as Save_file:
+        all_data = json.load(Save_file)
+        for name2 in all_data:
+            if name1 == name2:
+                return True
+    return False

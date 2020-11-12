@@ -6,8 +6,42 @@ import numpy
 import random
 import sys
 from Tessellation import Hex_Grid
-sys.setrecursionlimit(2000)
+sys.setrecursionlimit(3000)
 limit = sys.getrecursionlimit()
+
+def fill(HG,coords):
+    """fills parametric outline to create solid map, by creating list of all tiles in a row and filling all
+    empty blocks between the min and max"""
+    def check(coords):
+        #check
+        if coords != False:
+            col, row = coords
+            tile = HG.data(col,row)
+            if tile.ID != 1:
+                tile.ID = 1
+                tile.elevation = 1
+                recursive_fill(coords)
+
+    def recursive_fill(coords):
+        Next = HG.get_N(coords)
+        check(Next)
+        Next = HG.get_NW(coords)
+        check(Next)
+        Next = HG.get_SW(coords)
+        check(Next)
+        Next = HG.get_S(coords)
+        check(Next)
+        Next = HG.get_SE(coords)
+        check(Next)
+        Next = HG.get_NE(coords)
+        check(Next)
+
+    #fill grid shape
+    col,row = coords
+    col = int(round(col/90))
+    row = int(round(row/26))
+    coords = [col,row]
+    recursive_fill(coords)
 
 class generation():
     def __init__(self,Seed,Max_parameters,Loading):
@@ -65,48 +99,13 @@ class generation():
                         tile.elevation = SUM
             return MSTR_Grid
 
-        def grid_fill_shape():
-            """fills parametric outline to create solid map, by creating list of all tiles in a row and filling all
-            empty blocks between the min and max"""
-            def recursive_fill(coords):
-                def check(coords):
-                    #check
-                    if coords != False:
-                        col, row = coords
-                        tile = HG.data(col,row)
-                        if tile.ID == 0:
-                            tile.ID = 1
-                            tile.elevation = 1
-                            recursive_fill(coords)
-            
-                #recursive fill
-                Next = HG.get_N(coords)
-                check(Next)
-                Next = HG.get_NW(coords)
-                check(Next)
-                Next = HG.get_SW(coords)
-                check(Next)
-                Next = HG.get_S(coords)
-                check(Next)
-                Next = HG.get_SE(coords)
-                check(Next)
-                Next = HG.get_NE(coords)
-                check(Next)
-
-            #fill grid shape
-            col,row = self.center
-            col = int(round(col/90))
-            row = int(round(row/26))
-            coords = [col,row]
-            recursive_fill(coords)
-
         Cols,Rows = self.Max_Params
         Grids = []
         for tier in range(self.total_tiers):
             if not tier == 0:
                 HG = base_grid()
                 create_base_terrain()
-                grid_fill_shape()
+                fill(HG,self.center)
                 Grids.append(HG)
         MSTR_Grid = base_grid()
         condence_tiers()

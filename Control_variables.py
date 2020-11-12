@@ -16,7 +16,8 @@ class Ctrl_Vars():
         self.WC_Tools = WC_tools()
         self.restart_world = False
 
-        #TODO: Expirmental
+        self.keyboard = ''
+
         self.main = True
         self.world_creator = False
         self.WC_initialized = False
@@ -50,7 +51,10 @@ class Ctrl_Vars():
                 self.Left_click = False
         else:
             self.L_click_memory = False
-     
+
+    def clear_keyboard(self):
+        self.keyboard = ''
+
 #Clocks ______________________________________________________________
     def timer_init(self):
         #Turn timer variables
@@ -167,10 +171,17 @@ class WC_tools():
         self.Pause = False
 
         self.hotbar = [{'Type':None,'ID':None} for i in range(10)]
+        self.active_tool = self.hotbar[0]
 
         self.move_inv = False
-
+    
     def set_hotbar(self,index,Type,ID):
+        count = 0
+        for item in self.hotbar:
+            if item['Type'] == Type and item['ID'] == ID:
+                self.remove_hotbar(count)
+                count += 1
+
         self.hotbar[index]['Type'] = Type
         self.hotbar[index]['ID'] = ID
 

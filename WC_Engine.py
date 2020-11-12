@@ -17,7 +17,7 @@ def check_events(Settings,Ctrl_Vars,Map,Elements,HUD):
         if event.type == pygame.MOUSEMOTION:
             MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD)
         elif event.type == pygame.KEYDOWN:
-            KEYDOWN(event,Ctrl_Vars,HUD)
+            KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LSHIFT:
                 Ctrl_Vars.LSHIFT_DOWN = False
@@ -86,7 +86,7 @@ def MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD):
             for element in Elements:
                 element.translate(dx,dy)
 
-def KEYDOWN(event,Ctrl_Vars,HUD):
+def KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD):
     if event.key == pygame.K_ESCAPE:
         Ctrl_Vars.WC_Tools.Pause = True
         Ctrl_Vars.Game_Menu_Vars.Game_active = False
@@ -97,18 +97,44 @@ def KEYDOWN(event,Ctrl_Vars,HUD):
         Ctrl_Vars.WC_Tools.toggle_HUD()
     elif event.key == pygame.K_e:
         HUD.Inventory.toggle()
+    elif event.key == pygame.K_f:
+        x,y = pygame.mouse.get_pos()
+        x *= Settings.mouseX_scaling
+        y *= Settings.mouseY_scaling
+        for col in range(Map.num_cols):
+            for row in range(Map.num_rows):
+                hover = Map.data(col,row).check_contained(x,y)
+                if hover:
+                    ID1 = Ctrl_Vars.WC_Tools.ID
+                    ID2 = Map.data(col,row).ID
+                    if ID1 != ID2:
+                        fill(Map,[col,row],[ID1,ID2])
     else:
         if event.key >= 48 and event.key <= 57: #Type any number between 0 and 9
-            index = event.key - 48
-            Ctrl_Vars.WC_Tools.set_TypeID(index)
-    
+            x,y = pygame.mouse.get_pos()
+            x *= Settings.mouseX_scaling
+            y *= Settings.mouseY_scaling
+            item = HUD.Inventory.get_collision(x,y)
+            index = event.key - 49
+            if index == -1:
+                index = 9
+
+            if item != False:
+                Type,ID = item
+                Ctrl_Vars.WC_Tools.set_hotbar(index,Type,ID)
+                HUD.hotbar.set_tool(index,Type,ID)
+            else:
+                Ctrl_Vars.WC_Tools.set_TypeID(index)
+                HUD.hotbar.highlight(index)
+
 def initialization(Screen,Ctrl_Vars):
     HUD = WC_HUD(Screen,Ctrl_Vars)
     Map = Map_init(Screen)
     Elements = []
+    Cursor = highlight(Screen)
     pygame.mixer.music.load('Music/World Edit.wav')
     pygame.mixer.music.play(-1)
-    return (HUD,Map,Elements)
+    return (HUD,Map,Elements,Cursor)
 
 def Map_init(Screen):
     """cols = int(input("Cols: "))
@@ -122,17 +148,20 @@ def Map_init(Screen):
             Map.write(tile,col,row)
     return Map
 
-def Draw_UI(Map,Elements):
+def Draw_UI(Map,Elements,Cursor):
+    highlights = []
     for row in range(Map.num_rows):
         draw_row = Map.num_rows - row - 1
         for col in range(Map.num_cols):
-            Map.data(col,draw_row).draw()
+            Map.data(col,draw_row).draw(highlights)
     for element in Elements:
         element.draw()
+    for rect in highlights:
+        Cursor.draw(rect)
 
-def Display(Screen,HUD,Map,Elements):
+def Display(Screen,HUD,Map,Elements,Cursor):
     Screen.fill((0,0,0))
-    Draw_UI(Map,Elements)
+    Draw_UI(Map,Elements,Cursor)
     HUD.draw()
 
 def return_home(Ctrl_Vars):
@@ -144,23 +173,56 @@ def return_home(Ctrl_Vars):
     Ctrl_Vars.Game_Menu_Vars.Start_Screen = True
     Ctrl_Vars.Game_Menu_Vars.menu_select = True
 
+def fill(Map,coords,ID):
+    """fills parametric outline to create solid map, by creating list of all tiles in a row and filling all
+    empty blocks between the min and max"""
+    def check(coords):
+        #check
+        if coords != False:
+            col, row = coords
+            if Map.data(col,row).ID == ID2:
+                Map.data(col,row).update_ID(ID1)
+                #return
+                recursive_fill(coords)
+
+    def recursive_fill(coords):
+        Next = Map.get_N(coords)
+        check(Next)
+        Next = Map.get_NW(coords)
+        check(Next)
+        Next = Map.get_SW(coords)
+        check(Next)
+        Next = Map.get_S(coords)
+        check(Next)
+        Next = Map.get_SE(coords)
+        check(Next)
+        Next = Map.get_NE(coords)
+        check(Next)
+
+    #fill grid shape
+    ID1,ID2 = ID
+    recursive_fill(coords)
+
 class WC_tile(Hexagon):
     def __init__(self,Screen,col,row):
         Hexagon.__init__(self,col,row,0,0)
         self.Screen = Screen
-        self.image = pygame.image.load("WC_Hex/ID0.png").convert()
+        self.image = pygame.image.load("WC_Hex/Tile0.png").convert()
         self.image.set_colorkey((255,0,255))
 
-        self.height = 52*2
-        self.width = 60*2
+        self.height = 78
+        self.width = 90
         self.side_length = self.width/2
         self.offset = (self.side_length*(3/2))
         self.position()
+        self.highlighted = False
+        self.Highlight = pygame.image.load("WC_Hex/TileHighlight.png").convert()
+        self.Highlight.set_colorkey((255,0,255))
 
     def update_ID(self,ID):
         self.ID = ID
         self.image = pygame.image.load(
-            "WC_Hex/ID{}.png".format(self.ID)
+            "WC_Hex/Tile{}.png".format(self.ID)
             ).convert()
         self.image.set_colorkey((255,0,255))
 
@@ -171,9 +233,9 @@ class WC_tile(Hexagon):
         self.bottom += dy
 
     def position(self):
-        self.bottom = 1080 - (self.row * (self.height / 2) - 2)
+        self.bottom = 1080 - (self.row * (self.height / 2 - 1))
         self.top = self.bottom - self.height
-        self.left = self.col * (self.width + self.side_length) - 2
+        self.left = self.col * (self.width + self.side_length - 1)
         if self.row%2 == 0:
             self.left += self.offset
             self.off_center = True
@@ -193,11 +255,15 @@ class WC_tile(Hexagon):
             right_bound = self.left + self.width - (y_rel)*slope
 
             if x >= left_bound and x <= right_bound:
+                self.highlighted = True
                 return True
+        self.highlighted = False
         return False
         
-    def draw(self):
+    def draw(self,Cursor_list):
         self.Screen.blit(self.image,(self.left,self.top))
+        if self.highlighted:
+            Cursor_list.append([self.left-2,self.top-2])
 
 class Field_element():
     def __init__(self,Screen,Type,ID,coords=None,position=None):
@@ -223,3 +289,11 @@ class Field_element():
 
     def draw(self):
         self.Screen.blit(self.image,self.rect)
+
+class highlight():
+    def __init__(self,Screen):
+        self.Screen = Screen
+        self.Highlight = pygame.image.load("WC_Hex/TileHighlight.png").convert()
+        self.Highlight.set_colorkey((255,0,255))
+    def draw(self,rect):
+        self.Screen.blit(self.Highlight,rect)
