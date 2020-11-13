@@ -245,7 +245,7 @@ class WC_tile(Hexagon):
         return [(self.left + self.width//2),self.center_y] 
 
     def check_contained(self,x,y):
-        if y >= self.top and y <= self.bottom:
+        if y > self.top and y < self.bottom:
             slope = 1/math.sqrt(3)
             if y - self.center_y >= 0:
                 slope *= -1
