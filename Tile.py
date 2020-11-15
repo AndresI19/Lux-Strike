@@ -2,7 +2,7 @@ import pygame
 from math import sqrt,trunc
 from numpy.random import choice
 from Tessellation import Animation
-import json
+import json,sys
 
 #Mother class of all tiles. All tiles are the same size and contain the same number of elements. 
 """FIXME: Needs a lot of work, 
@@ -67,6 +67,16 @@ def load_graphics(self):
         Hexagon()
         self.set_colorkey()
 
+#Tile dictionary:
+def TileClass():
+    TileID = {}
+    with open('database.json','r') as File:
+        data = json.load(File)['Tile']
+        for key in data:
+            TileID[data[key]['ID']] = getattr(sys.modules[__name__], key)
+    File.close()
+    return TileID
+
 class Tile():
     def __init__(self,Screen,col,row,cliffs,elevation):
         self.Screen = Screen
@@ -105,10 +115,10 @@ class Tile():
 
     def animated_draw(self):
         #self.clock()
-        self.Animation.clock(self.Hexagon_rect)
+        self.Animation.clock()
         if self.render:
             self.draw_extended_terrain()
-            self.Animation.Screen.blit(self.Animation.image,self.Hexagon_rect)
+            self.Animation.draw(self.Hexagon_rect)
             if self.highlighted:
                 self.highlight.draw(self.Hexagon_rect)
 

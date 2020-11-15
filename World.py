@@ -55,38 +55,29 @@ class World():
         self.seed = Generation.seed
         self.total_tiers = Generation.total_tiers
 
-        #pass master grid object
-        """self.master_grid = generation.MSTR_Grid"""
         post_generation = Post_Generation(Generation.MSTR_Grid,self.seed)
-        #self.stairs = post_generation.stairs
 
         #create world using matrix information ---------------------------------------------------
         self.master_grid = post_generation.grid
         self.transcribe_grid()
 
     def transcribe_grid(self):
+        def special_case(key):
+            if key == 101:
+                self.stairs = [col,row]
+            if key == 102:
+                self.Doors.append(tile)
         #converts grid into tiles
+        ID_Converter = T.TileClass()
         for col in range(self.num_cols):
             for row in range(self.num_rows):
                 elevation = self.master_grid.data(col,row).elevation
                 ID = self.master_grid.data(col,row).ID
                 cliffs = self.master_grid.data(col,row).cliffs
-                if ID == 0:
-                    tile = T.Water(self.Screen,col,row,cliffs,0)
-                elif ID == 1:
-                    tile = T.Grass(self.Screen,col,row,cliffs,elevation)
-                elif ID == 2:
-                    tile = T.Beach(self.Screen,col,row,cliffs,elevation)
-                elif ID == 3:
-                    tile = T.Mountain(self.Screen,col,row,cliffs,elevation)
-                elif ID == 100:
-                    tile = T.Brick(self.Screen,col,row,cliffs,elevation)
-                elif ID == 101:
-                    tile = T.Stairs(self.Screen,col,row,cliffs,elevation)
-                    self.stairs = [col,row]
-                elif ID == 102:
-                    tile = T.Door(self.Screen,col,row,cliffs,elevation)
-                    self.Doors.append(tile)
+                for key in ID_Converter:
+                    if ID == key:
+                        tile = ID_Converter[key](self.Screen,col,row,cliffs,elevation)
+                        special_case(key)
                 self.Map.write(tile,col,row)
 
     def find_player_spawn(self):

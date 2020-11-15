@@ -17,10 +17,8 @@ def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
     check_death(Player,Ctrl_Vars)
 
 def enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD):
-    col = Player.dx
-    row = Player.dy
     for Enemy in Enemies.Group:
-        Enemy.update_player_location(col,row)    #update knowledge of player projected location
+        Enemy.update_player_location(Player)    #update knowledge of player projected location
         if Enemy.aware:
             Enemy.choose_direction(World)
             Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD)
@@ -103,8 +101,8 @@ def KEYUP(event,Ctrl_Vars,World):
 
 def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     if event.key == pygame.K_ESCAPE:
-        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-        Ctrl_Vars.Game_Menu_Vars.Pause = True
+        Ctrl_Vars.GameNav.Menu_reset()
+        Ctrl_Vars.GameNav.Pause = True
     #camera Center
     elif event.key == pygame.K_LSHIFT:
         Camera.set_pan(4)
@@ -227,7 +225,7 @@ def menu_management(Settings,Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,Game_O
     run_menu(Settings,Ctrl_Vars,Menu_envelope)
 
 def run_menu(Settings,Ctrl_Vars,Menu_envelope):
-    Menu_check_events(Settings,Ctrl_Vars,Menu_envelope.Menus)
+    Menu_check_events(Settings,Ctrl_Vars,Menu_envelope.UI)
     Menu_diplay(Menu_envelope)
 
 #Menu input engine--------------------------------------------------------------------
@@ -272,10 +270,10 @@ def num_keys(event,Ctrl_Vars):
 
     elif len(Ctrl_Vars.seed) >= 18:
         if event.key == 13:
-            Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-            Ctrl_Vars.Game_Menu_Vars.load_world = True
-            Ctrl_Vars.Game_Menu_Vars.menu_select = False
-            Ctrl_Vars.Game_Menu_Vars.Custom = True
+            Ctrl_Vars.GameNav.Menu_reset()
+            Ctrl_Vars.GameNav.load_world = True
+            Ctrl_Vars.GameNav.menu_select = False
+            Ctrl_Vars.GameNav.Custom = True
     if event.key == pygame.K_BACKSPACE:
         Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
         sound = pygame.mixer.Sound("SFX/Button_press.wav")
@@ -354,16 +352,16 @@ def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
 def check_stairs(World,Player,Ctrl_Vars):
     col,row = World.stairs[0],World.stairs[1]
     if Player.col == col and Player.row == row:
-        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-        Ctrl_Vars.Game_Menu_Vars.Game_Win = True
+        Ctrl_Vars.GameNav.Menu_reset()
+        Ctrl_Vars.GameNav.Game_Win = True
 
 def check_drops(Player,Drops):
     Drops.check_pick_up(Player)
 
 def check_death(Player,Ctrl_Vars):
     if Player.Stats.Health_Points <= 0:
-        Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-        Ctrl_Vars.Game_Menu_Vars.Game_Over = True
+        Ctrl_Vars.GameNav.Menu_reset()
+        Ctrl_Vars.GameNav.Game_Over = True
         sound = pygame.mixer.Sound("SFX/game over.wav")
         pygame.mixer.Sound.play(sound)
 
@@ -375,8 +373,8 @@ def check_tall_block(World,MOB,Ctrl_Vars):
     World.Map.data(MOB.col,MOB.row-2).check_tall_block(MOB,Ctrl_Vars)
 
 def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
-    Ctrl_Vars.Game_Menu_Vars.load_world = False
-    Ctrl_Vars.Game_Menu_Vars.Game_active = True
+    Ctrl_Vars.GameNav.load_world = False
+    Ctrl_Vars.GameNav.Game_active = True
     Camera.Center_Screen()
     Player.glue(World)
     Enemies.glue(World)
@@ -438,8 +436,9 @@ def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start):
         return False
 
     Next = Path()
-    if Act(Next) != False:    #Else end
-        laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next)
+    if Next != False:
+        if Act(Next) != False:    #Else end
+            laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next)
 
 def Save_game(World,Player,Enemies,Drops):
     name = input("Type name: ")

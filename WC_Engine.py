@@ -89,8 +89,8 @@ def MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD):
 def KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD):
     if event.key == pygame.K_ESCAPE:
         Ctrl_Vars.WC_Tools.Pause = True
-        Ctrl_Vars.Game_Menu_Vars.Game_active = False
-        Ctrl_Vars.Game_Menu_Vars.menu_select = True
+        Ctrl_Vars.GameNav.Game_active = False
+        Ctrl_Vars.GameNav.menu_select = True
     elif event.key == pygame.K_LSHIFT:
         Ctrl_Vars.LSHIFT_DOWN = True
     elif event.key == pygame.K_F1:
@@ -128,13 +128,13 @@ def KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD):
                 HUD.hotbar.highlight(index)
 
 def initialization(Screen,Ctrl_Vars):
-    HUD = WC_HUD(Screen,Ctrl_Vars)
+    hud = WC_HUD(Screen,Ctrl_Vars)
     Map = Map_init(Screen)
     Elements = []
     Cursor = highlight(Screen)
     pygame.mixer.music.load('Music/World Edit.wav')
     pygame.mixer.music.play(-1)
-    return (HUD,Map,Elements,Cursor)
+    return (hud,Map,Elements,Cursor)
 
 def Map_init(Screen):
     """cols = int(input("Cols: "))
@@ -165,13 +165,13 @@ def Display(Screen,HUD,Map,Elements,Cursor):
     HUD.draw()
 
 def return_home(Ctrl_Vars):
-    Ctrl_Vars.Game_Menu_Vars.Menu_reset()
+    Ctrl_Vars.GameNav.Menu_reset()
     Ctrl_Vars.main = True
     Ctrl_Vars.world_creator = False
-    Ctrl_Vars.Game_Menu_Vars.load_world = False
-    Ctrl_Vars.Game_Menu_Vars.Game_active = False
-    Ctrl_Vars.Game_Menu_Vars.Start_Screen = True
-    Ctrl_Vars.Game_Menu_Vars.menu_select = True
+    Ctrl_Vars.GameNav.load_world = False
+    Ctrl_Vars.GameNav.Game_active = False
+    Ctrl_Vars.GameNav.Start_Screen = True
+    Ctrl_Vars.GameNav.menu_select = True
 
 def fill(Map,coords,ID):
     """fills parametric outline to create solid map, by creating list of all tiles in a row and filling all

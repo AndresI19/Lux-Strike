@@ -305,16 +305,15 @@ class Folder(Hexagon_Button):
             self.draw_text()
 """MENU SWITCHS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 class Start_Navigation(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,GoTo,Text,active = True):
+    def __init__(self,Screen,Coords,Ctrl_Vars,Text,active = True):
         Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
-        self.GoTo = GoTo
         self.text = Text
         self.init_text()
 
     def functionality(self):
         #activates campaign mode
         self.Ctrl_Vars.Start_Vars.Menu_reset()
-        self.Ctrl_Vars.Start_Vars.Set_Menu(self.GoTo)
+        self.Ctrl_Vars.Start_Vars.Set_Menu(self.text)
 
 class Menu_Navagation(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,load_type,Text,active = True):
@@ -324,26 +323,28 @@ class Menu_Navagation(Hexagon_Button):
         self.load_type = load_type
 
     def functionality(self):
-        self.Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-        self.Ctrl_Vars.Game_Menu_Vars.load_world = True
-        self.Ctrl_Vars.Game_Menu_Vars.menu_select = False
+        self.Ctrl_Vars.GameNav.Menu_reset()
+        self.Ctrl_Vars.GameNav.load_world = True
+        self.Ctrl_Vars.GameNav.menu_select = False
+        self.Ctrl_Vars.main = True
         if self.load_type == "Custom":
-            self.Ctrl_Vars.Game_Menu_Vars.Custom = True
+            self.Ctrl_Vars.GameNav.Custom = True
         elif self.load_type == "Random":
-            self.Ctrl_Vars.Game_Menu_Vars.Random = True
+            self.Ctrl_Vars.GameNav.Random = True
         elif self.load_type == "Load":
-            self.Ctrl_Vars.Game_Menu_Vars.Load = True
+            self.Ctrl_Vars.GameNav.Load = True
         elif self.load_type == "World Creator":
-            self.Ctrl_Vars.Game_Menu_Vars.Game_active = True
+            self.Ctrl_Vars.GameNav.Game_active = True
+            self.Ctrl_Vars.WC_initialized = False
             self.Ctrl_Vars.main = False
             self.Ctrl_Vars.world_creator = True
             self.menu_select = False
-            self.Ctrl_Vars.Game_Menu_Vars.load_world = False
+            self.Ctrl_Vars.GameNav.load_world = False
         else:
-            self.Ctrl_Vars.Game_Menu_Vars.load_world = False
-            self.Ctrl_Vars.Game_Menu_Vars.Game_active = False
-            self.Ctrl_Vars.Game_Menu_Vars.Start_Screen = True
-            self.Ctrl_Vars.Game_Menu_Vars.menu_select = True
+            self.Ctrl_Vars.GameNav.load_world = False
+            self.Ctrl_Vars.GameNav.Game_active = False
+            self.Ctrl_Vars.GameNav.Start_Screen = True
+            self.Ctrl_Vars.GameNav.menu_select = True
 
 """Simple Button specialized types ***************************************************************************"""
 #Number PAD
@@ -475,8 +476,8 @@ class Resume(Hexagon_Button):
 
     def functionality(self):
         #activates campaign mode
-        self.Ctrl_Vars.Game_Menu_Vars.Game_active = True
-        self.Ctrl_Vars.Game_Menu_Vars.Pause = False
+        self.Ctrl_Vars.GameNav.Game_active = True
+        self.Ctrl_Vars.GameNav.Pause = False
         self.Ctrl_Vars.WC_Tools.Pause = True
 
 class Retry(Hexagon_Button):
@@ -488,12 +489,12 @@ class Retry(Hexagon_Button):
 
     def functionality(self):
         #activates campaign mode
-        self.Ctrl_Vars.Game_Menu_Vars.load_world = True
-        self.Ctrl_Vars.Game_Menu_Vars.Pause = False
+        self.Ctrl_Vars.GameNav.Pause = False
+        self.Ctrl_Vars.GameNav.Game_Over = False
+        self.Ctrl_Vars.GameNav.Game_Win = False
 
-        self.Ctrl_Vars.restart_world = True
-        self.Ctrl_Vars.Game_Menu_Vars.Game_Over = False
-        self.Ctrl_Vars.Game_Menu_Vars.Game_Win = False
+        self.Ctrl_Vars.GameNav.load_world = True
+        self.Ctrl_Vars.GameNav.restart_world = True
 
 class Quit(Hexagon_Button):
     def __init__(self,Screen,Coords,Ctrl_Vars,active):
@@ -518,10 +519,10 @@ class Play(Folder):
     def build_submenu(self):
         #Play Options ----
         self.Buttons = []
-        random_Button = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Random","Random",False)
+        random_Button = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Random",'Random',False)
         #campaign_Button = Campaign(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        load_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Load_Pad","Load World",False)
-        seed_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Num_Pad","Custom",False)
+        load_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Load World",False)
+        seed_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Seed",False)
         self.Buttons.append(random_Button)
         self.Buttons.append(load_Button)
         self.Buttons.append(seed_Button)
@@ -535,8 +536,8 @@ class Extras(Folder):
         self.text = "Extras!"
         self.init_text()
         self.Buttons = []
-        Jukebox_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Jukebox","Jukebox",True)
-        World_Creator = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"World Creator","World Creator ~~Alpha~~",False)
+        Jukebox_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Jukebox",True)
+        World_Creator = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"World Creator","World Creator",False)
         Store_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
         self.Buttons.append(World_Creator)
         self.Buttons.append(Jukebox_Button)
@@ -551,14 +552,14 @@ class Settings(Folder):
     def build_submenu(self):
         #Settings Options ----
         self.Buttons = []
-        Sound_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Sound_Settings","Volume",True)
-        Display_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Display_Settings","Display",True)
+        Sound_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Volume",True)
+        Display_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Display",True)
         Controls_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
         self.Buttons.append(Display_Button)
         self.Buttons.append(Sound_Button)
         self.Buttons.append(Controls_Button)
 
-#Pause Screen
+#Quit Folder
 class Quit_Folder(Folder):
     def __init__(self,Screen,Coords,Ctrl_Vars):
         Folder.__init__(self,Screen,Coords,Ctrl_Vars)
@@ -567,12 +568,10 @@ class Quit_Folder(Folder):
 
     def build_submenu(self):
         #Settings Options ----
-        self.Buttons = []
-        return_start = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Return Start","Return Start",False)
-        #return_start = Return_start(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        Exit = Quit(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        self.Buttons.append(return_start)
-        self.Buttons.append(Exit)
+        self.Buttons = [
+            Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Title Screen",'Title Screen',False),
+            Quit(self.Screen,self.Coords,self.Ctrl_Vars,False)
+        ]
 
 """SLIDERS *********************************************************************************************"""
 class Slider_Bar():

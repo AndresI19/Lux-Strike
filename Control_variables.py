@@ -4,7 +4,6 @@ class Ctrl_Vars():
     def __init__(self,debug):
         self.timer_init()
         self.set_button_downs()
-        self.initialized = False #memory used to know if game objects have already been loaded and dont need to be re initialized
 
         self.page_count = 0
 
@@ -12,7 +11,7 @@ class Ctrl_Vars():
         self.seed = "" #this is a 'soft' version of the seed, it is not used as the seed unless the player indicates so.
         self.world_name = ""
         self.Start_Vars = Start_Menu_vars()
-        self.Game_Menu_Vars = Game_Menu_vars(debug)
+        self.GameNav = GameNav(debug)
         self.WC_Tools = WC_tools()
         self.restart_world = False
 
@@ -21,8 +20,6 @@ class Ctrl_Vars():
         self.main = True
         self.world_creator = False
         self.WC_initialized = False
-
-
 ##Dynamic game stats
         self.wallet = 0
 #Key Controls _____________________________________________
@@ -54,7 +51,6 @@ class Ctrl_Vars():
 
     def clear_keyboard(self):
         self.keyboard = ''
-
 #Clocks ______________________________________________________________
     def timer_init(self):
         #Turn timer variables
@@ -97,9 +93,8 @@ class Ctrl_Vars():
     def end_turn(self):
         self.turn_frame = 0
         self.phase_active = True   
-
 """Menu Controls%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
-class Game_Menu_vars():
+class GameNav():
     def __init__(self,debug):
         self.menu_select = True
         self.Start_Screen = True
@@ -112,6 +107,7 @@ class Game_Menu_vars():
         self.Random = False
         self.Custom = False
         self.Load = False
+        self.restart_world = False
         if debug == True:
             self.menu_select = False
             self.Start_Screen = False
@@ -138,6 +134,7 @@ class Start_Menu_vars():
         self.Jukebox = False
         self.Display_Settings = False
         self.Sound_Settings = False
+        self.key = 'Title Screen'
 
     def Menu_reset(self):
         self.load_menu = True
@@ -149,19 +146,8 @@ class Start_Menu_vars():
         self.Display_Settings = False
         self.Sound_Settings = False
 
-    def Set_Menu(self,Menu):
-        if Menu == "Title":
-            self.Title = True
-        elif Menu == "Num_Pad":
-            self.Num_pad = True
-        elif Menu == "Load_Pad":
-            self.Load_pad = True
-        elif Menu == "Jukebox":
-            self.Jukebox = True
-        elif Menu == "Display_Settings":
-            self.Display_Settings = True
-        elif Menu == "Sound_Settings":
-            self.Sound_Settings = True
+    def Set_Menu(self,key):
+        self.key = key
 
 class WC_tools():
     def __init__(self):

@@ -6,21 +6,21 @@ from Tessellation import Animation
 import json
 
 def menu_select(Screen,Window,Ctrl_Vars,Settings):
-    if Ctrl_Vars.Game_Menu_Vars.Start_Screen:
+    if Ctrl_Vars.GameNav.Start_Screen:
         Active_Menu = Start_Envelope(Screen,Window,Ctrl_Vars,Settings)
         time.sleep(0.5)
-    elif Ctrl_Vars.Game_Menu_Vars.Pause:
+    elif Ctrl_Vars.GameNav.Pause:
         Active_Menu = Pause_Envelope(Screen,Ctrl_Vars)
     elif Ctrl_Vars.WC_Tools.Pause:
         Active_Menu = WC_Pause_Envelope(Screen,Ctrl_Vars)
-    elif Ctrl_Vars.Game_Menu_Vars.Game_Win:
+    elif Ctrl_Vars.GameNav.Game_Win:
         Active_Menu = Game_Win_Envelope(Screen,Ctrl_Vars)
         time.sleep(0.5)
-    elif Ctrl_Vars.Game_Menu_Vars.Game_Over:
+    elif Ctrl_Vars.GameNav.Game_Over:
         Active_Menu = Game_Over_Envelope(Screen,Ctrl_Vars)
         time.sleep(0.5)
 
-    Ctrl_Vars.Game_Menu_Vars.menu_select = False
+    Ctrl_Vars.GameNav.menu_select = False
     #let garbage collector take care of un-used menus
     return Active_Menu
 
@@ -37,34 +37,27 @@ class Start_Envelope():
         pygame.mixer.music.play(-1)
 
         #Main options
-        self.Title_Screen = Title_Menu(Screen,Ctrl_Vars,Settings)
-        self.Volume_Screen = Sound_Menu(Screen,Ctrl_Vars,Settings)
-        self.Display_Screen = Display_Menu(Screen,Window,Ctrl_Vars,Settings)
-        self.JukeBox_Screen = Jukebox_Menu(Screen,Ctrl_Vars)
-        self.Num_Pad = Num_Pad(Screen,Ctrl_Vars)
-        self.Load_pad = World_load(Settings,Screen,Ctrl_Vars)
+        self.UI = []
+        self.sub_menus = {
+            'Title Screen': Title_Menu(Screen,Ctrl_Vars,Settings),
+            'Volume': Sound_Menu(Screen,Ctrl_Vars,Settings), 
+            'Jukebox': Jukebox_Menu(Screen,Ctrl_Vars),
+            'Display': Display_Menu(Screen,Window,Ctrl_Vars,Settings),
+            'Seed': Num_Pad(Screen,Ctrl_Vars),
+            'Load World': World_load(Settings,Screen,Ctrl_Vars)
+            }
         self.Sub_menu_select()
 
-    def Sub_menu_select(self): #a menu select for everything in the start menu
+    def Sub_menu_select(self):
         if self.Start_vars.load_menu:
-            if self.Start_vars.Title:
-                self.Active_Menu = self.Title_Screen
-            elif self.Start_vars.Sound_Settings:
-                self.Active_Menu = self.Volume_Screen
+            self.Active_Menu = self.sub_menus[self.Start_vars.key]
+            self.UI = self.Active_Menu.Menus
+            if self.Start_vars.key == 'Volume':
                 pygame.mixer.music.load('Music/Bad KpR.mp3')
                 pygame.mixer.music.play(-1)
-            elif self.Start_vars.Num_pad:
-                self.Active_Menu = self.Num_Pad
-            elif self.Start_vars.Load_pad:
-                self.Active_Menu = self.Load_pad
-            elif self.Start_vars.Display_Settings:
-                self.Active_Menu = self.Display_Screen
-            elif self.Start_vars.Jukebox:
-                self.Active_Menu = self.JukeBox_Screen
             time.sleep(0.5)
             self.Start_vars.load_menu = False
-            self.Menus = self.Active_Menu.Menus
-        
+
     def draw(self):
         self.Sub_menu_select()
         self.Still.draw()
@@ -72,12 +65,13 @@ class Start_Envelope():
 
 class Title_Menu():
     def __init__(self,Screen,Ctrl_Vars,Settings):
-        self.Menus = []
         """These are folders, each contain a few more options within them"""
-        self.Menus.append(Buttons.Settings(Screen,[4,1],Ctrl_Vars,Settings)) #Settings
-        self.Menus.append(Buttons.Extras(Screen,[4,2],Ctrl_Vars))
-        self.Menus.append(Buttons.Play(Screen,[4,3],Ctrl_Vars))
-        self.Menus.append(Buttons.Quit(Screen,[9,0],Ctrl_Vars,True)) 
+        self.Menus = [
+            Buttons.Settings(Screen,[4,1],Ctrl_Vars,Settings),
+            Buttons.Extras(Screen,[4,2],Ctrl_Vars),
+            Buttons.Play(Screen,[4,3],Ctrl_Vars),
+            Buttons.Quit(Screen,[9,0],Ctrl_Vars,True)
+        ]
 
     def draw(self):
         for i in range(len(self.Menus)):
@@ -104,46 +98,47 @@ class Sound_Menu():
 
     def init_sliders(self):
         #Sliders
-        i = 175
+        spacing = 175
         x = self.Screen_rect.centerx - 120
         y = self.Screen_rect.top + 450
-        self.MasterV_Slider = Buttons.Slider_Bar(self.Screen,self.Ctrl_Vars,x,y,"Master Volume")
-        self.MusicV_slider = Buttons.Slider_Bar(self.Screen,self.Ctrl_Vars,x,y + i,"Music Volume")
-        self.SFX_slider = Buttons.Slider_Bar(self.Screen,self.Ctrl_Vars,x,y + i*2,"SFX Volume")
-        self.Voice_slider = Buttons.Slider_Bar(self.Screen,self.Ctrl_Vars,x,y + i*3,"Voice Volume")
-        self.Menus.append(self.MasterV_Slider)
-        self.Menus.append(self.MusicV_slider)
-        self.Menus.append(self.SFX_slider)
-        self.Menus.append(self.Voice_slider)
+        self.slider_names = ["Master volume","Music volume","SFX volume","Voice volume"]
+        self.sliders = []
+        for i in range(len(self.slider_names)):
+            name = self.slider_names[i]
+            self.sliders.append(
+                Buttons.Slider_Bar(
+                    self.Screen,self.Ctrl_Vars,x,y + spacing * i,name
+                    )
+            )
         self.init_slider_values()
+        self.Menus.extend(self.sliders)
 
     def init_slider_values(self):
-        self.MasterV_Slider.value = self.Settings.settings["Master volume"]
-        self.MasterV_Slider.set_Knob()
-        self.MusicV_slider.value = self.Settings.settings["Music volume"]
-        self.MusicV_slider.set_Knob()
-        self.SFX_slider.value = self.Settings.settings["SFX volume"]
-        self.SFX_slider.set_Knob()
-        self.Voice_slider.value = self.Settings.settings["Voice volume"]
-        self.Voice_slider.set_Knob()
+        count = 0
+        for slider in self.sliders:
+            slider.value = self.Settings.settings[self.slider_names[count]]
+            slider.set_Knob()
+            count += 1
 
     def init_buttons(self):
-        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")#back button
-        Save = Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings) #commit changes to file
+        buttons = [
+            Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title Screen"),
+            Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings)
+        ]
         self.Default = Buttons.Default_Sound(self.Screen,[9,2],self.Ctrl_Vars,self.Settings)
-        self.Menus.append(Back_Nav) 
-        self.Menus.append(Save)
-        self.Menus.append(self.Default) #return default
+        buttons.append(self.Default)
+        self.Menus.extend(buttons)
 
     ##Standard
     def update(self):
         if self.Default.value:
             self.init_slider_values()
             self.Default.value = False
-        self.Settings.settings["Master volume"] = self.MasterV_Slider.value
-        self.Settings.settings["Music volume"] = self.MusicV_slider.value
-        self.Settings.settings["SFX volume"] = self.SFX_slider.value
-        self.Settings.settings["Voice volume"] = self.Voice_slider.value
+        count = 0
+        for slider in self.sliders:
+            key = self.slider_names[count]
+            self.Settings.settings[key] = slider.value
+            count += 1
         pygame.mixer.music.set_volume(self.Settings.settings["Master volume"]/100)
 
     def draw(self):
@@ -159,32 +154,21 @@ class Display_Menu():
         self.Ctrl_Vars = Ctrl_Vars
         self.Window = Window
         self.init_curtain()
-        self.Menus = []
-        self.init_buttons()
+        self.Menus = [
+            Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings),
+            Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title Screen",True),
+            Buttons.Full_Screen(self.Screen,[4,2],self.Ctrl_Vars,self.Settings,True),
+            Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,[1920,1080],"1920X1080"),
+            Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,[1600,900],"1600X900"),
+            Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,[1280,720],"1280X720"),
+            Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,[640,480],"640X480")
+        ]
 
     def init_curtain(self):
         Screen_rect = self.Screen.get_rect()
         self.curtain = pygame.Surface((Screen_rect.right,Screen_rect.bottom))
         self.curtain.fill((0,0,0))
         self.curtain.set_alpha(120)
-
-    def init_buttons(self):
-        #Buttons
-        Save = Buttons.Save_Settings(self.Screen,[9,1],self.Ctrl_Vars,self.Settings) #commit
-        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back",True)
-        Full_Screen = Buttons.Full_Screen(self.Screen,[4,2],self.Ctrl_Vars,self.Settings,True)
-        R1920X1080 = Buttons.Resolution(self.Window,self.Screen,[3,1],self.Ctrl_Vars,self.Settings,[1920,1080],"1920X1080")
-        R1600X900 = Buttons.Resolution(self.Window,self.Screen,[4,1],self.Ctrl_Vars,self.Settings,[1600,900],"1600X900")
-        R1280X720 = Buttons.Resolution(self.Window,self.Screen,[5,1],self.Ctrl_Vars,self.Settings,[1280,720],"1280X720")
-        R640X480 = Buttons.Resolution(self.Window,self.Screen,[6,1],self.Ctrl_Vars,self.Settings,[640,480],"640X480")
-
-        self.Menus.append(Save)
-        self.Menus.append(Back_Nav) #back button
-        self.Menus.append(Full_Screen)
-        self.Menus.append(R1920X1080)
-        self.Menus.append(R1600X900)
-        self.Menus.append(R1280X720)
-        self.Menus.append(R640X480)
 
     def draw(self):
         self.Screen.blit(self.curtain,(0,0))
@@ -195,9 +179,11 @@ class Jukebox_Menu():
     def __init__(self,Screen,Ctrl_Vars):
         self.Screen = Screen
         self.Ctrl_Vars = Ctrl_Vars
-        self.Menus = []
-        self.init_curtain()
+        self.Menus = [
+            Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title Screen")
+        ]
         self.init_buttons()
+        self.init_curtain()
 
     def init_buttons(self):
         count = 0
@@ -205,9 +191,7 @@ class Jukebox_Menu():
             for j in range(0,5):
                 button = Buttons.Music_Button(self.Screen,[i,j],count,self.Ctrl_Vars)
                 self.Menus.append(button)
-                count += 1     
-        Back_Nav = Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")
-        self.Menus.append(Back_Nav)
+                count += 1
 
     def init_curtain(self):
         Screen_rect = self.Screen.get_rect()
@@ -231,11 +215,11 @@ class Pause_Envelope():
 
         #Main options
         """These are folders, each contain a few more options within them"""
-        self.Menus = []
-        #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
-        self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
-        self.Menus.append(Buttons.Resume(Screen,[4,3],Ctrl_Vars))
-        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars))
+        self.UI = [
+            Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars),
+            Buttons.Resume(Screen,[4,3],Ctrl_Vars),
+            Buttons.Retry(Screen,[6,3],Ctrl_Vars)
+        ]
 
     def init_text(self,size):
         text_color = ((255,255,255))
@@ -249,8 +233,8 @@ class Pause_Envelope():
     def draw(self):
         self.Screen.fill((0,0,0))
         self.Screen.blit(self.font_image,self.font_rect)
-        for i in range(len(self.Menus)):
-            self.Menus[i].draw()
+        for item in self.UI:
+            item.draw()
 
 class Game_Over_Envelope(Pause_Envelope):
     def __init__(self,Screen,Ctrl_Vars):
@@ -262,15 +246,10 @@ class Game_Over_Envelope(Pause_Envelope):
         pygame.mixer.music.load('Music/Beach Ball.mp3')
         pygame.mixer.music.play(-1)
         self.init_image()
-        self.init_menus()
-
-    def init_menus(self):
-        #Main options
-        """These are folders, each contain a few more options within them"""
-        self.Menus = []
-        #self.Menus.append(Buttons.Settings(Screen,1,1,Ctrl_Vars))
-        self.Menus.append(Buttons.Quit_Folder(self.Screen,[6,3],self.Ctrl_Vars))
-        self.Menus.append(Buttons.Retry(self.Screen,[4,3],self.Ctrl_Vars))
+        self.UI = [
+            Buttons.Quit_Folder(self.Screen,[6,3],self.Ctrl_Vars),
+            Buttons.Retry(self.Screen,[4,3],self.Ctrl_Vars)
+        ]
 
     def init_image(self):
         self.image = pygame.image.load('HUD/Death.png')
@@ -292,22 +271,19 @@ class Game_Over_Envelope(Pause_Envelope):
         self.Screen.fill((0,0,0))
         self.Screen.blit(self.image,self.image_rect)
         self.Screen.blit(self.font_image,self.font_rect)
-        for i in range(len(self.Menus)):
-            self.Menus[i].draw()
+        for item in self.UI:
+            item.draw()
 
 class Game_Win_Envelope():
     def __init__(self,Screen,Ctrl_Vars):
         self.Screen = Screen
         self.Screen_rect = self.Screen.get_rect()
-
-        #Main options
-        self.Menus = []
-
-        self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
-        Random = Buttons.Menu_Navagation(Screen,[4,3],Ctrl_Vars,"Random","Random")
-        self.Menus.append(Random)
-        self.Menus.append(Buttons.Retry(Screen,[6,3],Ctrl_Vars))
-        self.Menus.append(Buttons.Save_seed(Screen,[4,1],Ctrl_Vars))
+        self.UI = [
+            Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars),
+            Buttons.Menu_Navagation(Screen,[4,3],Ctrl_Vars,"Random","Random"),
+            Buttons.Retry(Screen,[6,3],Ctrl_Vars),
+            Buttons.Save_seed(Screen,[4,1],Ctrl_Vars)
+        ]
         self.init_background()
         self.init_animation()
 
@@ -361,8 +337,8 @@ class Game_Win_Envelope():
     def draw(self):
         self.fade_background()
         self.animate()
-        for i in range(len(self.Menus)):
-            self.Menus[i].draw()
+        for item in self.UI:
+            item.draw()
 
 class Num_Pad():
     #Makes a number pad like on a phone for entering numbers. The functionality of this one can and should be generalized
@@ -389,7 +365,13 @@ class Num_Pad():
         self.curtain_rect.centery = 270
 
     def Menus_init(self):
-        self.Menus = []
+        self.Menus = [
+            Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars),
+            Buttons.Key(self.Screen,[4,0],self.Ctrl_Vars,0),
+            Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Custom","Enter"),
+            Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars),
+            Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")
+        ]
         x = 3 #column
         y = 3 #row
         for i in range(9): #arranging main 9 numbers not including 0
@@ -398,13 +380,6 @@ class Num_Pad():
             if x >= 6:
                 y -= 1
                 x = 3
-        #arranging 0 and functional keys by hand
-        self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars)) 
-        self.Menus.append(Buttons.Key(self.Screen,[4,0],self.Ctrl_Vars,0)) 
-        Enter = Buttons.Menu_Navagation(self.Screen,[5,0],self.Ctrl_Vars,"Custom","Enter")
-        self.Menus.append(Enter)
-        self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars))
-        self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")) #back button
 
     def init_text(self):
         font_size = 100
@@ -441,21 +416,16 @@ class World_load():
         self.Settings = Settings
         self.Screen_rect = Screen.get_rect()
 
-        self.Menus_init()
+        self.Menus = [
+            Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title Screen")
+        ]
         self.World_list = world_list(Screen)
 
-    def Menus_init(self):
-        self.Menus = []
-        #arranging 0 and functional keys by hand
-        self.Menus.append(Buttons.Del_Key(self.Screen,[3,0],self.Ctrl_Vars)) 
-        self.Menus.append(Buttons.Clear(self.Screen,[2,0],self.Ctrl_Vars))
-        self.Menus.append(Buttons.Start_Navigation(self.Screen,[9,0],self.Ctrl_Vars,"Title","Back")) #back button
-
     def navigation(self):
-        self.Ctrl_Vars.Game_Menu_Vars.Menu_reset()
-        self.Ctrl_Vars.Game_Menu_Vars.load_world = True
-        self.Ctrl_Vars.Game_Menu_Vars.menu_select = False
-        self.Ctrl_Vars.Game_Menu_Vars.Load = True
+        self.Ctrl_Vars.GameNav.Menu_reset()
+        self.Ctrl_Vars.GameNav.load_world = True
+        self.Ctrl_Vars.GameNav.menu_select = False
+        self.Ctrl_Vars.GameNav.Load = True
 
     def collision(self):
         x,y = pygame.mouse.get_pos()
@@ -484,16 +454,11 @@ class Background():
                 ).convert()
             image.set_colorkey((255,0,255))
             images.append(image)
-        for i in range(N):
-            image = pygame.image.load(
-                'Title/Title{}.png'.format(N-1)
-                ).convert()
-            image.set_colorkey((255,0,255))
-            images.append(image)
-        self.Animation = Animation(self.Screen,images,2)
+        self.Animation = Animation(self.Screen,images,3,1)
 
     def draw(self):
-        self.Animation.loop((0,0))
+        self.Animation.clock()
+        self.Animation.draw((0,0))
 
 """%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ~~~~~~~~~~~~~~~ WORLD CREATOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -504,12 +469,10 @@ class WC_Pause_Envelope():
         self.Screen_rect = self.Screen.get_rect()
         self.text = "Paused"
         self.init_text(100)
-
-        #Main options
-        """These are folders, each contain a few more options within them"""
-        self.Menus = []
-        self.Menus.append(Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars))
-        self.Menus.append(Buttons.Resume(Screen,[4,3],Ctrl_Vars))
+        self.Menus = [
+            Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars),
+            Buttons.Resume(Screen,[4,3],Ctrl_Vars)
+        ]
 
         self.Curtain()
 

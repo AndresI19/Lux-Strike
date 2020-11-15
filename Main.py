@@ -48,19 +48,8 @@ pygame.display.flip()
 Ctrl_Vars = Ctrl_Vars(debug)
 
 #initialization swtich menu: Can probobaly move to world module
-def world_init(Ctrl_Vars,Screen):
-    def initialize_entities(World):
-        Max_parameters = [World.num_cols,World.num_rows]
-        spawn_coord = [World.spawn_col,World.spawn_row]
-        player = Player(Screen,spawn_coord)
-        enemies = ENEMIES(Screen,Max_parameters,World,player)
-        hud = HUD(Settings,Screen,Ctrl_Vars,World,player,enemies)
-        drops = Drop_envelope(Screen,Ctrl_Vars,hud,player.Stats)
-        camera = Camera(World,player,enemies,drops)
-        Ctrl_Vars.initialized = True
-        return [player,enemies,hud,drops,camera]
-
-    def load_entities(World,Data):
+def world_init(Ctrl_Vars,Screen,world = None):
+    def init_entities(World,DATA = None):
         Max_parameters = [World.num_cols,World.num_rows]
         spawn_coord = [World.spawn_col,World.spawn_row]
         player = Player(Screen,spawn_coord,DATA)
@@ -68,64 +57,34 @@ def world_init(Ctrl_Vars,Screen):
         hud = HUD(Settings,Screen,Ctrl_Vars,World,player,enemies,DATA)
         drops = Drop_envelope(Screen,Ctrl_Vars,hud,player.Stats,DATA)
         camera = Camera(World,player,enemies,drops)
-        Ctrl_Vars.initialized = True
         return [player,enemies,hud,drops,camera]
 
     Loading = Graphics.Load_Screen(Window,Screen,Settings)
-    if Ctrl_Vars.Game_Menu_Vars.Random:
+    if Ctrl_Vars.GameNav.Random:
         world = World(Screen,None,Loading)
         Ctrl_Vars.seed = str(world.seed)
-        player,enemies,hud,drops,camera = initialize_entities(world)
-        Ctrl_Vars.Game_Menu_Vars.Random = False
-    elif Ctrl_Vars.Game_Menu_Vars.Custom:
+        player,enemies,hud,drops,camera = init_entities(world)
+        Ctrl_Vars.GameNav.Random = False
+    elif Ctrl_Vars.GameNav.Custom:
         Seed = Ctrl_Vars.seed
         world = World(Screen,Seed,Loading)
-        player,enemies,hud,drops,camera = initialize_entities(world)
-        Ctrl_Vars.Game_Menu_Vars.Custom = False
-    elif Ctrl_Vars.Game_Menu_Vars.Load:
+        player,enemies,hud,drops,camera = init_entities(world)
+        Ctrl_Vars.GameNav.Custom = False
+    elif Ctrl_Vars.GameNav.Load:
         name = Ctrl_Vars.seed
         DATA = Load_map(name)
         world = World(Screen,None,Loading,DATA)
-        player,enemies,hud,drops,camera = load_entities(world,DATA)
-        Ctrl_Vars.Game_Menu_Vars.Load = False
+        player,enemies,hud,drops,camera = init_entities(world,DATA)#load_entities(world,DATA)
+        Ctrl_Vars.GameNav.Load = False
+    elif Ctrl_Vars.GameNav.restart_world:
+        Seed = world.seed
+        world.__init__(Screen,Seed,Loading)
+        player,enemies,hud,drops,camera = init_entities(world)
+        Ctrl_Vars.GameNav.restart_world = False
     return (world,player,enemies,hud,drops,camera)
 
-def new_world_init(Ctrl_Vars,Screen,World,Camera,Window,Settings):
-    def re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD,DATA= None):
-        #assuming world has been initialized, this will re initialize everything else
-        Max_parameters = (World.num_cols,World.num_rows)
-        spawn_coord = (World.spawn_row,World.spawn_col)
-        if DATA == None:
-            Player.__init__(Screen,spawn_coord)
-            Enemies.__init__(Screen,Max_parameters,World,Player)
-            Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats)
-        else:
-            Player.__init__(Screen,spawn_coord,DATA)
-            Enemies.__init__(Screen,Max_parameters,World,Player,DATA)
-            Drops.__init__(Screen,Ctrl_Vars,HUD,Player.Stats,DATA)
-        HUD.__init__(Settings,Screen,Ctrl_Vars,World,Player,Enemies)
-
-
-    Loading = Graphics.Load_Screen(Window,Screen,Settings)
-    if Ctrl_Vars.Game_Menu_Vars.Random:
-        World.__init__(Screen,None,Loading)
-        Ctrl_Vars.seed = str(World.seed)
-        re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
-        Ctrl_Vars.Game_Menu_Vars.Random = False
-    elif Ctrl_Vars.Game_Menu_Vars.Custom:
-        Seed = Ctrl_Vars.seed
-        World.__init__(Screen,Seed,Loading)
-        re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD)
-        Ctrl_Vars.Game_Menu_Vars.Custom = False
-    elif Ctrl_Vars.Game_Menu_Vars.Load:
-        name = Ctrl_Vars.seed
-        DATA = Load_map(name)
-        World.__init__(Screen,None,Loading,DATA)
-        re_init(Settings,Screen,Ctrl_Vars,World,Player,Enemies,Drops,HUD,DATA)
-        Ctrl_Vars.Game_Menu_Vars.Load = False
-    elif Ctrl_Vars.restart_world:
-        Ctrl_Vars.restart_world = False
-    Camera.follow = True
+def clear_all(World,Player,Enemies,Drops,HUD,Camera):
+    del World,Player,Enemies,Drops,HUD,Camera
 
 def game_loop(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     Ctrl_Vars.merge_timer()
@@ -146,38 +105,37 @@ def game_loop(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
 """Main loop: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 while True:
     clock.tick(60) #set frame rate (variable in argument per second)
-    if not Ctrl_Vars.Game_Menu_Vars.Game_active:
+    if not Ctrl_Vars.GameNav.Game_active:
         #Menus and game Loading
-        if not Ctrl_Vars.Game_Menu_Vars.load_world:
-            if Ctrl_Vars.Game_Menu_Vars.menu_select:
+        if not Ctrl_Vars.GameNav.load_world:
+            if Ctrl_Vars.GameNav.menu_select:
                 #Dynamic Menus, Start, Pause, Victory, Game Over
                 active_menu = Menus.menu_select(Screen,Window,Ctrl_Vars,Settings)
             Engine.run_menu(Settings,Ctrl_Vars,active_menu)
         #Create New world --------------------------------------------------------------------------*
             """Loading Screen"""
-        elif Ctrl_Vars.Game_Menu_Vars.load_world:
+        elif Ctrl_Vars.GameNav.load_world:
             time.sleep(0.5)
             Screen.fill((0,0,0))
             pygame.display.flip()
             #Initialization of major game objects
-            if not Ctrl_Vars.initialized:
-                World,Player,Enemies,HUD,Drops,Camera = world_init(Ctrl_Vars,Screen)
-            else:
-                new_world_init(Ctrl_Vars,Screen,World,Camera,Window,Settings)
-            Engine.end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
+            if not Ctrl_Vars.GameNav.restart_world:
+                world = None
+            world,player,enemies,hud,drops,camera = world_init(Ctrl_Vars,Screen,world)
+            Engine.end_loading(Settings,Ctrl_Vars,world,player,enemies,drops,camera)
         #-------------------------------------------------------------------------------------------*
         """Game loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
     else:
         if Ctrl_Vars.main:
-            game_loop(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera)
-            Camera.View(Ctrl_Vars)
-            Graphics.Display(Screen,World,HUD,Player,Enemies,Drops)
+            game_loop(Settings,Ctrl_Vars,hud,world,player,enemies,drops,camera)
+            camera.View(Ctrl_Vars)
+            Graphics.Display(Screen,world,hud,player,enemies,drops)
         elif Ctrl_Vars.world_creator:
             if not Ctrl_Vars.WC_initialized:
-                HUD,Map,Elements,Cursor = WC_Engine.initialization(Screen,Ctrl_Vars)
+                hud,Map,Elements,Cursor = WC_Engine.initialization(Screen,Ctrl_Vars)
                 Ctrl_Vars.WC_initialized = True
-            WC_Engine.check_events(Settings,Ctrl_Vars,Map,Elements,HUD)
-            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,Elements,HUD)
-            WC_Engine.Display(Screen,HUD,Map,Elements,Cursor)
+            WC_Engine.check_events(Settings,Ctrl_Vars,Map,Elements,hud)
+            WC_Engine.check_mouse_position(Settings,Ctrl_Vars,Map,Elements,hud)
+            WC_Engine.Display(Screen,hud,Map,Elements,Cursor)
     
     Graphics.scale(Window,Screen,Settings)

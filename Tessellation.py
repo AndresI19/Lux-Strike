@@ -15,54 +15,40 @@ class Hex_Grid():
         self.build()
 
     def build(self):
+        #Simple function that initializes objects matrix base, all objects default to None
         for col in range(self.num_cols):
             self.Matrix.append([])
             for row in range(self.num_rows):
                 self.Matrix[col].append(None)
     
     def check_bounds(self,col,row):
+        #Makes sure that indices passed are contianed, will not allow negatice indices.
         if col >= 0 and col < self.num_cols:
             if row >= 0 and row < self.num_rows:
                 return True
-        #print("col: {} Row: {}".format(col,row))
         return False
 
     def index_allowed(self,col,row):
+        #makes sure that such an index is allowable.
         if col >= -self.num_cols and col < self.num_cols:
             if row >= -self.num_rows and row < self.num_rows:
                 return True
-        #print("Index not allowed: col: {} Row: {}".format(col,row))
         return False       
         
     def write(self,Data,col,row):
+        #Writes data to given index
         if self.index_allowed(col,row):
             self.Matrix[col][row] = Data
-        else:
-            return None
-            #print("Out of bounds error: Col:{} Row:{} is not supported".format(col,row))
 
     def data(self,col,row):
+        #Retrives data at given index
         if self.index_allowed(col,row):
             return self.Matrix[col][row]
 
-    def print(self):
-        for row in range(self.num_rows):
-            x = "   "
-            for col in range(self.num_cols):
-                x += str(self.Matrix[col][-1-row]) + "|"
-            if row%2 == 0:
-                x = "S_" + x
-            print(x)
-
-    def print_type(self):
-        for row in range(self.num_rows):
-            x = "   "
-            for col in range(self.num_cols):
-                x += str(type(self.data(col,-1-row)))[13:-2] + "|"
-            if row%2 == 0:
-                x = "S_" + x
-            print(x)
 #directionals
+    """Moving on a hexagon grid is complicated, as the columns go up and contain a list of staggard rows. The way to maneuver this is to
+    define every other row as staggard. Hence, if row%2 = 0 col goes += 1. Moving up or down requires a row change of plus or minus 2. 
+    At each possible control a check_move is preformed."""
     def get_NE(self,coords):
         col,row = coords
         stagger = self.check_stagger(row)
@@ -207,8 +193,9 @@ class Hex_Grid():
             else:
                 return 'NE'
 
+
 class Animation():
-    def __init__(self,Screen,reel,speed = 1):
+    def __init__(self,Screen,reel,speed = 1,Type = 0):
         self.Screen = Screen
         self.reel = reel
         self.speed = speed
@@ -217,28 +204,76 @@ class Animation():
 
         self.count = 0 
 
-    def loop(self,rect):
+        if Type == 0 or Type == 'loop':
+            self.clock = self.clock_loop
+        elif Type == 1 or Type == 'wave':
+            self.flip_flop = 1
+            self.clock = self.clock_wave
+        elif Type == 2 or Type == 'once':
+            self.clock = self.clock_once
+        else:
+            print("Failed to init animation type, default to loop")
+            self.clock = self.clock_loop
+
+    def clock_loop(self):
         if self.count + 1 >= self.frames:
             self.count = 0
         else:
-            self.image = self.reel[self.count//self.speed]
             self.count += 1
-        self.Screen.blit(self.image,rect)
+        self.image = self.reel[self.count//self.speed]
 
-    def clock(self,rect):
-        if self.count + 1 >= self.frames:
-            self.count = 0
-        else:
+    def clock_wave(self):
+        if self.flip_flop > 0:
+            if self.count + 1 >= self.frames:
+                self.flip_flop *= -1
+        elif self.count - 1 < 0:
+            self.flip_flop *= -1
+        self.count += self.flip_flop
+        self.image = self.reel[self.count//self.speed]
+
+    def clock_once(self):
+        if self.active:
+            if self.count + 1 >= self.frames:
+                self.toggle()
+            else:
+                self.count += 1
             self.image = self.reel[self.count//self.speed]
-            self.count += 1
+            return True
 
-    def once(self,rect):
-        if self.count + 1 >= self.frames:
+    def toggle(self):
+        if self.active:
             self.active = False
         else:
-            self.image = self.reel[self.count//self.speed]
-            self.count += 1
+            self.active = True
+
+    def draw(self,rect):
         self.Screen.blit(self.image,rect)
+    
+    def get_rect(self):
+        return self.reel[0].get_rect()
+
+#DEBUG TOOLS FOR HEX GRID
+def print(HG):
+    for row in range(HG.num_rows):
+        x = "   "
+        for col in range(HG.num_cols):
+            x += str(HG.Matrix[col][-1-row]) + "|"
+        if row%2 == 0:
+            x = "S_" + x
+        print(x)
+
+def print_type(HG):
+    for row in range(HG.num_rows):
+        x = "   "
+        for col in range(HG.num_cols):
+            x += str(type(HG.data(col,-1-row)))[13:-2] + "|"
+        if row%2 == 0:
+            x = "S_" + x
+        print(x)
+
+
+
+
 
 """Grid = Hex_Grid(11,17)
 c,r = 4,7

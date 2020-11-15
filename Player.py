@@ -22,10 +22,14 @@ class MOB():
         self.hitstun = False
 
         self.spawn()
-        self.dx = self.col
-        self.dy = self.row
     
     #spawn player in start location
+    def spawn(self):
+        self.col = self.spawn_col
+        self.row = self.spawn_row
+        self.dx = self.col
+        self.dy = self.row
+
     def compare_spawn(self,coords):
         col,row = coords
         allow = True
@@ -34,52 +38,39 @@ class MOB():
                 allow = False
         return allow
 
-    def spawn(self):
-        self.col = self.spawn_col
-        self.row = self.spawn_row
-
 ###Movement vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    """moving on a hexagon grid is complicated, as the columns go up and contain a list of staggard rows. The way to maneuver this is to
-    give the game knowledge of the player location and call every other row staggard. Hence, if the players row value goes up (y) then the off_center value
-    is flipped. Moving up or down requires a row change of plus or minus 2. At each possible control a check_move is preformed."""
     def set_NE(self,World):
         coords = World.Map.get_NE([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'NE')
+            self.set_direction(coords,'NE')
 
     def set_N(self,World):
-        #self.set_direction(0,2,'N')
         coords = World.Map.get_N([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'N')
+            self.set_direction(coords,'N')
 
     def set_NW(self,World):
         coords = World.Map.get_NW([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'NW')
+            self.set_direction(coords,'NW')
 
     def set_SW(self,World):
         coords = World.Map.get_SW([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'SW')
+            self.set_direction(coords,'SW')
 
     def set_S(self,World):
         coords = World.Map.get_S([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'S')
+            self.set_direction(coords,'S')
 
     def set_SE(self,World):
         coords = World.Map.get_SE([self.col,self.row])
         if coords != False:
-            col,row = coords
-            self.set_direction(col,row,'SE')
+            self.set_direction(coords,'SE')
 
-    def set_direction(self,col,row,D):
+    def set_direction(self,coords,D):
+        col, row = coords
         self.dx =  col
         self.dy =  row
         self.sprite_direction(D)

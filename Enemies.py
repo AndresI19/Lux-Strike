@@ -123,9 +123,9 @@ class ENEMIES():
         for i in range(len(self.Group)):
             self.Group[i].Icon.draw()
 
-    def update_player_location(self,x,y):
+    def update_player_location(self,Player):
         for i in range(len(self.Group)):
-            self.Group[i].update_player_location(x,y)
+            self.Group[i].update_player_location(Player)
 
     def update_Icon(self):
         for i in range(len(self.Group)):
@@ -144,9 +144,7 @@ class enemy(MOB):
         self.Icon = Icon_Enemy(self.Screen,self.col,self.row)
 
         self.Player_location = (0,0)
-        self.aware = False
         self.death_SFX = pygame.mixer.Sound("SFX/Critical Hit 1.wav")
-        self.Aware_animation = exclamation_mark(self.Screen)
 
         self.Screen_rect = self.Screen.get_rect()
         self.check_render()
@@ -154,6 +152,19 @@ class enemy(MOB):
             self.elevaiton = elevation
         
         self.key = False
+        self.init_aware()
+
+    def init_aware(self):
+        self.aware = False
+        images = []
+        for i in range(3):
+            image = pygame.image.load(
+                'Enemies/!{}.png'.format(i)).convert()
+            image.set_colorkey((255,0,255))
+            images.append(image)
+        images.append(image)
+        images.append(image)
+        self.exclaimation = Animation(self.Screen,images,3,2)
 
     def check_render(self):
         self.render = False
@@ -164,8 +175,8 @@ class enemy(MOB):
     def SFX_death(self):
         pygame.mixer.Sound.play(self.death_SFX)
 
-    def update_player_location(self,col,row):
-        self.Player_location = (col,row)
+    def update_player_location(self,Player):
+        self.Player_location = [Player.col,Player.row]
 
     def choose_direction(self,World):
         #Zombie AI: simply move to toward the player location
@@ -198,9 +209,7 @@ class enemy(MOB):
             self.choose_direction()
         else:
             self.scan(Player,4)
-        col = Player.col
-        row = Player.row
-        self.update_player_location(col,row)
+        self.update_player_location(Player)
 
     def scan(self,Player,r):
         Points = self.Map.get_circle(self.col,self.row,r)
@@ -210,17 +219,17 @@ class enemy(MOB):
                 self.aware = True
                 sound = pygame.mixer.Sound("SFX/aware.wav")
                 pygame.mixer.Sound.play(sound)
-                self.Aware_animation.activate(
-                    (self.MOB_rect.centerx,self.MOB_rect.top)
-                    )
+                self.exclaimation.toggle()
 
 ##Standard
     def Draw(self):
         if self.render:
             self.Screen.blit(self.MOB_image, self.MOB_rect)
-            if self.Aware_animation.Animation.active:
-                self.Aware_animation.activate((self.MOB_rect.centerx,self.MOB_rect.top)) #refactored for updating
-                self.Aware_animation.draw(self.Screen)
+            if self.exclaimation.clock():
+                rect = self.exclaimation.get_rect()
+                rect.centerx = self.MOB_rect.centerx
+                rect.bottom = self.MOB_rect.top
+                self.exclaimation.draw(rect)
 
 class swanzai(enemy):
     """This will be a basic enemy that uses the most basic AI patter, it simply goes to the player
@@ -320,9 +329,7 @@ class rabbit(enemy):
             self.choose_direction()
         else:
             self.scan(Player,2)
-        col = Player.col
-        row = Player.row
-        self.update_player_location(col,row)
+        self.update_player_location(Player)
 
     def choose_direction(self,World):
         #Zombie AI: simply move to toward the player location
@@ -342,26 +349,3 @@ class rabbit(enemy):
             coords = World.Map.get_SE(coords)
         self.set_direction(coords,direction)
 
-class exclamation_mark():
-    def __init__(self,Screen):
-        images = []
-        for i in range(3):
-            image = pygame.image.load(
-                'Enemies/!{}.png'.format(i)).convert()
-            image.set_colorkey((255,0,255))
-            images.append(image)
-        images.append(image)
-        images.append(image)
-        image = images[0]
-        self.rect = image.get_rect()
-
-        self.Animation = Animation(Screen,images,3)
-
-    def draw(self,screen):
-        self.Animation.once(self.rect)
-
-    def activate(self,coord):
-        self.rect.centerx = coord[0]
-        self.rect.bottom = coord[1]
-        self.active = True
-        self.Animation.active = True
