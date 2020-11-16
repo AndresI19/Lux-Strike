@@ -77,11 +77,9 @@ class generation():
             seed = rng.generate_seed_from_seed(self.seed,tier)
             parametric = create_parametric(seed,self.Max_Params,tier,self.center)
             for point in parametric:
-                for col in range(Cols):
-                    for row in range(Rows):
-                        x,y = point
-                        Hex = HG.data(col,row)
-                        Hex.check_contained(x,y)
+                for i in range(len(HG)):
+                    x,y = point
+                    HG[i].check_contained(x,y)
                 self.Loading.Update()
 
         def condence_tiers():
@@ -167,7 +165,7 @@ def generate_control_points(seed = 0):
     Control_points = radial_values(DF,angles)
     return Control_points
 
-def create_parametric(seed,Max_parameters,layer,center):
+def create_parametric(seed,Max_parameters,layer,center): 
     def CatmullRomSpline(P0, P1, P2, P3, nPoints=35):
         """
         P0, P1, P2, and P3 should be (x,y) point pairs that define the Catmull-Rom spline.

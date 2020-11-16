@@ -164,3 +164,62 @@ class word_object():
 
     def print(self):#for testing. will delete
         print(self.word)
+
+#ANIMATION OBJECT
+class Animation():
+    def __init__(self,Screen,reel,speed = 1,Type = 0):
+        self.Screen = Screen
+        self.reel = reel
+        self.speed = speed
+        self.frames = len(reel) * self.speed
+        self.active = False
+
+        self.count = 0 
+
+        if Type == 0 or Type == 'loop':
+            self.clock = self.clock_loop
+        elif Type == 1 or Type == 'wave':
+            self.flip_flop = 1
+            self.clock = self.clock_wave
+        elif Type == 2 or Type == 'once':
+            self.clock = self.clock_once
+        else:
+            print("Failed to init animation type, default to loop")
+            self.clock = self.clock_loop
+
+    def clock_loop(self):
+        if self.count + 1 >= self.frames:
+            self.count = 0
+        else:
+            self.count += 1
+        self.image = self.reel[self.count//self.speed]
+
+    def clock_wave(self):
+        if self.flip_flop > 0:
+            if self.count + 1 >= self.frames:
+                self.flip_flop *= -1
+        elif self.count - 1 < 0:
+            self.flip_flop *= -1
+        self.count += self.flip_flop
+        self.image = self.reel[self.count//self.speed]
+
+    def clock_once(self):
+        if self.active:
+            if self.count + 1 >= self.frames:
+                self.toggle()
+            else:
+                self.count += 1
+            self.image = self.reel[self.count//self.speed]
+            return True
+
+    def toggle(self):
+        if self.active:
+            self.active = False
+        else:
+            self.active = True
+
+    def draw(self,rect):
+        self.Screen.blit(self.image,rect)
+    
+    def get_rect(self):
+        return self.reel[0].get_rect()

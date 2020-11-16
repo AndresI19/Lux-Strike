@@ -3,7 +3,7 @@ from Player import MOB
 from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
 from Drops import Money_drop,Key
-from Tessellation import Animation
+from Graphics import Animation
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():

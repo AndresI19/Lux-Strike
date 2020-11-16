@@ -1,18 +1,15 @@
 import pygame
 from math import sqrt,trunc
 from numpy.random import choice
-from Tessellation import Animation
+from Graphics import Animation
 import json,sys
 
 #Mother class of all tiles. All tiles are the same size and contain the same number of elements. 
 """FIXME: Needs a lot of work, 
 -fix render over sight
 -rework visibility to remove redundent blits
--fix water elevation issue
 -clean up unused variables
--phase out mother class image calls
--Not a singke things here that isnt a work in progress
-"""
+-Not a single things here that isnt a work in progress"""
 
 #Tile graphic loading
 def load_graphics(self):
@@ -98,7 +95,6 @@ class Tile():
         #--------------------------------------------------------------
 
         self.set_HexProperties()
-        self.Icon = Icon(Screen,col,row)
         self.highlighted = False
         self.highlight = highlight(Screen)
 
@@ -218,7 +214,7 @@ class Tile():
         self.Character_Spot_Mainx = self.Hexagon_rect.centerx
         self.Character_Spot_Mainy = self.Hexagon_rect.bottom - round(self.Hexagon_rect.height/4)
         self.check_render()
-
+        
     def draw_extended_terrain(self):
         #clean up this entire thing its gross and redundent
             for i in range(self.L_num):
@@ -267,7 +263,7 @@ class Water(Tile):
         self.ID = 0
         self.Type = 'Water'
         load_graphics(self)
-        self.Icon = Icon_Water(Screen,col,row)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Grass(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -275,7 +271,7 @@ class Grass(Tile):
         self.ID = 1
         self.Type = 'Grass'
         load_graphics(self)
-        self.Icon = Icon_Grass(Screen,col,row,elevation)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Mountain(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -283,7 +279,7 @@ class Mountain(Tile):
         self.ID = 3
         self.Type = 'Mountain'
         load_graphics(self)
-        self.Icon = Icon_Brick(Screen,col,row,1)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Beach(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -291,7 +287,7 @@ class Beach(Tile):
         self.ID = 2
         self.Type = 'Beach'
         load_graphics(self)
-        self.Icon = Icon_Sand(Screen,col,row,1)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Brick(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -299,7 +295,7 @@ class Brick(Tile):
         self.ID = 100
         self.Type = 'Brick'
         load_graphics(self)
-        self.Icon = Icon_Brick(Screen,col,row,1)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Stairs(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -307,7 +303,7 @@ class Stairs(Tile):
         self.ID = 101
         self.Type = 'Stairs'
         load_graphics(self)
-        self.Icon = Icon_Stairs(Screen,col,row,1)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
 
 class Door(Tile):
     def __init__(self,Screen,col,row,cliffs,elevation):
@@ -316,7 +312,7 @@ class Door(Tile):
         self.Type = 'Door'
         load_graphics(self)
         self.open = False
-        self.Icon = Icon_Brick(Screen,col,row,1)
+        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
     
     def Open(self,World):
         if not self.open:
@@ -346,17 +342,19 @@ class Door(Tile):
         self.Character_Spot_Mainy -= self.Center_rect.height * x
 
 #Class for the mini map icons, one per tile instance
-class Icon():
+class Icon():    
     def __init__(self,Screen,col,row):
         self.Screen = Screen
         self.Screen_rect = self.Screen.get_rect()
-        self.image = pygame.image.load('Tiles/Grass/Mini00.png').convert()
-        self.image.set_colorkey((255,0,255))
-        self.image_rect = self.image.get_rect()
-
         self.col = col
         self.row = row
+        self.init_image()
         self.position()
+
+    def init_image(self):
+        self.image = pygame.image.load('Tiles/Icons/Mini.png').convert()
+        self.image.set_colorkey((255,0,255))
+        self.image_rect = self.image.get_rect()
 
     def position(self):
         width = 15
@@ -368,33 +366,53 @@ class Icon():
         if self.row%2 == 0:
             self.image_rect.left += offset
 
+    def gradiantUP(self):
+        cap = [
+            self.color[i]*1.25// 10 for i in range(3)
+        ]
+        for i in range(3):
+            self.color[i] -= (25 * self.elevation)
+            if self.color[i] < cap[i]:
+                self.color[i] = cap[i]
+
+    def gradiantDOWN(self):
+        start = [
+            self.color[i]*1.25// 10 for i in range(3)
+        ] 
+        for i in range(3):
+            start[i] += (25 * self.elevation)
+            if start[i] > self.color[i]:
+                start[i] = self.color[i]
+        self.color = start
+
     def draw(self):
         self.Screen.blit(self.image, self.image_rect)
 
-class Icon_Water(Icon):
-    def __init__(self,Screen,col,row):
-        Icon.__init__(self,Screen,col,row)
-        self.image = self.image = pygame.image.load('Tiles/Water/Mini00.png').convert()
-        self.image.set_colorkey((255,0,255))
+class Icon_Tile(Icon):
+    def __init__(self,Screen,col,row,Type,elevation):
+        self.Type = Type
+        self.elevation = elevation
 
-class Icon_Grass(Icon):
-    def __init__(self,Screen,col,row,elevation):
-        Icon.__init__(self,Screen,col,row)
-        self.image = self.image = pygame.image.load(
-            'Tiles/Grass/Mini0{}.png'.format(elevation)).convert()
-        self.image.set_colorkey((255,0,255))
+        with open('database.json','r') as File:
+            data = json.load(File)['Tile']
+            self.color = data[self.Type]['Icon']
+        File.close()
 
-class Icon_Brick(Icon):
-    def __init__(self,Screen,col,row,elevation):
         Icon.__init__(self,Screen,col,row)
-        self.image = self.image = pygame.image.load('Tiles/Brick/Mini00.png').convert()
-        self.image.set_colorkey((255,0,255))
 
-class Icon_Stairs(Icon):
-    def __init__(self,Screen,col,row,elevation):
-        Icon.__init__(self,Screen,col,row)
-        self.image = self.image = pygame.image.load('Tiles/Brick/Mini01.png').convert()
-        self.image.set_colorkey((255,0,255))
+    def init_image(self):
+        self.init_color = self.gradiantUP
+        self.init_color()
+        shape = pygame.image.load('Tiles/Icons/Mini.png').convert()
+        self.image_rect = shape.get_rect()
+        shape.set_colorkey((255,255,255))
+        canvas = pygame.Surface(
+            (self.image_rect.width,self.image_rect.height)
+        )
+        canvas.fill(self.color)
+        canvas.blit(shape,(0,0))
+        canvas.set_colorkey((255,0,255))
+        self.image = canvas 
 
 class Icon_Player(Icon):
     def __init__(self,Screen,col,row):
@@ -416,12 +434,6 @@ class Icon_Enemy(Icon):
         self.col = col
         self.row = row
         self.position()
-
-class Icon_Sand(Icon):
-    def __init__(self,Screen,col,row,elevation):
-        Icon.__init__(self,Screen,col,row)
-        self.image = pygame.image.load('Tiles/Beach/Mini00.png').convert()
-        self.image.set_colorkey((255,0,255))
 
 #Obstacles
 class Obstacles():

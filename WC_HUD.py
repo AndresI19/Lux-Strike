@@ -124,6 +124,7 @@ class Inventory():
                     Boxs.append(box)
                     num += 1
                 self.inventory.append(Boxs)
+        File.close()
             
         self.current = self.inventory[0]
 

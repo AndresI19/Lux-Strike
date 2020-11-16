@@ -11,7 +11,17 @@ class Hex_Grid():
         self.Grid = []"""
         self.num_cols = Cols
         self.num_rows = Rows
+        self.num = 0 #iterator
+        self.total = self.num_rows*self.num_cols
         self.Matrix = []
+        self.get_ = {
+            'N':self.get_N,
+            'NE':self.get_NE,
+            'SE':self.get_SE,
+            'S':self.get_S,
+            'SW':self.get_SW,
+            'NW':self.get_NW
+        }
         self.build()
 
     def build(self):
@@ -193,95 +203,49 @@ class Hex_Grid():
             else:
                 return 'NE'
 
+    def __str__(self):
+        x = ""
+        for row in range(self.num_rows):
+            y = ''
+            for col in range(self.num_cols):
+                y += str(type(self.data(col,-1-row)))[8:-2] + "|"
+            if row%2 == 0:
+                y = "__|" + y
+            x += y + "\n"
+        return x
 
-class Animation():
-    def __init__(self,Screen,reel,speed = 1,Type = 0):
-        self.Screen = Screen
-        self.reel = reel
-        self.speed = speed
-        self.frames = len(reel) * self.speed
-        self.active = False
+    def __iter__(self):
+        return self
 
-        self.count = 0 
+    def __next__(self):
+        return self.next()
 
-        if Type == 0 or Type == 'loop':
-            self.clock = self.clock_loop
-        elif Type == 1 or Type == 'wave':
-            self.flip_flop = 1
-            self.clock = self.clock_wave
-        elif Type == 2 or Type == 'once':
-            self.clock = self.clock_once
+    def next(self):
+        if self.num < self.total:
+            self.Itrow = self.num//self.num_cols
+            self.Itcol = self.num - (self.Itrow * self.num_cols)
+            self.num = self.num + 1
+            return self.Matrix[self.Itcol][self.Itrow]
         else:
-            print("Failed to init animation type, default to loop")
-            self.clock = self.clock_loop
+            self.Itcol = 0
+            self.ItRow = 0
+            raise StopIteration()
 
-    def clock_loop(self):
-        if self.count + 1 >= self.frames:
-            self.count = 0
-        else:
-            self.count += 1
-        self.image = self.reel[self.count//self.speed]
+    def __getitem__(self,key):
+        row = key//self.num_cols
+        col = key - (row * self.num_cols)
+        return self.Matrix[col][row]
 
-    def clock_wave(self):
-        if self.flip_flop > 0:
-            if self.count + 1 >= self.frames:
-                self.flip_flop *= -1
-        elif self.count - 1 < 0:
-            self.flip_flop *= -1
-        self.count += self.flip_flop
-        self.image = self.reel[self.count//self.speed]
+    def __setitem__(self,key,data):
+        row = key//self.num_cols
+        col = key - (row * self.num_cols)
+        self.Matrix[col][row] = data
+        
+    def __len__(self):
+        return self.total
 
-    def clock_once(self):
-        if self.active:
-            if self.count + 1 >= self.frames:
-                self.toggle()
-            else:
-                self.count += 1
-            self.image = self.reel[self.count//self.speed]
-            return True
-
-    def toggle(self):
-        if self.active:
-            self.active = False
-        else:
-            self.active = True
-
-    def draw(self,rect):
-        self.Screen.blit(self.image,rect)
-    
-    def get_rect(self):
-        return self.reel[0].get_rect()
-
-#DEBUG TOOLS FOR HEX GRID
-def print(HG):
-    for row in range(HG.num_rows):
-        x = "   "
-        for col in range(HG.num_cols):
-            x += str(HG.Matrix[col][-1-row]) + "|"
-        if row%2 == 0:
-            x = "S_" + x
-        print(x)
-
-def print_type(HG):
-    for row in range(HG.num_rows):
-        x = "   "
-        for col in range(HG.num_cols):
-            x += str(type(HG.data(col,-1-row)))[13:-2] + "|"
-        if row%2 == 0:
-            x = "S_" + x
-        print(x)
-
-
-
-
-
+#print("Hello\nWorld")
 """Grid = Hex_Grid(11,17)
-c,r = 4,7
-Points = Grid.get_diamond(c,r,2)
-print(Points)
-count = "_1__"
-for point in Points:
-    col,row = point
-    Grid.write(count,col,row)
-Grid.write("WAH_",c,r)
-Grid.print()"""
+for i in range(len(Grid)):
+    Grid[i] = i
+"""

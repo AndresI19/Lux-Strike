@@ -80,9 +80,8 @@ def MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD):
         if Ctrl_Vars.WC_Tools.move_inv:
             HUD.Inventory.translate(dx,dy)
         else:
-            for col in range(Map.num_cols):
-                for row in range(Map.num_rows):
-                    Map.data(col,row).translate(dx,dy)
+            for i in range(len(Map)):
+                Map[i].translate(dx,dy)
             for element in Elements:
                 element.translate(dx,dy)
 
@@ -186,21 +185,13 @@ def fill(Map,coords,ID):
                 recursive_fill(coords)
 
     def recursive_fill(coords):
-        Next = Map.get_N(coords)
-        check(Next)
-        Next = Map.get_NW(coords)
-        check(Next)
-        Next = Map.get_SW(coords)
-        check(Next)
-        Next = Map.get_S(coords)
-        check(Next)
-        Next = Map.get_SE(coords)
-        check(Next)
-        Next = Map.get_NE(coords)
-        check(Next)
+        for f in functions:
+            Next = f(coords)
+            check(Next)
 
     #fill grid shape
     ID1,ID2 = ID
+    functions = [Map.get_N,Map.get_NW,Map.get_SW,Map.get_S,Map.get_SE,Map.get_NE]
     recursive_fill(coords)
 
 class WC_tile(Hexagon):

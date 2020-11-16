@@ -117,7 +117,11 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
                 if Player.Stats.Laser_Heat == 5:
                     HUD.Dialog_box.load_event('ScortchingHot')
                 HUD.Laser_Gauge.init_charge()
-                laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.col,Player.row])
+                #laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.col,Player.row])
+                line(
+                    World.Map,Player.D,[Player.col,Player.row],
+                    laser_check,[Ctrl_Vars,World,Player,Enemies,Drops]
+                )
                 HUD.Combo.update()
                 Ctrl_Vars.end_phase()
 
@@ -187,7 +191,11 @@ def face_direction(event,Ctrl_Vars,World,Player):
         Player.sprite_direction('S')
     elif event.key == pygame.K_a:
         Player.sprite_direction('SW')
-    Scan_line(World,Player,[Player.col,Player.row])
+    line(
+        World.Map,Player.D,[Player.col,Player.row],
+        highlight_check,[World,Player]
+    )
+    #Scan_line(World,Player,[Player.col,Player.row])
 
 def MouseDown(event,Ctrl_Vars):
     """event buttons 1 and 2 refer to mouse bindings"""
@@ -381,65 +389,34 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
     pygame.mixer.music.load('Music/Navy Blues.mp3')
     pygame.mixer.music.play(-1)
 
-##Recursive Line functions
-def Scan_line(World,MOB,Start):
-    def Path():
-        if MOB.D == 'N':
-            Next = World.Map.get_N(Start)
-        elif MOB.D == 'NE':
-            Next = World.Map.get_NE(Start)
-        elif MOB.D == 'SE':
-            Next = World.Map.get_SE(Start)
-        elif MOB.D == 'S':
-            Next = World.Map.get_S(Start)
-        elif MOB.D == 'SW':
-            Next = World.Map.get_SW(Start)
-        elif MOB.D == 'NW':
-            Next = World.Map.get_NW(Start)
-        return Next
-
-    def Act(Next):
-        col,row = Next
+##While loop: Line functions
+def laser_check(args,coords):
+    Ctrl_Vars,World,MOB,Enemies,Drops = args
+    col,row = coords
+    if World.Map.data(col,row).elevation <= MOB.elevation:
+        World.laser_list.append([col,row])
         if World.Map.data(col,row).elevation == MOB.elevation:
-            World.Map.data(col,row).highlighted = True
-            World.highlighted_list.append([col,row])
-            return True
+            return Enemies.check_kill(Ctrl_Vars,Drops,col,row)
         return False
+    return True
 
-    Next = Path()
-    if Next != False:
-        if Act(Next):    #Else end
-            Scan_line(World,MOB,Next)
-
-def laser(World,Ctrl_Vars,Drops,MOB,Enemies,Start):
-    def Path():
-        if MOB.D == 'N':
-            Next = World.Map.get_N(Start)
-        elif MOB.D == 'NE':
-            Next = World.Map.get_NE(Start)
-        elif MOB.D == 'SE':
-            Next = World.Map.get_SE(Start)
-        elif MOB.D == 'S':
-            Next = World.Map.get_S(Start)
-        elif MOB.D == 'SW':
-            Next = World.Map.get_SW(Start)
-        elif MOB.D == 'NW':
-            Next = World.Map.get_NW(Start)
-        return Next
-
-    def Act(Next):
-        col,row = Next
-        if World.Map.data(col,row).elevation <= MOB.elevation:
-            World.laser_list.append([col,row])
-            if World.Map.data(col,row).elevation == MOB.elevation:
-                return not Enemies.check_kill(Ctrl_Vars,Drops,col,row)
+def highlight_check(args,coords):
+    World,MOB = args
+    col,row = coords
+    if World.Map.data(col,row).elevation == MOB.elevation:
+        World.Map.data(col,row).highlighted = True
+        World.highlighted_list.append([col,row])
         return False
+    return True
 
-    Next = Path()
-    if Next != False:
-        if Act(Next) != False:    #Else end
-            laser(World,Ctrl_Vars,Drops,MOB,Enemies,Next)
+def line(HG,D,start,f,fargs):
+    Next = HG.get_[D](start)
+    while Next != False:
+        if f(fargs,Next):
+            break
+        Next = HG.get_[D](Next)
 
+#Naming saved worlds
 def Save_game(World,Player,Enemies,Drops):
     name = input("Type name: ")
     Save.Save_world(name,World,Player,Enemies,Drops)

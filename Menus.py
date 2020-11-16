@@ -2,7 +2,7 @@ import pygame
 import Buttons
 from Graphics import word_object
 import time
-from Tessellation import Animation
+from Graphics import Animation
 import json
 
 def menu_select(Screen,Window,Ctrl_Vars,Settings):
@@ -29,10 +29,10 @@ class Start_Envelope():
     def __init__(self,Screen,Window,Ctrl_Vars,Settings):
         self.Ctrl_Vars = Ctrl_Vars
         self.Screen = Screen
-        self.Still = Background(Screen)
         self.Start_vars = Ctrl_Vars.Start_Vars
         self.Start_vars.load_menu = True
         self.Start_vars.Title = True
+        self.Background = self.init_background()
         pygame.mixer.music.load('Music/6 Solutions per Side.mp3')
         pygame.mixer.music.play(-1)
 
@@ -48,6 +48,17 @@ class Start_Envelope():
             }
         self.Sub_menu_select()
 
+    def init_background(self):
+        images = []
+        N = 36
+        for i in range(N):
+            image = pygame.image.load(
+                'Title/Title{}.png'.format(i)
+                ).convert()
+            image.set_colorkey((255,0,255))
+            images.append(image)
+        return Animation(self.Screen,images,3,1)
+
     def Sub_menu_select(self):
         if self.Start_vars.load_menu:
             self.Active_Menu = self.sub_menus[self.Start_vars.key]
@@ -60,7 +71,8 @@ class Start_Envelope():
 
     def draw(self):
         self.Sub_menu_select()
-        self.Still.draw()
+        self.Background.clock()
+        self.Background.draw((0,0))
         self.Active_Menu.draw()
 
 class Title_Menu():
@@ -443,23 +455,6 @@ class World_load():
             self.Menus[i].draw()
         self.World_list.draw()
 
-class Background():
-    def __init__(self,Screen):
-        self.Screen = Screen
-        images = []
-        N = 36
-        for i in range(N):
-            image = pygame.image.load(
-                'Title/Title{}.png'.format(i)
-                ).convert()
-            image.set_colorkey((255,0,255))
-            images.append(image)
-        self.Animation = Animation(self.Screen,images,3,1)
-
-    def draw(self):
-        self.Animation.clock()
-        self.Animation.draw((0,0))
-
 """%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ~~~~~~~~~~~~~~~ WORLD CREATOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
@@ -469,7 +464,7 @@ class WC_Pause_Envelope():
         self.Screen_rect = self.Screen.get_rect()
         self.text = "Paused"
         self.init_text(100)
-        self.Menus = [
+        self.UI = [
             Buttons.Quit_Folder(Screen,[7,1],Ctrl_Vars),
             Buttons.Resume(Screen,[4,3],Ctrl_Vars)
         ]
@@ -493,8 +488,8 @@ class WC_Pause_Envelope():
     def draw(self):
         self.Screen.blit(self.curtain,self.Screen_rect)
         self.Screen.blit(self.font_image,self.font_rect)
-        for i in range(len(self.Menus)):
-            self.Menus[i].draw()
+        for i in range(len(self.UI)):
+            self.UI[i].draw()
 
 class world_list():
     def __init__(self,Screen):
@@ -506,6 +501,7 @@ class world_list():
                 world_name = list_item(Screen,name,count)
                 self.world_names.append(world_name)
                 count += 1
+        File.close()
 
     def collision(self,x,y):
         for item in self.world_names:

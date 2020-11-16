@@ -1,6 +1,6 @@
 import pygame,pygame.font
 from Graphics import word_object
-from Tessellation import Animation
+from Graphics import Animation
 import json
 pygame.mixer.init()
 
@@ -191,6 +191,7 @@ class Dialog_box():
         with open(self.path,'r') as File:
             Events = json.load(File)
             event = Events[Event_Code]
+        File.close()
         self.event = event
         self.play = True
         self.init_page()
@@ -221,11 +222,6 @@ class Dialog_box():
         self.Ctrl_Vars.page_count = 0
         self.background_image.fill(self.color)
         self.play = False
-        del self.speaker_image
-        del self.speaker_rect
-        del self.portrait
-        del self.portrait_rect
-        del self.page
 
     def init_dialog(self):
         page = self.event[self.Ctrl_Vars.page_count]['Dialog']

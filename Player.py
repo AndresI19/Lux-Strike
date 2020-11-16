@@ -165,7 +165,7 @@ class Player(MOB):
         if DATA != None:
             self.col,self.row,self.elevation = DATA['Player']
             self.dx,self.dy = self.col,self.row
-
+    
     def sprite_direction(self,D):
         self.D = D
         self.MOB_image = self.MOB_image = pygame.image.load(

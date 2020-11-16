@@ -46,6 +46,7 @@ def Save_world(name,World,Player,Enemies,Drops):
         all_data[name] = save_data
     with open(path,'w') as Save_file:
         json.dump(all_data,Save_file)
+    Save_file.close()
 
 def Save_map(World):
     Matrix = [[None for x in range(World.num_rows)] for y in range(World.num_cols)]
@@ -71,7 +72,8 @@ def name_collision(name1):
     path = 'Saved_Worlds/Saves.json'
     with open(path,'r') as Save_file:
         all_data = json.load(Save_file)
-        for name2 in all_data:
-            if name1 == name2:
-                return True
+    Save_file.close()
+    for name2 in all_data:
+        if name1 == name2:
+            return True
     return False

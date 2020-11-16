@@ -1,4 +1,4 @@
-import pygame.display
+import pygame
 import json
 
 #Class for display,sound and TODO: control variables
@@ -13,6 +13,7 @@ class Settings():
             "Resolution" : [1600,900],
             "Full Screen" : False
         }
+
         self.drag_sensativity = 1
         self.Load_settings()
         self.init_Screen()

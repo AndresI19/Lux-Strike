@@ -1,5 +1,4 @@
 debug = False
-#import all modules from directory, as well as pygame lib
 #full modules
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'

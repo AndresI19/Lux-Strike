@@ -44,8 +44,6 @@ class World():
             #TODO: Seed should be the world name
             self.seed = self.seed = rng.generate_Xdegit_seed(18)
             
-
-
 ###MAP GENERATION/ INITIALIZATION vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def generate_map(self,Seed,Loading):
         #initialize generation object, creates a new world --------------------------------------
@@ -125,9 +123,8 @@ class World():
 ##Standard Functionalities
     def translate(self,dx,dy):
         #move every element in the world
-        for col in range(self.num_cols):
-            for row in range(self.num_rows):
-                self.Map.data(col,row).translate(dx,dy)
+        for i in range(len(self.Map)):
+            self.Map[i].translate(dx,dy)
         
     def reset_highlight(self):
         for i in range(len(self.highlighted_list)):

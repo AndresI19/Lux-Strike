@@ -3,7 +3,7 @@
         "Water":{
             "ID":0,
             "Path":"Tiles/Water/",
-            "Icon":true,
+            "Icon":[0,174,235],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":8,"Choice":false,"Speed":13},
                 "Left":{"Path":"L","Total":1},
@@ -14,7 +14,7 @@
         "Grass":{
             "ID":1,
             "Path":"Tiles/Grass/",
-            "Icon":true,
+            "Icon":[0,236,63],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":4,"Choice":[0.55,0.35,0.05,0.05]},
                 "Left":{"Path":"L","Total":1},
@@ -25,7 +25,7 @@
         "Beach":{
             "ID":2,
             "Path":"Tiles/Beach/",
-            "Icon":true,
+            "Icon":[234,228,176],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":4,"Choice":[0.75,0.10,0.10,0.05]},
                 "Left":{"Path":"L","Total":1},
@@ -36,7 +36,7 @@
         "Mountain":{
             "ID":3,
             "Path":"Tiles/Mountain/",
-            "Icon":true,
+            "Icon":[195,195,195],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":1,"Choice":false},
                 "Left":{"Path":"L","Total":1},
@@ -47,7 +47,7 @@
         "Brick":{
             "ID":100,
             "Path":"Tiles/Brick/",
-            "Icon":true,
+            "Icon":[150,150,150],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":1,"Choice":false},
                 "Left":{"Path":"L","Total":1},
@@ -58,7 +58,7 @@
         "Stairs":{
             "ID":101,
             "Path":"Tiles/Brick/",
-            "Icon":true,
+            "Icon":[150,150,150],
             "Isometric":{
                 "Hexagon":{"Path":"HS","Total":1,"Choice":false},
                 "Left":{"Path":"L","Total":1},
@@ -69,7 +69,7 @@
         "Door":{
             "ID":102,
             "Path":"Tiles/Brick/",
-            "Icon":true,
+            "Icon":[255,127,39],
             "Isometric":{
                 "Hexagon":{"Path":"H","Total":1,"Choice":false},
                 "Left":{"Path":"L","Total":1},
@@ -78,8 +78,6 @@
             }
         }
     },
-
-
 
     "Enemies" : {
         "Swanzai":{
