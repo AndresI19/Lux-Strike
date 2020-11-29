@@ -1,13 +1,12 @@
 import pygame
 from math import floor
 from random import randint
+from Control_variables import Screen,ScreenRect
 #drops
 """We all knew we would get here one day"""
 ##new file, early comments and refactorying
 class Drop_envelope():
-    def __init__(self,Screen,Ctrl_Vars,HUD,Stats,DATA = None):
-        self.Screen = Screen
-        self.Ctrl_Vars = Ctrl_Vars
+    def __init__(self,HUD,Stats,DATA = None):
         self.Group = []
         self.Money_Group = []
         self.HUD = HUD
@@ -16,15 +15,15 @@ class Drop_envelope():
             for data in DATA['Drops']:
                 ID,coords,position,value = data
                 if ID == 0:
-                    drop = Money_drop(Screen,Ctrl_Vars,coords,position,None,value)
+                    drop = Money_drop(coords,position,None,value)
                 elif ID == 1:
-                    drop = Key(Screen,Ctrl_Vars,coords,position)
+                    drop = Key(coords,position)
                 self.Group.append(drop)
 
     def enemy_drop(self,Enemy,coords):
         if Enemy.key == True:
             drop = Key(
-                self.Screen,self.Ctrl_Vars,coords,[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
+                coords,[Enemy.MOB_rect.centerx,Enemy.MOB_rect.bottom]
             )
             self.Group.append(drop)
         else:
@@ -36,11 +35,11 @@ class Drop_envelope():
             if drop.value > 0:
                 if  drop.col == col and drop.row == row:
                     value = drop.value + 10 * (self.Stats.combo + 1)
-                    new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,None,value)
+                    new_drop = Money_drop(coords,position,None,value)
                     self.Group.remove(drop)
                     self.Group.append(new_drop)
                     return
-        new_drop = Money_drop(self.Screen,self.Ctrl_Vars,coords,position,self.Stats.combo)
+        new_drop = Money_drop(coords,position,self.Stats.combo)
         self.Group.append(new_drop)
 
     def check_pick_up(self,Player):
@@ -58,9 +57,7 @@ class Drop_envelope():
             drop.translate(x,y)
 
 class Drops():
-    def __init__(self,Screen,coords,position):
-        self.Screen = Screen #needed for graphics
-        self.Screen_rect = Screen.get_rect()
+    def __init__(self,coords,position):
         self.col = 0
         self.row = 0
         self.render = True
@@ -77,7 +74,7 @@ class Drops():
 
     def draw(self):
         if self.render:
-            self.Screen.blit(self.image,self.rect)
+            Screen.blit(self.image,self.rect)
 
     def translate(self,x,y):
         self.rect.centerx += x
@@ -86,8 +83,8 @@ class Drops():
 
     def check_render(self):
         self.render = False
-        if self.rect.bottom >= 0 and self.rect.top <= self.Screen_rect.bottom:
-            if self.rect.right >= 0 and self.rect.left <= self.Screen_rect.right:
+        if self.rect.bottom >= 0 and self.rect.top <= ScreenRect.bottom:
+            if self.rect.right >= 0 and self.rect.left <= ScreenRect.right:
                 self.render = True
 
     def SFX(self):
@@ -97,10 +94,9 @@ class Drops():
         pygame.mixer.Sound.play(sound)
 
 class Money_drop(Drops):
-    def __init__(self,Screen,Ctrl_Vars,coords,position,combo = None,value = None):
-        Drops.__init__(self,Screen,coords,position)
+    def __init__(self,coords,position,combo = None,value = None):
+        Drops.__init__(self,coords,position)
         self.ID = 0
-        self.Ctrl_Vars = Ctrl_Vars
         if value == None:
             self.value = 10 * (combo + 1)
             x = combo + 1
@@ -115,14 +111,12 @@ class Money_drop(Drops):
         self.position(coords,position)
 
     def functionality(self,Player):
-        #self.Ctrl_Vars.wallet += self.value
-        Player.Stats.Money += self.value#round(self.value * (1 + Player.Stats.combo/2))
+        Player.Stats.Money += self.value
 
 class Key(Drops):
-    def __init__(self,Screen,Ctrl_Vars,coords,position):
-        Drops.__init__(self,Screen,coords,position)
+    def __init__(self,coords,position):
+        Drops.__init__(self,coords,position)
         self.ID = 1
-        self.Ctrl_Vars = Ctrl_Vars
         self.image = pygame.image.load('Drops/Key.png').convert()
         self.image_init()
         self.position(coords,position)

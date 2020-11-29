@@ -1,6 +1,7 @@
 import json
+from pygame import Surface
 #class for player input variables; ei knowing the mouse is down or what menu is on
-class Ctrl_Vars():
+class ctrl_vars():
     def __init__(self,debug):
         self.timer_init()
         self.set_button_downs()
@@ -93,6 +94,30 @@ class Ctrl_Vars():
     def end_turn(self):
         self.turn_frame = 0
         self.phase_active = True   
+##NAV GAMELOOP
+    def Nav_GameTypes(self,key):
+        self.GameNav.GameLoad_Nav()
+        self.main = True
+        if key == "Custom":
+            self.GameNav.Custom = True
+        elif key == "Random":
+            self.GameNav.Random = True
+        elif key == "Load":
+            self.GameNav.Load = True
+        elif key == "World Creator":
+            self.Nav_To_WC()
+        else:
+            self.GameNav.RETURN_TITLE()
+
+    def Nav_To_WC(self):
+        self.main = False
+        self.world_creator = True
+        self.WC_initialized = False
+
+        self.GameNav.Game_active = True
+        self.GameNav.menu_select = False
+        self.GameNav.load_world = False
+
 """Menu Controls%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 class GameNav():
     def __init__(self,debug):
@@ -108,6 +133,7 @@ class GameNav():
         self.Custom = False
         self.Load = False
         self.restart_world = False
+        self.key = 'Start Screen'
         if debug == True:
             self.menu_select = False
             self.Start_Screen = False
@@ -124,27 +150,25 @@ class GameNav():
         self.Game_Over = False
         self.load_world = False
 
+    def GameLoad_Nav(self):
+        self.Menu_reset()
+        self.load_world = True
+        self.menu_select = False
+
+    def RETURN_TITLE(self):
+        self.load_world = False
+        self.Game_active = False
+        self.Start_Screen = True
+        self.menu_select = True
+
 class Start_Menu_vars():
     def __init__(self):
-        self.Title = True
+        #keys "Title Screen","Load World","Seed"
         self.load_menu = True
-
-        self.Num_pad = False
-        self.Load_pad = False
-        self.Jukebox = False
-        self.Display_Settings = False
-        self.Sound_Settings = False
         self.key = 'Title Screen'
 
     def Menu_reset(self):
         self.load_menu = True
-
-        self.Title = False
-        self.Num_pad = False
-        self.Load_pad = False
-        self.Jukebox = False
-        self.Display_Settings = False
-        self.Sound_Settings = False
 
     def Set_Menu(self,key):
         self.key = key
@@ -184,3 +208,8 @@ class WC_tools():
             self.HUD_Visable = False
         else:
             self.HUD_Visable = True
+
+debug = False
+Ctrl_Vars = ctrl_vars(debug) #This will overright the class defination with an instance, should save memory
+Screen = Surface((1920,1080)) #global blit screen
+ScreenRect = Screen.get_rect()

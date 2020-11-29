@@ -1,7 +1,7 @@
 import pygame
 import json
 
-#Class for display,sound and TODO: control variables
+#Class for display,sound and TODO: Controls
 class Settings():
     def __init__(self):
         self.path = 'Saved_Worlds/Settings.json'
@@ -67,6 +67,7 @@ class Settings():
         }
         with open (self.path,'w') as Save_file:
             json.dump(data,Save_file)
+        Save_file.close()
 
     def Load_settings(self):
         with open (self.path,'r') as Save_file:

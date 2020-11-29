@@ -77,3 +77,12 @@ def name_collision(name1):
         if name1 == name2:
             return True
     return False
+
+def delete_map(name):
+    path = 'Saved_Worlds/Saves.json'
+    with open(path,'r') as Save_file:
+        all_data = json.load(Save_file)
+        del all_data[name]
+    with open(path,'w') as Save_file:
+        json.dump(all_data,Save_file)
+    Save_file.close()

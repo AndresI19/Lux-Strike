@@ -10,8 +10,7 @@ and each tile contains its individual properties. The World starts with size par
 and by association the world generation time. A genertaion object is used to create a world case by case, so reinitializing this object
 hence creates a new world."""
 class World():
-    def __init__(self,Screen,Seed,Loading,DATA = None):
-        self.Screen = Screen
+    def __init__(self,Seed,DATA = None):
         self.highlighted_list = []
         self.laser_list = []
         self.Doors = []
@@ -26,7 +25,7 @@ class World():
             self.spawn_col = 0
             self.spawn_row = 0
 
-            self.generate_map(Seed,Loading)
+            self.generate_map(Seed)
             self.find_player_spawn()
         else:
             Matrix = DATA['Map']['Matrix']
@@ -45,10 +44,10 @@ class World():
             self.seed = self.seed = rng.generate_Xdegit_seed(18)
             
 ###MAP GENERATION/ INITIALIZATION vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    def generate_map(self,Seed,Loading):
+    def generate_map(self,Seed):
         #initialize generation object, creates a new world --------------------------------------
         max_parameters = [self.num_cols,self.num_rows]
-        Generation = generation(Seed,max_parameters,Loading)
+        Generation = generation(Seed,max_parameters)
         #save seed for display and copy paste use
         self.seed = Generation.seed
         self.total_tiers = Generation.total_tiers
@@ -74,7 +73,7 @@ class World():
                 cliffs = self.master_grid.data(col,row).cliffs
                 for key in ID_Converter:
                     if ID == key:
-                        tile = ID_Converter[key](self.Screen,col,row,cliffs,elevation)
+                        tile = ID_Converter[key](col,row,cliffs,elevation)
                         special_case(key)
                 self.Map.write(tile,col,row)
 

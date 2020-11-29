@@ -3,26 +3,27 @@ import pygame,sys,math
 import Tessellation
 from WC_HUD import WC_HUD
 from Generation import Hexagon
+from Control_variables import Ctrl_Vars,Screen
 
-def check_events(Settings,Ctrl_Vars,Map,Elements,HUD):
+def check_events(Settings,Map,Elements,HUD):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
         #mouse inputs
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            MouseDown(event,Ctrl_Vars)
+            MouseDown(event)
         elif event.type == pygame.MOUSEBUTTONUP:
-            MouseUp(event,Ctrl_Vars)
+            MouseUp(event)
         #camera controls
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD)
+            MouseMotion(event,Settings,Map,Elements,HUD)
         elif event.type == pygame.KEYDOWN:
-            KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD)
+            KEYDOWN(Settings,event,Map,HUD)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LSHIFT:
                 Ctrl_Vars.LSHIFT_DOWN = False
 
-def check_mouse_position(Settings,Ctrl_Vars,Map,Elements,HUD):
+def check_mouse_position(Settings,Map,Elements,HUD):
     if not Ctrl_Vars.LSHIFT_DOWN:
         x,y = pygame.mouse.get_pos()
         x *= Settings.mouseX_scaling
@@ -32,9 +33,9 @@ def check_mouse_position(Settings,Ctrl_Vars,Map,Elements,HUD):
             for row in range(Map.num_rows):
                 hover = Map.data(col,row).check_contained(x,y)
                 if hover:
-                    pencil_draw(Ctrl_Vars,Map,Elements,col,row)
+                    pencil_draw(Map,Elements,col,row)
 
-def pencil_draw(Ctrl_Vars,Map,Elements,col,row):
+def pencil_draw(Map,Elements,col,row):
     Type = Ctrl_Vars.WC_Tools.Type
     if Ctrl_Vars.Left_MouseDown:
         if Type == None:
@@ -48,8 +49,7 @@ def pencil_draw(Ctrl_Vars,Map,Elements,col,row):
                     Elements.remove(element)
             coords = [col,row]
             poss = Map.data(col,row).get_center()
-            Screen = Map.data(col,row).Screen
-            element = Field_element(Screen,Type,ID,coords,poss)
+            element = Field_element(Type,ID,coords,poss)
             Elements.append(element)
     elif Ctrl_Vars.Right_MouseDown:
         if Type == 'Tile':
@@ -59,20 +59,20 @@ def pencil_draw(Ctrl_Vars,Map,Elements,col,row):
                 if element.col == col and element.row == row:
                     Elements.remove(element)
 
-def MouseDown(event,Ctrl_Vars):
+def MouseDown(event):
     """event buttons 1 and 2 refer to mouse bindings"""
     if event.button == 1:
         Ctrl_Vars.Left_MouseDown = True
     elif event.button == 3:
         Ctrl_Vars.Right_MouseDown = True
 
-def MouseUp(event,Ctrl_Vars):
+def MouseUp(event):
     if event.button == 1:
         Ctrl_Vars.Left_MouseDown = False
     elif event.button == 3:
         Ctrl_Vars.Right_MouseDown = False
 
-def MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD):
+def MouseMotion(event,Settings,Map,Elements,HUD):
     #handles relative movement of the mouse
     if Ctrl_Vars.LSHIFT_DOWN and Ctrl_Vars.Left_MouseDown:
         #drag
@@ -85,9 +85,9 @@ def MouseMotion(event,Settings,Ctrl_Vars,Map,Elements,HUD):
             for element in Elements:
                 element.translate(dx,dy)
 
-def KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD):
+def KEYDOWN(Settings,event,Map,HUD):
     if event.key == pygame.K_ESCAPE:
-        Ctrl_Vars.WC_Tools.Pause = True
+        Ctrl_Vars.GameNav.Pause = True
         Ctrl_Vars.GameNav.Game_active = False
         Ctrl_Vars.GameNav.menu_select = True
     elif event.key == pygame.K_LSHIFT:
@@ -126,16 +126,16 @@ def KEYDOWN(Settings,event,Ctrl_Vars,Map,HUD):
                 Ctrl_Vars.WC_Tools.set_TypeID(index)
                 HUD.hotbar.highlight(index)
 
-def initialization(Screen,Ctrl_Vars):
-    hud = WC_HUD(Screen,Ctrl_Vars)
-    Map = Map_init(Screen)
+def initialization():
+    hud = WC_HUD()
+    Map = Map_init()
     Elements = []
-    Cursor = highlight(Screen)
+    Cursor = highlight()
     pygame.mixer.music.load('Music/World Edit.wav')
     pygame.mixer.music.play(-1)
     return (hud,Map,Elements,Cursor)
 
-def Map_init(Screen):
+def Map_init():
     """cols = int(input("Cols: "))
     rows = int(input("Rows: "))"""
     cols = 35
@@ -143,7 +143,7 @@ def Map_init(Screen):
     Map = Tessellation.Hex_Grid(cols,rows)
     for col in range(Map.num_cols):
         for row in range(Map.num_rows):
-            tile = WC_tile(Screen,col,row)
+            tile = WC_tile(col,row)
             Map.write(tile,col,row)
     return Map
 
@@ -163,7 +163,7 @@ def Display(Screen,HUD,Map,Elements,Cursor):
     Draw_UI(Map,Elements,Cursor)
     HUD.draw()
 
-def return_home(Ctrl_Vars):
+def return_home():
     Ctrl_Vars.GameNav.Menu_reset()
     Ctrl_Vars.main = True
     Ctrl_Vars.world_creator = False
@@ -195,9 +195,8 @@ def fill(Map,coords,ID):
     recursive_fill(coords)
 
 class WC_tile(Hexagon):
-    def __init__(self,Screen,col,row):
+    def __init__(self,col,row):
         Hexagon.__init__(self,col,row,0,0)
-        self.Screen = Screen
         self.image = pygame.image.load("WC_Hex/Tile0.png").convert()
         self.image.set_colorkey((255,0,255))
 
@@ -252,13 +251,12 @@ class WC_tile(Hexagon):
         return False
         
     def draw(self,Cursor_list):
-        self.Screen.blit(self.image,(self.left,self.top))
+        Screen.blit(self.image,(self.left,self.top))
         if self.highlighted:
             Cursor_list.append([self.left-2,self.top-2])
 
 class Field_element():
-    def __init__(self,Screen,Type,ID,coords=None,position=None):
-        self.Screen = Screen
+    def __init__(self,Type,ID,coords=None,position=None):
         self.Type = Type
         self.ID = ID
         self.image = pygame.image.load(
@@ -279,12 +277,11 @@ class Field_element():
             self.rect.top += dy
 
     def draw(self):
-        self.Screen.blit(self.image,self.rect)
+        Screen.blit(self.image,self.rect)
 
 class highlight():
-    def __init__(self,Screen):
-        self.Screen = Screen
+    def __init__(self):
         self.Highlight = pygame.image.load("WC_Hex/TileHighlight.png").convert()
         self.Highlight.set_colorkey((255,0,255))
     def draw(self,rect):
-        self.Screen.blit(self.Highlight,rect)
+        Screen.blit(self.Highlight,rect)

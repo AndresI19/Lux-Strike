@@ -2,23 +2,21 @@ import pygame,pygame.font
 from Graphics import word_object
 from Graphics import Animation
 import json
+from Control_variables import Ctrl_Vars,Screen,ScreenRect
 pygame.mixer.init()
 
 #Envelope class containing all border rectangles
 class HUD():
-    def __init__(self,Settings,Screen,Ctrl_Vars,World,Player,Enemies,DATA=None):
-        self.Screen = Screen
-        self.Screen_rect = Screen.get_rect()
+    def __init__(self,Settings,World,Player,Enemies,DATA=None):
         self.Settings = Settings
         self.HUD_Borders = self.make_HUD_Borders()
-        self.Player_Stats = Player_Stats(Screen,Player.Stats)
-        self.Money_bar = Currency_bar(Screen,Player.Stats)
-        self.Mini_map = Mini_map(Screen,World,Player,Enemies)
-        #self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
-        self.Dialog_box = Dialog_box(Screen,Ctrl_Vars)
-        self.Combo = Combo_meter(Screen,Player.Stats)
-        self.Keys = Keys(Screen,Player.Stats)
-        self.Laser_Gauge = Laser_Gauge(Screen,Player.Stats)
+        self.Player_Stats = Player_Stats(Player.Stats)
+        self.Money_bar = Currency_bar(Player.Stats)
+        self.Mini_map = Mini_map(World,Player,Enemies)
+        self.Dialog_box = Dialog_box()
+        self.Combo = Combo_meter(Player.Stats)
+        self.Keys = Keys(Player.Stats)
+        self.Laser_Gauge = Laser_Gauge(Player.Stats)
         self.init_text(World)
 
     def init_text(self,World):
@@ -29,8 +27,8 @@ class HUD():
         self.font.set_bold(True)
         self.font_image = self.font.render("Seed: "+ World.seed,True,self.text_color,None)
         self.font_rect = self.font_image.get_rect()
-        self.font_rect.right = self.Screen_rect.right - 1
-        self.font_rect.bottom = self.Screen_rect.bottom -3
+        self.font_rect.right = ScreenRect.right - 1
+        self.font_rect.bottom = ScreenRect.bottom -3
 
     def make_HUD_Borders(self):
         #left border margin
@@ -49,7 +47,7 @@ class HUD():
         Right = pygame.image.load("HUD/Right frame.png").convert()
         Right.set_colorkey((255,0,255))
         Right_rect = Right.get_rect()
-        Right_rect.right = self.Screen_rect.right
+        Right_rect.right = ScreenRect.right
 
         Middle = pygame.image.load("HUD/Map frame.png").convert()
         Middle.set_colorkey((255,0,255))
@@ -65,20 +63,19 @@ class HUD():
 
     def draw(self):
         for i in range(len(self.HUD_Borders[0])):
-            self.Screen.blit(self.HUD_Borders[0][i],self.HUD_Borders[1][i])
+            Screen.blit(self.HUD_Borders[0][i],self.HUD_Borders[1][i])
         self.Mini_map.draw()
         self.Player_Stats.draw()
         self.Money_bar.draw()
         self.Combo.draw()
         self.Keys.draw()
         self.Laser_Gauge.draw()
-        self.Screen.blit(self.font_image,self.font_rect)
+        Screen.blit(self.font_image,self.font_rect)
         self.Dialog_box.draw()
         
 #Left
 class Player_Stats():
-    def __init__(self,Screen,Stats):
-        self.Screen = Screen
+    def __init__(self,Stats):
         self.Stats = Stats
         self.Empty_bar = pygame.image.load("HUD/HealthBar.png").convert()
         self.Empty_bar.set_colorkey((255,0,255))
@@ -104,10 +101,10 @@ class Player_Stats():
             flip *= -1
 
     def draw(self):
-        self.Screen.blit(self.Empty_bar,self.Empty_bar_rect)
+        Screen.blit(self.Empty_bar,self.Empty_bar_rect)
         #draw each icon over it
         for i in range(self.Stats.Health_Points):
-            self.Health_Points_display[i].draw(self.Screen)
+            self.Health_Points_display[i].draw()
 
 class HealthIcon():
     def __init__(self,x,y):
@@ -132,12 +129,11 @@ class HealthIcon():
         if x%2 == 0:
             self.HealthIcon_rect.left += offset
 
-    def draw(self,Screen):
+    def draw(self):
         Screen.blit(self.HealthIcon,self.HealthIcon_rect)
 
 class Mini_map():
-    def __init__(self,Screen,World,Player,Enemies):
-        self.Screen = Screen
+    def __init__(self,World,Player,Enemies):
         self.World = World
         self.Player = Player
         self.Enemies = Enemies
@@ -151,11 +147,8 @@ class Mini_map():
         self.Player.Icon.draw()
 
 class Dialog_box():
-    def __init__(self,Screen,Ctrl_Vars):
+    def __init__(self):
         self.path = 'Dialog/Dialog.json'
-        self.Screen = Screen
-        self.Screen_rect = self.Screen.get_rect()
-        self.Ctrl_Vars = Ctrl_Vars
         self.color,self.alpha = (2,2,70),185
         self.init_background()
 
@@ -198,19 +191,19 @@ class Dialog_box():
 
     def init_background(self):
         self.background_image = pygame.Surface(
-            (self.Screen_rect.width//2,self.Screen_rect.height//5)
+            (ScreenRect.width//2,ScreenRect.height//5)
             )
         self.background_image.convert()
         self.background_image.fill(self.color)
         self.background_image.set_alpha(self.alpha)
         self.background_rect = self.background_image.get_rect()
-        self.background_rect.centerx = self.Screen_rect.centerx
-        self.background_rect.bottom = self.Screen_rect.bottom - 100
+        self.background_rect.centerx = ScreenRect.centerx
+        self.background_rect.bottom = ScreenRect.bottom - 100
 
     def init_page(self):
         if self.event != None:
             pygame.mixer.Sound.play(self.SFX)
-            if self.Ctrl_Vars.page_count >= len(self.event):
+            if Ctrl_Vars.page_count >= len(self.event):
                 self.stop()
                 return
             self.init_speaker_text()
@@ -219,12 +212,12 @@ class Dialog_box():
     
     def stop(self):
         self.event = None
-        self.Ctrl_Vars.page_count = 0
+        Ctrl_Vars.page_count = 0
         self.background_image.fill(self.color)
         self.play = False
 
     def init_dialog(self):
-        page = self.event[self.Ctrl_Vars.page_count]['Dialog']
+        page = self.event[Ctrl_Vars.page_count]['Dialog']
         self.page = []
         for line in page:
             sentence = self.load_sentence(line)
@@ -252,14 +245,14 @@ class Dialog_box():
         return sentence
 
     def init_speaker_text(self):
-        name = self.event[self.Ctrl_Vars.page_count]['Speaker']
+        name = self.event[Ctrl_Vars.page_count]['Speaker']
         self.speaker_image = self.font.render(name,True,(255,255,255),None)
         self.speaker_rect = self.speaker_image.get_rect()
         self.speaker_rect.right = self.background_rect.right - 15
         self.speaker_rect.bottom = self.background_rect.bottom - 10
 
     def init_portrait(self):
-        code,side = self.event[self.Ctrl_Vars.page_count]['Portrait'].split(".")
+        code,side = self.event[Ctrl_Vars.page_count]['Portrait'].split(".")
         self.portrait = pygame.image.load("Portraits/{}.png".format(
             code)).convert()
         self.portrait.set_colorkey((255,0,255))
@@ -271,20 +264,20 @@ class Dialog_box():
         if int(side) == -1:
             self.portrait = pygame.transform.flip(self.portrait, True, False)
 
-    ##Drawing Dialog Box
+##Drawing Dialog Box
     def draw(self):
         if self.play:
-            self.Screen.blit(self.background_image, self.background_rect)
-            self.Screen.blit(self.speaker_image, self.speaker_rect)
+            Screen.blit(self.background_image, self.background_rect)
+            Screen.blit(self.speaker_image, self.speaker_rect)
             self.text_scroll()
-            self.Screen.blit(self.portrait, self.portrait_rect)
+            Screen.blit(self.portrait, self.portrait_rect)
 
     def text_scroll(self):
         x = self.dialog_x
         y = self.dialog_y
         for line in self.page:
             for word in line:
-                word.draw(self.Screen,(x,y))
+                word.draw((x,y))
                 if word.full == False:
                     break
                 x += word.font_rect.right
@@ -306,8 +299,7 @@ class Dialog_box():
         self.Screen = Screen"""
 
 class Currency_bar():
-    def __init__(self,Screen,Stats):
-        self.Screen = Screen
+    def __init__(self,Stats):
         self.Stats = Stats
         self.Currency_images = []
         for i in range(17):
@@ -370,16 +362,14 @@ class Currency_bar():
     def draw(self):
         self.clock()
         self.number_animate()
-        self.Screen.blit(self.Currency_image,self.Currency_rect)
-        self.Screen.blit(self.font_image,self.font_rect)
+        Screen.blit(self.Currency_image,self.Currency_rect)
+        Screen.blit(self.font_image,self.font_rect)
 
 class Combo_meter():
-    def __init__(self,Screen,Stats):
+    def __init__(self,Stats):
         """---------------------------
         I DO NOT HAVE LICENCE TO USE FONT
         ------------------------------"""
-        self.Screen = Screen
-        self.Screen_rect = Screen.get_rect()
         self.Stats = Stats
         size = 60
         self.color = (255,255,255)
@@ -407,8 +397,8 @@ class Combo_meter():
         self.position()
 
     def position(self):
-        self.rect.right = self.Screen_rect.right - 40
-        self.rect.top = self.Screen_rect.top + 200
+        self.rect.right = ScreenRect.right - 40
+        self.rect.top = ScreenRect.top + 200
 
     def Animate(self):
         if self.animate:
@@ -424,15 +414,13 @@ class Combo_meter():
                 
     def draw(self):
         self.Animate()
-        self.Screen.blit(self.image,self.rect)
+        Screen.blit(self.image,self.rect)
 
 class Keys():
-    def __init__(self,Screen,Stats):
+    def __init__(self,Stats):
         """---------------------------
         I DO NOT HAVE LICENCE TO USE FONT
         ------------------------------"""
-        self.Screen = Screen
-        self.Screen_rect = Screen.get_rect()
         self.Stats = Stats
         size = 40
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
@@ -444,8 +432,8 @@ class Keys():
         self.key = pygame.image.load('Drops/Key.png').convert()
         self.key.set_colorkey((255,0,255))
         self.key_rect = self.key.get_rect()
-        self.key_rect.right = self.Screen_rect.right - 85
-        self.key_rect.top = self.Screen_rect.top + 120
+        self.key_rect.right = ScreenRect.right - 85
+        self.key_rect.top = ScreenRect.top + 120
 
     def update(self):
         color = (255,255,255)
@@ -455,13 +443,11 @@ class Keys():
         self.text_rect.bottom = self.key_rect.bottom
      
     def draw(self):
-        self.Screen.blit(self.key,self.key_rect)
-        self.Screen.blit(self.text_image,self.text_rect)
+        Screen.blit(self.key,self.key_rect)
+        Screen.blit(self.text_image,self.text_rect)
 
 class Laser_Gauge():
-    def __init__(self,Screen,Stats):
-        self.Screen = Screen
-        self.Screen_rect = Screen.get_rect()
+    def __init__(self,Stats):
         self.Stats = Stats
         self.colors = [(0,0,0),(0,255,217),(187,255,0),(255,255,0),(255,115,0),(255,0,42)]
         self.init_images()
@@ -476,8 +462,8 @@ class Laser_Gauge():
         self.fore_bar.set_colorkey((255,0,255))
         self.bar_rect = self.fore_bar.get_rect()
 
-        self.background_rect.left = self.Screen_rect.left + 30
-        self.background_rect.bottom = self.Screen_rect.bottom - 100
+        self.background_rect.left = ScreenRect.left + 30
+        self.background_rect.bottom = ScreenRect.bottom - 100
 
         self.bar_rect.left = self.background_rect.left + 6
         self.bar_rect.bottom = self.background_rect.bottom - 90
@@ -512,12 +498,12 @@ class Laser_Gauge():
 
     def draw(self):
         self.jiggle()
-        self.Screen.blit(self.background,self.background_rect)
-        self.Screen.blit(self.charge,self.charge_rect)
+        Screen.blit(self.background,self.background_rect)
+        Screen.blit(self.charge,self.charge_rect)
         for i in range(4):
             bar = self.bar_rect.copy()
             bar.bottom -= i * 85
-            self.Screen.blit(self.fore_bar,bar)
+            Screen.blit(self.fore_bar,bar)
 
 
 """#Bottom

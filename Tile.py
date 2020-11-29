@@ -3,6 +3,7 @@ from math import sqrt,trunc
 from numpy.random import choice
 from Graphics import Animation
 import json,sys
+from Control_variables import Screen,ScreenRect
 
 #Mother class of all tiles. All tiles are the same size and contain the same number of elements. 
 """FIXME: Needs a lot of work, 
@@ -34,7 +35,7 @@ def load_graphics(self):
                 images.append(image)
             if Choice == False:
                 Speed = Hexdata['Speed']
-                self.Animation = Animation(self.Screen,images,Speed)
+                self.Animation = Animation(images,Speed)
                 self.draw = self.animated_draw
                 return
             else:
@@ -75,9 +76,7 @@ def TileClass():
     return TileID
 
 class Tile():
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        self.Screen = Screen
-        self.Screen_rect = self.Screen.get_rect()
+    def __init__(self,col,row,cliffs,elevation):
         self.set_ledge_draw_height(cliffs)
         
         #Row Column information
@@ -96,7 +95,7 @@ class Tile():
 
         self.set_HexProperties()
         self.highlighted = False
-        self.highlight = highlight(Screen)
+        self.highlight = highlight()
 
         #self.Obstacle = None
 
@@ -104,7 +103,7 @@ class Tile():
     def standard_draw(self):
         if self.render:
             #filling in elevation gaps with copies
-            self.Screen.blit(self.Hexagon_image, self.Hexagon_rect)
+            Screen.blit(self.Hexagon_image, self.Hexagon_rect)
             self.draw_extended_terrain()
             if self.highlighted:
                 self.highlight.draw(self.Hexagon_rect)
@@ -160,7 +159,7 @@ class Tile():
 
     #initialize position based on location in matrix
     def build(self):
-        self.Hexagon_rect.bottom = self.Screen_rect.bottom - self.row * ((self.height / 2)-1)
+        self.Hexagon_rect.bottom = ScreenRect.bottom - self.row * ((self.height / 2)-1)
         self.Hexagon_rect.left = self.col * (self.width + self.side_length - 4)
         if self.row%2 == 0:
             self.Hexagon_rect.left += self.offset - 2
@@ -207,10 +206,6 @@ class Tile():
         self.Right_rect.bottom += y
         self.Right_rect.left += x
 
-        """if self.Obstacle != None:
-            self.Obstacle.rect.bottom += y
-            self.Obstacle.rect.left += x"""
-
         self.Character_Spot_Mainx = self.Hexagon_rect.centerx
         self.Character_Spot_Mainy = self.Hexagon_rect.bottom - round(self.Hexagon_rect.height/4)
         self.check_render()
@@ -220,27 +215,27 @@ class Tile():
             for i in range(self.L_num):
                 Left_rect = self.Left_rect.copy()
                 Left_rect.bottom += self.Center_rect.height * i
-                self.Screen.blit(self.Left_image, Left_rect)
+                Screen.blit(self.Left_image, Left_rect)
             for j in range(self.C_num):
                 Center_rect = self.Center_rect.copy()
                 Center_rect.bottom += self.Center_rect.height * j
-                self.Screen.blit(self.Center_image, Center_rect)
+                Screen.blit(self.Center_image, Center_rect)
             for k in range(self.R_num):
                 Right_rect = self.Right_rect.copy()
                 Right_rect.bottom += self.Center_rect.height * k
-                self.Screen.blit(self.Right_image, Right_rect)
+                Screen.blit(self.Right_image, Right_rect)
 
     def check_render(self):
         """FIXME: fix tiles whose ledges should render but hexagon doesnt. Add actual margin
         Happens rarely at the top but enough to notice will become more of a problem the more elevation becomes important"""
-        bottom_bound = self.Hexagon_rect.top <= self.Screen_rect.bottom - 150
+        bottom_bound = self.Hexagon_rect.top <= ScreenRect.bottom - 150
         tile_bottom = self.Hexagon_rect.bottom + self.C_num * self.Center_rect.height
-        top_bound = tile_bottom >= self.Screen_rect.top
+        top_bound = tile_bottom >= ScreenRect.top
         
         verticle_bound = bottom_bound and top_bound
 
-        left_bound = self.Hexagon_rect.right >= self.Screen_rect.left + 203 
-        right_bound = self.Hexagon_rect.left <= self.Screen_rect.right - 240
+        left_bound = self.Hexagon_rect.right >= ScreenRect.left + 203 
+        right_bound = self.Hexagon_rect.left <= ScreenRect.right - 240
         horizontal_bound = left_bound and right_bound
 
         if verticle_bound and horizontal_bound:
@@ -258,61 +253,61 @@ class Tile():
 
 #tile daughter classes.
 class Water(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 0
         self.Type = 'Water'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Grass(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 1
         self.Type = 'Grass'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Mountain(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 3
         self.Type = 'Mountain'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Beach(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 2
         self.Type = 'Beach'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Brick(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 100
         self.Type = 'Brick'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Stairs(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 101
         self.Type = 'Stairs'
         load_graphics(self)
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
 
 class Door(Tile):
-    def __init__(self,Screen,col,row,cliffs,elevation):
-        Tile.__init__(self,Screen,col,row,cliffs,elevation)
+    def __init__(self,col,row,cliffs,elevation):
+        Tile.__init__(self,col,row,cliffs,elevation)
         self.ID = 102
         self.Type = 'Door'
         load_graphics(self)
         self.open = False
-        self.Icon = Icon_Tile(Screen,col,row,self.Type,elevation)
+        self.Icon = Icon_Tile(col,row,self.Type,elevation)
     
     def Open(self,World):
         if not self.open:
@@ -343,9 +338,7 @@ class Door(Tile):
 
 #Class for the mini map icons, one per tile instance
 class Icon():    
-    def __init__(self,Screen,col,row):
-        self.Screen = Screen
-        self.Screen_rect = self.Screen.get_rect()
+    def __init__(self,col,row):
         self.col = col
         self.row = row
         self.init_image()
@@ -361,7 +354,7 @@ class Icon():
         height = 13
         offset = 2*width/3
 
-        self.image_rect.bottom = self.Screen_rect.bottom - self.row * (trunc(height/2)) - 32
+        self.image_rect.bottom = ScreenRect.bottom - self.row * (trunc(height/2)) - 32
         self.image_rect.left = self.col * (width + offset/2) + 1550
         if self.row%2 == 0:
             self.image_rect.left += offset
@@ -386,10 +379,10 @@ class Icon():
         self.color = start
 
     def draw(self):
-        self.Screen.blit(self.image, self.image_rect)
+        Screen.blit(self.image, self.image_rect)
 
 class Icon_Tile(Icon):
-    def __init__(self,Screen,col,row,Type,elevation):
+    def __init__(self,col,row,Type,elevation):
         self.Type = Type
         self.elevation = elevation
 
@@ -398,7 +391,7 @@ class Icon_Tile(Icon):
             self.color = data[self.Type]['Icon']
         File.close()
 
-        Icon.__init__(self,Screen,col,row)
+        Icon.__init__(self,col,row)
 
     def init_image(self):
         self.init_color = self.gradiantUP
@@ -415,8 +408,8 @@ class Icon_Tile(Icon):
         self.image = canvas 
 
 class Icon_Player(Icon):
-    def __init__(self,Screen,col,row):
-        Icon.__init__(self,Screen,col,row)
+    def __init__(self,col,row):
+        Icon.__init__(self,col,row)
         self.image = self.image = pygame.image.load('Tiles/Icons/Mini01.png').convert()
         self.image.set_colorkey((255,0,255))
     def update_coo(self,col,row):
@@ -425,8 +418,8 @@ class Icon_Player(Icon):
         self.position()
 
 class Icon_Enemy(Icon):
-    def __init__(self,Screen,col,row):
-        Icon.__init__(self,Screen,col,row)
+    def __init__(self,col,row):
+        Icon.__init__(self,col,row)
         self.image = self.image = pygame.image.load('Tiles/Icons/Mini00.png').convert()
         self.image.set_colorkey((255,0,255))
 
@@ -437,8 +430,7 @@ class Icon_Enemy(Icon):
 
 #Obstacles
 class Obstacles():
-    def __init__(self,Screen,Tile):
-        self.Screen = Screen
+    def __init__(self,Tile):
         self.image = pygame.image.load("Tiles/Obstacles/Tree00.png").convert()
         self.image.set_colorkey((255,0,255))
         self.rect = self.image.get_rect()
@@ -447,12 +439,11 @@ class Obstacles():
         self.rect.bottom = y + 20
 
     def draw(self):
-        self.Screen.blit(self.image,self.rect)
+        Screen.blit(self.image,self.rect)
 
 #Misc
 class highlight():
-    def __init__(self,Screen):
-        self.Screen = Screen
+    def __init__(self):
         self.image = pygame.image.load('HUD/Highlight.png').convert()
         self.image.set_colorkey((255,0,255))
         self.image_rect = self.image.get_rect()
@@ -461,4 +452,4 @@ class highlight():
         self.image_rect.centerx = host_rect.centerx
     def draw(self,host_rect):
         self.update(host_rect)
-        self.Screen.blit(self.image, self.image_rect)
+        Screen.blit(self.image, self.image_rect)

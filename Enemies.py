@@ -4,11 +4,11 @@ from RNG import seed_random_bound_int,seed_random_choice
 from Tile import Icon_Enemy
 from Drops import Money_drop,Key
 from Graphics import Animation
+from Control_variables import Screen,ScreenRect
 
 #holder class for grouops of enemies, all functiosn are just instructions on how to operate on the list of enemies
 class ENEMIES():
-    def __init__(self,Screen,Max_Parameters,World,Player,DATA = None):
-        self.Screen = Screen
+    def __init__(self,Max_Parameters,World,Player,DATA = None):
         self.Stats = Player.Stats
         self.Group = []
         if DATA == None:
@@ -21,11 +21,11 @@ class ENEMIES():
                 #[Enemy.ID,[Enemy.col,Enemy.row],Enemy.elevation]
                 ID,coords,elevation = data
                 if ID == 0:
-                    enemy = swanzai(self.Screen,World,coords,elevation)
+                    enemy = swanzai(World,coords,elevation)
                 elif ID == 1:
-                    enemy = nest(self.Screen,World,self,coords,elevation)
+                    enemy = nest(World,self,coords,elevation)
                 elif ID == 2:
-                    enemy = rabbit(self.Screen,World,coords,elevation)
+                    enemy = rabbit(World,coords,elevation)
                 self.Group.append(enemy)
 
 ###Enemy operations vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -82,11 +82,11 @@ class ENEMIES():
     def choose_enemy(self,World,seed,count,col,row):
         def enemy_return(enemy_type):
             if enemy_type == 'swanzai':
-                Enemy = swanzai(self.Screen,World,(col,row))
+                Enemy = swanzai(World,(col,row))
             elif enemy_type == 'nest':
-                Enemy = nest(self.Screen,World,self,(col,row))
+                Enemy = nest(World,self,(col,row))
             elif enemy_type == 'rabbo':
-                Enemy = rabbit(self.Screen,World,(col,row))
+                Enemy = rabbit(World,(col,row))
             return Enemy
             
         for i in range(len(self.quotas)):
@@ -133,20 +133,19 @@ class ENEMIES():
 
 """Basic Enemy, using swanzie as a place holder --------------------------------------------------------"""
 class enemy(MOB):
-    def __init__(self,Screen,World,coordinates,elevation = None):
-        MOB.__init__(self,Screen,coordinates)
+    def __init__(self,World,coordinates,elevation = None):
+        MOB.__init__(self,coordinates)
         self.MOB_image = pygame.image.load('Enemies/Swanzai.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
         self.MOB_rect = self.MOB_image.get_rect()
         self.Map = World.Map
         
         self.direction = 'S'
-        self.Icon = Icon_Enemy(self.Screen,self.col,self.row)
+        self.Icon = Icon_Enemy(self.col,self.row)
 
         self.Player_location = (0,0)
         self.death_SFX = pygame.mixer.Sound("SFX/Critical Hit 1.wav")
 
-        self.Screen_rect = self.Screen.get_rect()
         self.check_render()
         if elevation != None:
             self.elevaiton = elevation
@@ -164,12 +163,12 @@ class enemy(MOB):
             images.append(image)
         images.append(image)
         images.append(image)
-        self.exclaimation = Animation(self.Screen,images,3,2)
+        self.exclaimation = Animation(images,3,2)
 
     def check_render(self):
         self.render = False
-        if self.MOB_rect.bottom >= 0 and self.MOB_rect.top <= self.Screen_rect.bottom:
-            if self.MOB_rect.right >= 0 and self.MOB_rect.left <= self.Screen_rect.right:
+        if self.MOB_rect.bottom >= 0 and self.MOB_rect.top <= ScreenRect.bottom:
+            if self.MOB_rect.right >= 0 and self.MOB_rect.left <= ScreenRect.right:
                 self.render = True
 
     def SFX_death(self):
@@ -224,7 +223,7 @@ class enemy(MOB):
 ##Standard
     def Draw(self):
         if self.render:
-            self.Screen.blit(self.MOB_image, self.MOB_rect)
+            Screen.blit(self.MOB_image, self.MOB_rect)
             if self.exclaimation.clock():
                 rect = self.exclaimation.get_rect()
                 rect.centerx = self.MOB_rect.centerx
@@ -234,8 +233,8 @@ class enemy(MOB):
 class swanzai(enemy):
     """This will be a basic enemy that uses the most basic AI patter, it simply goes to the player
     by the shortest line. It does minimum damage and gets trapped on things easily. Dies easy too. Tutorial level"""
-    def __init__(self,Screen,World,coordinates,elevation = None):
-        enemy.__init__(self,Screen,World,coordinates,elevation)
+    def __init__(self,World,coordinates,elevation = None):
+        enemy.__init__(self,World,coordinates,elevation)
         self.ID = 0
         self.MOB_image = pygame.image.load('Enemies/Swanzai.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
@@ -244,8 +243,8 @@ class swanzai(enemy):
         self.death_SFX = pygame.mixer.Sound("SFX/Death Honk{}.wav".format(choice))
 
 class nest(enemy):
-    def __init__(self,Screen,World,Enemies,coordinates,elevation = None):
-        enemy.__init__(self,Screen,World,coordinates,elevation)
+    def __init__(self,World,Enemies,coordinates,elevation = None):
+        enemy.__init__(self,World,coordinates,elevation)
         self.ID = 1
         self.MOB_image = pygame.image.load('Enemies/Swanzai_nest.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
@@ -285,7 +284,7 @@ class nest(enemy):
                 choice = random.choice(temp)
                 if compare(choice):
                     active = False
-                    new_mob = swanzai(self.Screen,self.World,choice)
+                    new_mob = swanzai(self.World,choice)
                     self.Group.append(new_mob)
                     self.Clutch.append(new_mob)
                 else:
@@ -314,11 +313,11 @@ class nest(enemy):
 
     def Draw(self):
         self.animate(4)
-        self.Screen.blit(self.MOB_image, self.MOB_rect)
+        Screen.blit(self.MOB_image, self.MOB_rect)
 
 class rabbit(enemy):
-    def __init__(self,Screen,World,coordinates,elevation = None):
-        enemy.__init__(self,Screen,World,coordinates,elevation)
+    def __init__(self,World,coordinates,elevation = None):
+        enemy.__init__(self,World,coordinates,elevation)
         self.ID = 2
         self.MOB_image = pygame.image.load('Enemies/Rabbo.png').convert()
         self.MOB_image.set_colorkey((255,0,255))

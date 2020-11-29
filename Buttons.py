@@ -1,66 +1,174 @@
-import pygame
+import pygame,sys
 import pygame.font
 from math import sqrt
-import sys
 from time import sleep
+from Save import delete_map
+from Control_variables import Ctrl_Vars,Screen,ScreenRect
+
+"""Button Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
+def Default(self):
+    self.value = True
+    return True
+
+def OpenFolder(self):
+    #the functionality of the button is to open the sub menu
+    self.open = True
+    """once the folder has fully extended allow functionality"""
+    if self.frame_count >= self.frames:
+        self.frame_count = self.frames
+        for i in range(len(self.Buttons)):
+            self.Buttons[i].active = True #allow functionality
+    else:
+        self.frame_count += 1
+        self.translate_group(self.pixel_increment)
+
+def Start_Nav(self):
+    #activates campaign mode
+    Ctrl_Vars.Start_Vars.Menu_reset()
+    Ctrl_Vars.Start_Vars.Set_Menu(self.properties)
+
+def Menu_Nav(self):
+    key = self.properties
+    Ctrl_Vars.Nav_GameTypes(key)
+
+def Del(self):
+    #activates campaign mode
+    Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
+
+def Clear(self):
+    Ctrl_Vars.seed = ""
+
+def SaveSeed(self):
+    File = 'Saved_Worlds/Favorite Seeds.txt'
+    File = open(File,"a")
+    File.writelines(Ctrl_Vars.seed + "\n")
+    File.close()
+
+def SaveSettings(self):
+    self.properties.Save_settings()
+    print("Saved")
+
+def SaveVolume(self):
+    self.properties.default_volume()
+    self.value = True
+
+def Fullscreen(self):
+    self.properties.toggle_fullscreen()
+
+def Resume(self):
+    Ctrl_Vars.GameNav.Game_active = True
+    Ctrl_Vars.GameNav.Pause = False
+    Ctrl_Vars.WC_Tools.Pause = False
+
+def Retry(self):
+    Ctrl_Vars.GameNav.Pause = False
+    Ctrl_Vars.GameNav.Game_Over = False
+    Ctrl_Vars.GameNav.Game_Win = False
+
+    Ctrl_Vars.GameNav.load_world = True
+    Ctrl_Vars.GameNav.restart_world = True
+
+def Exit(self):
+    sleep(0.5)
+    sys.exit(0)
+
+def DeleteWorld(self):
+    delete_map(self.name)
+    self.LIST.init_boxes()
+
+def LoadWorld(self):
+    Ctrl_Vars.GameNav.Menu_reset()
+    Ctrl_Vars.GameNav.load_world = True
+    Ctrl_Vars.GameNav.menu_select = False
+    Ctrl_Vars.GameNav.Load = True
+    Ctrl_Vars.seed = self.name
+    Ctrl_Vars.Start_Vars.key = 'Title Screen'
+
+def Resolution(self):
+    Window,Settings,value = self.properties
+    if Settings.settings['Resolution'] != value:
+        Settings.settings['Full Screen'] = False
+        Settings.settings['Resolution'] = value
+        Settings.init_Screen()
+        Window = Settings.create_window()
+
+def key(self):
+    if len(Ctrl_Vars.seed) < 18:
+        Ctrl_Vars.seed += "{}".format(self.value)
 
 """Mother class Buttons%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
 #Simple Button (Mother) vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-class Hexagon_Button():
-    def __init__(self,Screen,Coords,Ctrl_Vars,active = True):
+class Hex_Button():
+    def __init__(self,Coords,text = "N/A",function = Default,properties = None,active = True):
         self.Coords = Coords
-        self.Screen = Screen #needed for graphics
-        self.Screen_rect = self.Screen.get_rect()
-        self.Ctrl_Vars = Ctrl_Vars #needed for functionality
+        self.text = text
+        self.sound = pygame.mixer.Sound("SFX/Button_press.wav")
+
+        self.functionality = function
+        self.properties = properties
 
         self.images = [pygame.image.load('Title/MenuGonOnS.png').convert(),
             pygame.image.load('Title/MenuGonS.png').convert()]
         self.rect = self.images[0].get_rect()
-        #geometric properties
-        self.height = self.rect.bottom
-        self.width = self.rect.right
-        self.side_length = self.height/2
-        self.offset = (self.width*(1/2))
-        self.outline = 4
-        
+
+        #Customize
+        self.position() #set position
+        self.init_text() #set text
+
         #state of activity
         self.On = False
+        self.value = False
         if active:
-            self.hide = False
-            self.active = True
+            self.toggleOff()
         else:
-            self.hide = True
-            self.active = False
+            self.toggleOn()
 
-        #location
-        self.position() #set position
+    def reset(self):
+        #default reset is to turn off shine
+        self.Value = False
+        self.On = False
 
-        #Text (Default string and size)
-        self.text = "N/A"
-        self.init_text()
+    def press(self):
+        #General functionality is just to shine and turn off
+        self.On = True
+        if Ctrl_Vars.Left_click:
+            pygame.mixer.Sound.play(self.sound)
+            Ctrl_Vars.Left_click = False
+            Ctrl_Vars.Left_MouseDown = False
+            self.functionality(self) #Specific functiality: passed in args
 
-        self.sound = pygame.mixer.Sound("SFX/Button_press.wav")
+    def toggleOn(self):
+        self.hide = True
+        self.active = False
+
+    def toggleOff(self):
+        self.hide = False
+        self.active = True
 
     def position(self):
         #sets position of object based on where it is stored on an array grid
-        x = self.Coords[0]
-        y = self.Coords[1]
+        x,y = self.Coords
+        
+        #geometric properties
+        self.height = self.rect.bottom
+        width = self.rect.right
+        offset = width/2
 
-        self.left = x * (self.width)
-        self.right = self.width + self.left
-        self.bottom = self.Screen_rect.bottom - (y * (self.height * (3/4)))
+        self.left = x * (width)
+        self.right = width + self.left
+        self.bottom = ScreenRect.bottom - (y * (self.height * (3/4)))
         self.top = self.bottom - self.height
         if y%2 == 0: #stagger rows
-            self.left += self.offset
-            self.right += self.offset
-        self.center_x = self.width/2 + self.left
+            self.left += offset
+            self.right += offset
+        self.center_x = offset + self.left
 
         self.rect.left = self.left
         self.rect.bottom = self.bottom
 
     def init_text(self):
-        def size_text():
-            font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",self.size)
+        def size_text(size):
+            font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
             font.set_bold(True)
             words = self.text.split()
             largest_word = words[0]
@@ -70,9 +178,9 @@ class Hexagon_Button():
                         largest_word = word
             TstFntImg = font.render(largest_word,True,text_color,None)
             rect = TstFntImg.get_rect()
-            while rect.width > self.height - 40 or self.size <= 3:
-                self.size -= 1
-                font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",self.size)
+            while rect.width > self.height - 40 or size <= 3:
+                size -= 1
+                font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
                 font.set_bold(True)
                 TstFntImg = font.render(largest_word,True,text_color,None)
                 rect = TstFntImg.get_rect()
@@ -104,9 +212,8 @@ class Hexagon_Button():
             return image
         
         #intialize text image using text in self memory
-        self.size = 40
         text_color = ((2,2,70))
-        font = size_text()
+        font = size_text(40)
         self.font_image = Make_image()
         self.font_rect = self.font_image.get_rect()
         self.font_rect.centerx = self.rect.centerx
@@ -118,50 +225,21 @@ class Hexagon_Button():
         if self.active:
             self.reset()
             #if in horizontal bounds
-            if x >= self.left and x <= self.right:
-                slope1 = 1/sqrt(3)
-                slope2 = 1/sqrt(3)
+            if x > self.left and x < self.right:
+                slope = 1/sqrt(3)
                 #use to set create verticle bounds
                 if x - self.center_x <= 0:
-                    slope2 *= -1
-                else:
-                    slope1 *= -1
+                    slope *= -1
 
                 ################
                 x_rel = x - self.center_x #bounds depends on x location of the mouse 
-                bottom_bound = self.bottom - (x_rel*slope2)
-                top_bound = self.top - (x_rel*slope1)
+                bottom_bound = self.bottom - (x_rel*slope)
+                top_bound = self.top - (x_rel*-slope)
                 ################
 
                 if y >= top_bound and y <= bottom_bound:
-                    if self.Ctrl_Vars.Left_MouseDown:
+                    if Ctrl_Vars.Left_MouseDown:
                         self.press() # if all conditions are met use functionality
-
-    def draw(self):
-        if not self.hide:
-            if self.On:
-                i = 0
-            else:
-                i = 1
-            self.images[i].set_colorkey((255,0,255))
-            self.Screen.blit(self.images[i], self.rect)
-        self.draw_text()
-
-    def press(self):
-        #General functionality is just to shine and turn off
-        self.On = True
-        if self.Ctrl_Vars.Left_click:
-            pygame.mixer.Sound.play(self.sound)
-            self.Ctrl_Vars.Left_click = False
-            self.Ctrl_Vars.Left_MouseDown = False
-            self.functionality() #Specific functiality: defined by daughter classes
-
-    def functionality(self):
-        print("No functioanlity")
-
-    def reset(self):
-        #default reset is to turn off shine
-        self.On = False
 
     def translate(self,dx):
         #moves entire object. Used in folding unfolding
@@ -171,22 +249,44 @@ class Hexagon_Button():
         self.rect.left += dx
         self.font_rect.left += dx
 
-    def draw_text(self):
-        self.Screen.blit(self.font_image,self.font_rect)
+    def draw(self):
+        if not self.hide:
+            if self.On:
+                i = 0
+            else:
+                i = 1
+            self.images[i].set_colorkey((255,0,255))
+            Screen.blit(self.images[i], self.rect)
+            Screen.blit(self.font_image,self.font_rect)
 
 #Mother Folder vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-class Folder(Hexagon_Button):
+class Folder(Hex_Button):
     """A class of button that holds a foldable submenu of buttons"""
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,False)
-        self.hide = False
+    def __init__(self,Coords,text = "N/A"):
+        Hex_Button.__init__(self,Coords,text,OpenFolder,None,True)
         self.open = False
         #animation parameters
         self.frames = 6
-        self.pixel_increment = self.width // self.frames
         self.frame_count = 0
 
+        self.width = self.rect.right - self.rect.left
+        self.pixel_increment = self.width // self.frames
+
         self.build_submenu()
+
+    def reset(self):
+        #resets the folder to its original operational state
+        if not self.open: #closed
+            #unfold
+            if self.frame_count > 0:
+                for i in range(len(self.Buttons)):
+                    self.Buttons[i].active = False
+                self.frame_count -= 1
+                self.translate_group(-self.pixel_increment)
+            elif self.frame_count == 0:
+                #turn off
+                self.frame_count = 0
+                self.On = False
 
     def build_submenu(self):
         #creates a list of button objects to make a menu with
@@ -225,7 +325,7 @@ class Folder(Hexagon_Button):
             ################
             #verticle bounds based on hexagonal shape
             if y >= top_bound and y <= bottom_bound:
-                if self.Ctrl_Vars.Left_MouseDown:
+                if Ctrl_Vars.Left_MouseDown:
                     self.press()
 
     def check_contained_opened(self,x,y):
@@ -251,43 +351,12 @@ class Folder(Hexagon_Button):
                 top_bound = self.top - (x_rel*slope1)
                 ################
                 if y >= top_bound and y <= bottom_bound:
-                    self.functionality()
-
-    def functionality(self):
-        #the functionality of the button is to open the sub menu
-        self.open = True
-        """once the folder has fully extended allow functionality"""
-        if self.frame_count >= self.frames:
-            self.frame_count = self.frames
-            for i in range(len(self.Buttons)):
-                self.Buttons[i].active = True #allow functionality
-        else:
-            self.frame_count += 1
-            self.translate_group(self.pixel_increment)
-
-    def reset(self):
-        #resets the folder to its original operational state
-        if not self.open: #closed
-            #unfold
-            if self.frame_count > 0:
-                for i in range(len(self.Buttons)):
-                    self.Buttons[i].active = False
-                self.frame_count -= 1
-                self.translate_group(-self.pixel_increment)
-            elif self.frame_count == 0:
-                #turn off
-                self.frame_count = 0
-                self.On = False
+                    self.functionality(self)
 
     def translate_group(self,dx):
         #move all objects in the submenu
         for i in range(len(self.Buttons)):
             self.Buttons[i].translate(dx*(i+1))
-
-    def draw_submenu(self):
-        #draws the sub class objects kept in the list
-        for i in range(len(self.Buttons)):
-            self.Buttons[i].draw()
 
     def draw(self):
         if not self.hide:
@@ -301,284 +370,118 @@ class Folder(Hexagon_Button):
                 for j in range(len(self.Buttons)):
                     self.Buttons[j].hide = True
             self.images[i].set_colorkey((255,0,255))
-            self.Screen.blit(self.images[i], self.rect)
-            self.draw_text()
-"""MENU SWITCHS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
-class Start_Navigation(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Text,active = True):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
-        self.text = Text
-        self.init_text()
+            Screen.blit(self.images[i], self.rect)
+            Screen.blit(self.font_image,self.font_rect)
 
-    def functionality(self):
-        #activates campaign mode
-        self.Ctrl_Vars.Start_Vars.Menu_reset()
-        self.Ctrl_Vars.Start_Vars.Set_Menu(self.text)
-
-class Menu_Navagation(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,load_type,Text,active = True):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
-        self.text = Text
-        self.init_text()
-        self.load_type = load_type
-
-    def functionality(self):
-        self.Ctrl_Vars.GameNav.Menu_reset()
-        self.Ctrl_Vars.GameNav.load_world = True
-        self.Ctrl_Vars.GameNav.menu_select = False
-        self.Ctrl_Vars.main = True
-        if self.load_type == "Custom":
-            self.Ctrl_Vars.GameNav.Custom = True
-        elif self.load_type == "Random":
-            self.Ctrl_Vars.GameNav.Random = True
-        elif self.load_type == "Load":
-            self.Ctrl_Vars.GameNav.Load = True
-        elif self.load_type == "World Creator":
-            self.Ctrl_Vars.GameNav.Game_active = True
-            self.Ctrl_Vars.WC_initialized = False
-            self.Ctrl_Vars.main = False
-            self.Ctrl_Vars.world_creator = True
-            self.menu_select = False
-            self.Ctrl_Vars.GameNav.load_world = False
-        else:
-            self.Ctrl_Vars.GameNav.load_world = False
-            self.Ctrl_Vars.GameNav.Game_active = False
-            self.Ctrl_Vars.GameNav.Start_Screen = True
-            self.Ctrl_Vars.GameNav.menu_select = True
+    def draw_submenu(self):
+        #draws the sub class objects kept in the list
+        for i in range(len(self.Buttons)):
+            self.Buttons[i].draw()
 
 """Simple Button specialized types ***************************************************************************"""
 #Number PAD
-class Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,value):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = "{}".format(str(value))
-        self.init_text()
+class Key(Hex_Button):
+    def __init__(self,Coords,value):
+        text = "{}".format(str(value))
+        Hex_Button.__init__(self,Coords,text,key)
         self.value = str(value)
 
-    def functionality(self):
-        #activates campaign mode
-        if len(self.Ctrl_Vars.seed) < 18:
-            self.Ctrl_Vars.seed += "{}".format(self.value)
-
-class Del_Key(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = "Del"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        self.Ctrl_Vars.seed = self.Ctrl_Vars.seed[:-1]
-
-class Clear(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = "Clear"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        self.Ctrl_Vars.seed = ""
-
-class Save_seed(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = "Save Seed"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        File = 'Saved_Worlds/Favorite Seeds.txt'
-        File = open(File,"a")
-        File.writelines(self.Ctrl_Vars.seed + "\n")
-        File.close()
-
-class Resolution(Hexagon_Button):
-    def __init__(self,Window,Screen,Coords,Ctrl_Vars,Settings,value,text):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.text = text
-        self.value = value
-        self.init_text()
-        self.Window = Window
-        self.Settings = Settings
-
-    def functionality(self):
-        #activates campaign mode
-        if self.Settings.settings['Resolution'] != self.value:
-            self.Settings.settings['Resolution'] = self.value
-            self.Settings.init_Screen()
-            self.Window = self.Settings.create_window()
-
 #Extras ------------------
-class Music_Button(Hexagon_Button):
-    def __init__(self,Screen,Coords,N,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
+class Music_Button(Hex_Button):
+    def __init__(self,Coords,N):
+        def functionality(self):
+            if self.N < len(self.music_library):
+                sleep(0.25)
+                pygame.mixer.music.load(
+                    'Music/{}.mp3'.format(self.text)
+                    )
+                pygame.mixer.music.play(-1)
         self.music_library = ["6 Solutions per Side","Bad KpR","Beach Ball","Navy Blues","Approach","Think"]
         self.N = N
         if self.N < len(self.music_library):
-            self.text = self.music_library[N]
+            text = self.music_library[N]
         else:
-            self.text = 'N/A'
-        self.init_text()
+            text = 'N/A'
+        Hex_Button.__init__(self,Coords,text,functionality)
 
-    def functionality(self):
-        if self.N < len(self.music_library):
-            sleep(0.25)
-            pygame.mixer.music.load(
-                'Music/{}.mp3'.format(self.text)
-                )
-            pygame.mixer.music.play(-1)
-
-#Settings
-class Default_Sound(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
+class Delete_World(Hex_Button):
+    def __init__(self,Coords,text,active,LIST):
+        Hex_Button.__init__(self,Coords,text,DeleteWorld,None,active)
         self.clicked = False
-        self.Settings = Settings
-        self.text = "Set Default"
+        self.text = "Delete"
         self.init_text()
-        self.value = False
+        self.LIST = LIST
+        self.name = None
 
-    def functionality(self):
-        self.Settings.default_volume()
-        self.value = True #Sends a signal to menus loop to init sliders
-
-class Save_Settings(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
+class Load_World(Hex_Button):
+    def __init__(self,Coords,text,active):
+        Hex_Button.__init__(self,Coords,text,LoadWorld,None,active)
         self.clicked = False
-        self.text = "Save"
+        self.text = "Load"
         self.init_text()
-        self.Settings = Settings
-
-    def functionality(self):
-        self.Settings.Save_settings()
-        print("Saved")
-
-class Full_Screen(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
-        self.Settings = Settings
-        self.clicked = False
-        self.text = "Full Screen"
-        self.init_text()
-    
-    def functionality(self):
-        self.Settings.toggle_fullscreen()
-  
-#In game: play-------------
-class Resume(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.clicked = False
-        self.text = "Resume"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        self.Ctrl_Vars.GameNav.Game_active = True
-        self.Ctrl_Vars.GameNav.Pause = False
-        self.Ctrl_Vars.WC_Tools.Pause = True
-
-class Retry(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars)
-        self.clicked = False
-        self.text = "Retry"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        self.Ctrl_Vars.GameNav.Pause = False
-        self.Ctrl_Vars.GameNav.Game_Over = False
-        self.Ctrl_Vars.GameNav.Game_Win = False
-
-        self.Ctrl_Vars.GameNav.load_world = True
-        self.Ctrl_Vars.GameNav.restart_world = True
-
-class Quit(Hexagon_Button):
-    def __init__(self,Screen,Coords,Ctrl_Vars,active):
-        Hexagon_Button.__init__(self,Screen,Coords,Ctrl_Vars,active)
-        self.clicked = False
-        self.text = "Desktop"
-        self.init_text()
-
-    def functionality(self):
-        #activates campaign mode
-        sleep(0.5)
-        sys.exit(0)
+        self.name = None
 
 """Specialized Folders   *******************************************************************************"""
 #Start Screen
 class Play(Folder):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Folder.__init__(self,Screen,Coords,Ctrl_Vars)
+    def __init__(self,Coords):
+        Folder.__init__(self,Coords)
         self.text = "Play!"
         self.init_text()
 
     def build_submenu(self):
         #Play Options ----
-        self.Buttons = []
-        random_Button = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Random",'Random',False)
-        #campaign_Button = Campaign(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        load_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Load World",False)
-        seed_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Seed",False)
-        self.Buttons.append(random_Button)
-        self.Buttons.append(load_Button)
-        self.Buttons.append(seed_Button)
+        self.Buttons = [
+            Hex_Button(self.Coords,"Random",Menu_Nav,"Random",False),
+            Hex_Button(self.Coords,"Load World",Start_Nav,"Load World",False),
+            Hex_Button(self.Coords,"Seed",Start_Nav,"Seed",False)
+        ]
 
 class Extras(Folder):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Folder.__init__(self,Screen,Coords,Ctrl_Vars)
+    def __init__(self,Coords):
+        Folder.__init__(self,Coords)
 
     def build_submenu(self):
         #Extras Options ----
         self.text = "Extras!"
         self.init_text()
-        self.Buttons = []
-        Jukebox_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Jukebox",True)
-        World_Creator = Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"World Creator","World Creator",False)
-        Store_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        self.Buttons.append(World_Creator)
-        self.Buttons.append(Jukebox_Button)
-        self.Buttons.append(Store_Button)
+        self.Buttons = [
+            Hex_Button(self.Coords,"Jukebox",Start_Nav,("Jukebox"),False),
+            Hex_Button(self.Coords,"World Creator",Menu_Nav,("World Creator"),False),
+            Hex_Button(self.Coords)
+        ]
 
 class Settings(Folder):
-    def __init__(self,Screen,Coords,Ctrl_Vars,Settings):
-        Folder.__init__(self,Screen,Coords,Ctrl_Vars)
+    def __init__(self,Coords,Settings):
+        Folder.__init__(self,Coords)
         self.text = 'Settings'
         self.init_text()
         
     def build_submenu(self):
         #Settings Options ----
-        self.Buttons = []
-        Sound_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Volume",True)
-        Display_Button = Start_Navigation(self.Screen,self.Coords,self.Ctrl_Vars,"Display",True)
-        Controls_Button = Hexagon_Button(self.Screen,self.Coords,self.Ctrl_Vars,False)
-        self.Buttons.append(Display_Button)
-        self.Buttons.append(Sound_Button)
-        self.Buttons.append(Controls_Button)
+        self.Buttons = [
+            Hex_Button(self.Coords,"Volume",Start_Nav,"Volume",False),
+            Hex_Button(self.Coords,"Display",Start_Nav,"Display",False),
+            Hex_Button(self.Coords)
+        ]
 
 #Quit Folder
 class Quit_Folder(Folder):
-    def __init__(self,Screen,Coords,Ctrl_Vars):
-        Folder.__init__(self,Screen,Coords,Ctrl_Vars)
+    def __init__(self,Coords):
+        Folder.__init__(self,Coords)
         self.text = "Quit"
         self.init_text()
 
     def build_submenu(self):
         #Settings Options ----
         self.Buttons = [
-            Menu_Navagation(self.Screen,self.Coords,self.Ctrl_Vars,"Title Screen",'Title Screen',False),
-            Quit(self.Screen,self.Coords,self.Ctrl_Vars,False)
+            Hex_Button(self.Coords,"Title Screen",Menu_Nav,"Title Screen",False),
+            Hex_Button(self.Coords,"Quit",Exit)
         ]
 
 """SLIDERS *********************************************************************************************"""
 class Slider_Bar():
-    def __init__(self,Screen,Ctrl_Vars,x,y,Name):
-        self.Screen = Screen #needed for graphics
-        self.Screen_rect = self.Screen.get_rect()
-        self.Ctrl_Vars = Ctrl_Vars
+    def __init__(self,x,y,Name):
         self.margin = 39
         self.init_image(x,y)
 
@@ -605,7 +508,7 @@ class Slider_Bar():
         self.image_rect.centery = y
         Kx = self.image_rect.left + self.margin
         Ky = self.image_rect.top
-        self.Knob = Slider_Knob(self.Screen,self.Ctrl_Vars,Kx,Ky)
+        self.Knob = Slider_Knob(Kx,Ky)
 
     def init_text(self,size):
         #intialize text image using text in self memory
@@ -650,22 +553,20 @@ class Slider_Bar():
         self.update()
 
     def draw(self):
-        self.Screen.blit(self.text_image,self.text_rect)
-        self.Screen.blit(self.image,self.image_rect)
-        self.Screen.blit(self.fill,self.fill_rect)
+        Screen.blit(self.text_image,self.text_rect)
+        Screen.blit(self.image,self.image_rect)
+        Screen.blit(self.fill,self.fill_rect)
         self.Knob.draw()
 
     def check_contained(self,x,y):
         if y >= self.image_rect.top and y <= self.image_rect.bottom: #since its narrow, check first
             if x >= self.image_rect.left + self.margin and x <= self.image_rect.right - self.margin:
-                if self.Ctrl_Vars.Left_MouseDown:
+                if Ctrl_Vars.Left_MouseDown:
                     dx = x - self.Knob.rect.centerx
                     self.Slide_Knob(dx)
 
 class Slider_Knob():
-    def __init__(self,Screen,Ctrl_Vars,x,y):
-        self.Screen = Screen #needed for graphics
-        self.Screen_rect = self.Screen.get_rect()
+    def __init__(self,x,y):
         self.image = pygame.image.load('HUD/Slider_Knob.png').convert()
         self.image.set_colorkey((255,0,255))
         self.rect = self.image.get_rect()
@@ -673,18 +574,16 @@ class Slider_Knob():
         self.rect.top = y
 
     def draw(self):
-        self.Screen.blit(self.image,self.rect)
+        Screen.blit(self.image,self.rect)
 
 class Typing_Box():
-    def __init__(self,Screen,Ctrl_Vars):
-        self.Screen = Screen #needed for graphics
-        self.Screen_rect = self.Screen.get_rect()
+    def __init__(self,Screen):
         self.image = pygame.Surface((1000,200))
         self.image.fill((0,0,0))
         self.image.set_alpha(185)
         self.rect = self.image.get_rect()
-        self.rect.centerx = self.Screen_rect.centerx
-        self.rect.centery = self.Screen_rect.centery
+        self.rect.centerx = ScreenRect.centerx
+        self.rect.centery = ScreenRect.centery
 
     def draw(self):
-        self.Screen.blit(self.image,self.rect)
+        Screen.blit(self.image,self.rect)

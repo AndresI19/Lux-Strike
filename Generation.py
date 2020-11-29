@@ -6,8 +6,13 @@ import numpy
 import random
 import sys
 from Tessellation import Hex_Grid
+from Graphics import Load_Screen
 sys.setrecursionlimit(3000)
 limit = sys.getrecursionlimit()
+
+def Make_Loading(Window,Settings):
+    global Loading
+    Loading = Load_Screen(Window,Settings)
 
 def fill(HG,coords):
     """fills parametric outline to create solid map, by creating list of all tiles in a row and filling all
@@ -44,7 +49,7 @@ def fill(HG,coords):
     recursive_fill(coords)
 
 class generation():
-    def __init__(self,Seed,Max_parameters,Loading):
+    def __init__(self,Seed,Max_parameters):
         #Seed for world gen!
         if Seed == None:
             self.seed = rng.generate_Xdegit_seed(18)
@@ -58,9 +63,9 @@ class generation():
 
         #start -----------
         self.center = [0,0]
-        self.Loading = Loading
+
         N = self.total_tiers * 700
-        self.Loading.set_steps(N)
+        Loading.set_steps(N)
         self.generate_master_grid()
         #------------------
 
@@ -80,7 +85,7 @@ class generation():
                 for i in range(len(HG)):
                     x,y = point
                     HG[i].check_contained(x,y)
-                self.Loading.Update()
+                Loading()
 
         def condence_tiers():
             for col in range(Cols):

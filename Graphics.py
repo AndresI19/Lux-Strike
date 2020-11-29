@@ -1,8 +1,9 @@
 import pygame
+from Control_variables import Screen,ScreenRect
 
 #graphics master loops vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 #main game
-def Display(Screen,World,HUD,Player,Enemies,Drops):
+def Display(World,HUD,Player,Enemies,Drops):
     Screen.fill((0,0,0))
     Draw_map(World,Player,Enemies,Drops)
     HUD.draw()
@@ -21,7 +22,7 @@ def Draw_map(World,Player,Enemies,Drops):
             if drop.row == draw_row:
                 drop.draw()
 
-def scale(Window,Screen,Settings):
+def scale(Window,Screen,Settings): #MUST PASS SCREEN
     if not Settings.settings['Resolution'] == [1920,1080] and not Settings.settings['Full Screen'] == True:
         Screen = pygame.transform.scale(Screen,(Settings.Screen_width,Settings.Screen_height))
     Window.blit(Screen,(0,0))
@@ -35,47 +36,43 @@ def Menu_diplay(Menu):
 #graphics master loops ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """ TODO: #Loading Screen object"""
 class Load_Screen():
-    def __init__(self,Window,Screen,Settings):
+    def __init__(self,Window,Settings):
         #loading screen variables
         self.Window = Window
         self.Settings = Settings
-        self.Screen = Screen
-        self.screen_rect = self.Screen.get_rect()
 
-        self.bar_size = (self.screen_rect.width * 9) // 10
-        self.bar_left = self.screen_rect.width/20 + 2
-        self.bar_top = self.screen_rect.bottom * (9/10) - 100
+        self.bar_size = (ScreenRect.width * 9) // 10
+        self.bar_left = ScreenRect.width/20 + 2
+        self.bar_top = ScreenRect.bottom * (9/10) - 100
         self.bar = pygame.image.load('HUD/Bar.png')
 
         self.count = 0 #dynamic
         self.bar_frame = pygame.image.load('HUD/Load_Bar.png').convert()
         self.bar_frame.set_colorkey((255,0,255))
-        self.Screen.blit(self.bar_frame,(0,self.bar_top-9))
+        Screen.blit(self.bar_frame,(0,self.bar_top-9))
 
         self.init_text()
-        self.scale_draw()
+        self.scale_draw(Screen)
 
     def set_steps(self,N):
         self.i = float(1/N) * 100 * 2
         self.requirement = self.bar_size/N
 
-    def scale_draw(self):
+    def scale_draw(self,Screen):
         if not self.Settings.settings['Resolution'] == [1920,1080]:
             Screen = pygame.transform.scale(
-                self.Screen,(self.Settings.Screen_width,self.Settings.Screen_height))
-        else:
-            Screen = self.Screen
+                Screen,(self.Settings.Screen_width,self.Settings.Screen_height))
         self.Window.blit(Screen,(0,0))
         pygame.display.flip()
 
-    def Update(self):
+    def __call__(self):
         self.count += self.i
         if self.count >= self.requirement:
             self.count = 0
             self.bar_left += 2
             if self.bar_left <= (1826):
-                self.Screen.blit(self.bar,(self.bar_left,self.bar_top))
-            self.scale_draw()
+                Screen.blit(self.bar,(self.bar_left,self.bar_top))
+            self.scale_draw(Screen)
         
     def init_text(self):
         text = "Loading..."
@@ -87,7 +84,7 @@ class Load_Screen():
         font_image = font.render(text,True,text_color,None)
         font_rect = font_image.get_rect()
         surface = pygame.Surface((font_rect.right,font_rect.bottom))
-        font_rect.right = self.screen_rect.right - 50
+        font_rect.right = ScreenRect.right - 50
         font_rect.centery = self.bar_top - 40
 
         surface_rect = surface.get_rect()
@@ -96,7 +93,7 @@ class Load_Screen():
         surface.blit(font_image, surface_rect)
         surface.set_alpha(105)
 
-        self.Screen.blit(surface,font_rect)
+        Screen.blit(surface,font_rect)
 
 class word_object():
     #Word object, is nothing more than a rendered text object, with the ability to display in a certain way
@@ -151,7 +148,7 @@ class word_object():
                 self.font_image = self.font.render(self.text,True,(0,0,0),None)
         return (x,y)
 
-    def draw(self,Screen,coordinates):
+    def draw(self,coordinates):
         if self.frame >= self.length:
             self.full = True
         else:
@@ -167,13 +164,11 @@ class word_object():
 
 #ANIMATION OBJECT
 class Animation():
-    def __init__(self,Screen,reel,speed = 1,Type = 0):
-        self.Screen = Screen
+    def __init__(self,reel,speed = 1,Type = 0):
         self.reel = reel
         self.speed = speed
         self.frames = len(reel) * self.speed
         self.active = False
-
         self.count = 0 
 
         if Type == 0 or Type == 'loop':
@@ -219,7 +214,7 @@ class Animation():
             self.active = True
 
     def draw(self,rect):
-        self.Screen.blit(self.image,rect)
+        Screen.blit(self.image,rect)
     
     def get_rect(self):
         return self.reel[0].get_rect()

@@ -1,11 +1,10 @@
 import pygame
 from Tile import Icon_Player
+from Control_variables import Screen
 
 #Parent class for mobile entities, the bases of the player and enemies
 class MOB():
-    def __init__(self,Screen,spawn_coord):
-        self.Screen = Screen
-
+    def __init__(self,spawn_coord):
         #Row column information
         self.col = 0
         self.row = 0
@@ -142,12 +141,12 @@ class MOB():
         return [self.col,self.row]
     #Draw functions and animation loops for world entities
     def Draw(self):
-        self.Screen.blit(self.MOB_image, self.MOB_rect)
+        Screen.blit(self.MOB_image, self.MOB_rect)
 
 """Class for player character.-----------------------------------------------------------------------------"""
 class Player(MOB):
-    def __init__(self,Screen,spawn_coord,DATA = None):
-        MOB.__init__(self,Screen,spawn_coord)
+    def __init__(self,spawn_coord,DATA = None):
+        MOB.__init__(self,spawn_coord)
         self.MOB_images = []
         self.MOB_image = pygame.image.load('Player/SW00.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
@@ -157,7 +156,7 @@ class Player(MOB):
 
         self.frame = 0
         self.max_frames = 0
-        self.Icon = Icon_Player(self.Screen,self.col,self.row)
+        self.Icon = Icon_Player(self.col,self.row)
 
         self.damage_SFX = pygame.mixer.Sound("SFX/damage.wav")
         self.last_heart_SXF = pygame.mixer.Sound("SFX/last heart.wav")

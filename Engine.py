@@ -1,41 +1,42 @@
 import sys, pygame, pygame.display
 from Graphics import Menu_diplay,Load_Screen
 import Save
+from Control_variables import Ctrl_Vars
 
 """Main Loop *************************************************************************"""
 #Game Engine. (Turn Based Engine) ++++++++++++++++++++++++++++++++++++++++
 """Action Phase"""
 #Not that Player input engine gets called brefore this.
 
-def Player_turn_end(World,Player,Enemies,Drops,Ctrl_Vars,HUD):
+def Player_turn_end(World,Player,Enemies,Drops,HUD):
     if Player.dx != Player.col or Player.dy != Player.row:
-        Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD)
+        Player_move(World,Player,Enemies,Drops,HUD)
     Player.update_elevation(World)
     
-    check_tall_block(World,Player,Ctrl_Vars)
-    check_stairs(World,Player,Ctrl_Vars)
-    check_death(Player,Ctrl_Vars)
+    check_tall_block(World,Player)
+    check_stairs(World,Player)
+    check_death(Player)
 
-def enemy_turn(Ctrl_Vars,World,Player,Enemies,HUD):
+def enemy_turn(World,Player,Enemies,HUD):
     for Enemy in Enemies.Group:
         Enemy.update_player_location(Player)    #update knowledge of player projected location
         if Enemy.aware:
             Enemy.choose_direction(World)
-            Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD)
+            Enemy_move(World,Enemy,Player,Enemies,HUD)
         else:
             Enemy.action(Player)
     Enemies.Enemy_Group_Collsion()
     Ctrl_Vars.end_turn()
 
 """Animation Phase"""
-def Player_animation_phase(Settings,Ctrl_Vars,HUD,World,Player,Enemies):
+def Player_animation_phase(Settings,HUD,World,Player,Enemies):
     Player.move_line(World,Ctrl_Vars.phase_frame)
     if not Player.reset_hitstun():
         Player.walk_animation(Ctrl_Vars.phase_frame)
     if Ctrl_Vars.phase_frame + 1 == Ctrl_Vars.phase_Frames:
         Player.glue(World)
     
-def Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies):
+def Enemy_animation_phase(World,Player,Enemies):
     Enemies.move_line(World,Ctrl_Vars.phase_frame)
     if Player.hitstun:
         Player.hurt_animation(Ctrl_Vars.phase_frame)
@@ -44,39 +45,39 @@ def Enemy_animation_phase(Ctrl_Vars,World,Player,Enemies):
         Player.reset_hitstun()
 
 #Player input engine vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-def check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
-    hold_keys(Ctrl_Vars,Player,World)
+def check_events(Settings,HUD,World,Player,Enemies,Drops,Camera):
+    hold_keys(Player,World)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
         #mouse inputs
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            MouseDown(event,Ctrl_Vars)
+            MouseDown(event)
         elif event.type == pygame.MOUSEBUTTONUP:
-            MouseUp(event,Ctrl_Vars)
+            MouseUp(event)
         #camera controls
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
+            MouseMotion(Settings,event,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYDOWN:
-            KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera)
+            KEYDOWN(event,Settings,HUD,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYUP:
-            KEYUP(event,Ctrl_Vars,World)
+            KEYUP(event,World)
 
-def animation_check_events(Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
+def animation_check_events(Settings,HUD,World,Player,Enemies,Drops,Camera):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
         #mouse inputs
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            MouseDown(event,Ctrl_Vars)
+            MouseDown(event)
         elif event.type == pygame.MOUSEBUTTONUP:
-            MouseUp(event,Ctrl_Vars)
+            MouseUp(event)
         if event.type == pygame.MOUSEMOTION:
-            MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera)
+            MouseMotion(Settings,event,World,Player,Enemies,Drops,Camera)
         elif event.type == pygame.KEYUP:
-            KEYUP(event,Ctrl_Vars,World)    
+            KEYUP(event,World)    
 
-def KEYUP(event,Ctrl_Vars,World):
+def KEYUP(event,World):
     if event.key == pygame.K_LSHIFT:
         World.reset_highlight()
         Ctrl_Vars.LSHIFT_DOWN = False
@@ -99,7 +100,7 @@ def KEYUP(event,Ctrl_Vars,World):
         World.reset_highlight()
         Ctrl_Vars.a_down = False
 
-def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
+def KEYDOWN(event,Settings,HUD,World,Player,Enemies,Drops,Camera):
     if event.key == pygame.K_ESCAPE:
         Ctrl_Vars.GameNav.Menu_reset()
         Ctrl_Vars.GameNav.Pause = True
@@ -120,7 +121,7 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
                 #laser(World,Ctrl_Vars,Drops,Player,Enemies,[Player.col,Player.row])
                 line(
                     World.Map,Player.D,[Player.col,Player.row],
-                    laser_check,[Ctrl_Vars,World,Player,Enemies,Drops]
+                    laser_check,[World,Player,Enemies,Drops]
                 )
                 HUD.Combo.update()
                 Ctrl_Vars.end_phase()
@@ -140,11 +141,11 @@ def KEYDOWN(event,Settings,Ctrl_Vars,HUD,World,Player,Enemies,Drops,Camera):
     #Directional inputs-----------------------------------------
     else:
         if Ctrl_Vars.LSHIFT_DOWN == False:
-            move_event(event,Ctrl_Vars,Player,World)
+            move_event(event,Player,World)
         else:
-            face_direction(event,Ctrl_Vars,World,Player)
+            face_direction(event,World,Player)
 
-def move_event(event,Ctrl_Vars,Player,World):
+def move_event(event,Player,World):
     if event.key == pygame.K_q:
         Player.set_NW(World)
         Ctrl_Vars.q_down = True
@@ -164,7 +165,7 @@ def move_event(event,Ctrl_Vars,Player,World):
         Player.set_SW(World)
         Ctrl_Vars.a_down = True
 
-def hold_keys(Ctrl_Vars,Player,World):
+def hold_keys(Player,World):
     if Ctrl_Vars.q_down == True:
         Player.set_NW(World)
     elif Ctrl_Vars.w_down == True:
@@ -178,7 +179,7 @@ def hold_keys(Ctrl_Vars,Player,World):
     elif Ctrl_Vars.a_down == True:
         Player.set_SW(World)
 
-def face_direction(event,Ctrl_Vars,World,Player):
+def face_direction(event,World,Player):
     if event.key == pygame.K_q:
         Player.sprite_direction('NW')
     elif event.key == pygame.K_w:
@@ -197,20 +198,20 @@ def face_direction(event,Ctrl_Vars,World,Player):
     )
     #Scan_line(World,Player,[Player.col,Player.row])
 
-def MouseDown(event,Ctrl_Vars):
+def MouseDown(event):
     """event buttons 1 and 2 refer to mouse bindings"""
     if event.button == 1:
         Ctrl_Vars.Left_MouseDown = True
     elif event.button == 2:
         Ctrl_Vars.Right_MouseDown = True
 
-def MouseUp(event,Ctrl_Vars):
+def MouseUp(event):
     if event.button == 1:
         Ctrl_Vars.Left_MouseDown = False
     elif event.button == 2:
         Ctrl_Vars.Right_MouseDown = False
 
-def MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
+def MouseMotion(Settings,event,World,Player,Enemies,Drops,Camera):
     #handles relative movement of the mouse
     if Ctrl_Vars.Left_MouseDown:
         #drag
@@ -219,8 +220,8 @@ def MouseMotion(Settings,event,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
         Camera.follow = False
 
 #Menu Engine. ------------------------------------------------------------
-def menu_management(Settings,Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,Game_Over,Num_Pad):
-    if Ctrl_Vars.Start_Screen:
+def menu_management(Settings,Start_Screen,Pause_Screen,Game_Win,Game_Over,Num_Pad):
+    if Ctrl_Vars.Start_Screen: 
         Menu_envelope = Start_Screen
     elif Ctrl_Vars.seed_menu:
         Menu_envelope = Num_Pad
@@ -230,14 +231,14 @@ def menu_management(Settings,Ctrl_Vars,Start_Screen,Pause_Screen,Game_Win,Game_O
         Menu_envelope = Game_Win
     elif Ctrl_Vars.Game_Over:
         Menu_envelope = Game_Over
-    run_menu(Settings,Ctrl_Vars,Menu_envelope)
+    run_menu(Settings,Menu_envelope)
 
-def run_menu(Settings,Ctrl_Vars,Menu_envelope):
-    Menu_check_events(Settings,Ctrl_Vars,Menu_envelope.UI)
+def run_menu(Settings,Menu_envelope):
+    Menu_check_events(Settings,Menu_envelope.UI)
     Menu_diplay(Menu_envelope)
 
 #Menu input engine--------------------------------------------------------------------
-def Menu_check_events(Settings,Ctrl_Vars,Buttons):
+def Menu_check_events(Settings,Buttons):
     Ctrl_Vars.mouse_down_update()
     check_hover(Settings,Buttons)
     for event in pygame.event.get():
@@ -245,9 +246,9 @@ def Menu_check_events(Settings,Ctrl_Vars,Buttons):
             sys.exit(0)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            MouseDown(event,Ctrl_Vars)
+            MouseDown(event)
         elif event.type == pygame.MOUSEBUTTONUP:
-            MouseUp(event,Ctrl_Vars)
+            MouseUp(event)
         
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -255,10 +256,10 @@ def Menu_check_events(Settings,Ctrl_Vars,Buttons):
                     sys.exit(0)
             elif event.key == pygame.K_LSHIFT:
                 Ctrl_Vars.LSHIFT_DOWN = True
-            if Ctrl_Vars.Start_Vars.Num_pad:
-                num_keys(event,Ctrl_Vars)
-            elif Ctrl_Vars.Start_Vars.Load_pad:
-                typing(event,Ctrl_Vars,Ctrl_Vars.world_name)
+            if Ctrl_Vars.Start_Vars.key == 'Seed':
+                num_keys(event)
+            elif Ctrl_Vars.Start_Vars.key == 'Load World':
+                typing(event,Ctrl_Vars.world_name)
 
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_LSHIFT:
@@ -271,23 +272,24 @@ def check_hover(Settings,Buttons):
     for i in range(len(Buttons)):
         Buttons[i].check_contained(x,y)
 
-def num_keys(event,Ctrl_Vars):
+def num_keys(event):
     if len(Ctrl_Vars.seed) < 18:
         if event.key >= 48 and event.key <= 57: #Type any number between 0 and 9
             Ctrl_Vars.seed += chr(event.key)
 
     elif len(Ctrl_Vars.seed) >= 18:
         if event.key == 13:
-            Ctrl_Vars.GameNav.Menu_reset()
+            Ctrl_Vars.Nav_GameTypes("Custom")
+            """Ctrl_Vars.GameNav.Menu_reset()
             Ctrl_Vars.GameNav.load_world = True
             Ctrl_Vars.GameNav.menu_select = False
-            Ctrl_Vars.GameNav.Custom = True
+            Ctrl_Vars.GameNav.Custom = True"""
     if event.key == pygame.K_BACKSPACE:
         Ctrl_Vars.seed = Ctrl_Vars.seed[:-1]
         sound = pygame.mixer.Sound("SFX/Button_press.wav")
         pygame.mixer.Sound.play(sound)
 
-def typing(event,Ctrl_Vars,string):
+def typing(event,string):
     char = chr(event.key)
     if event.key >= 48 and event.key <= 57 or event.key == 32: #Type any number between 0 and 9 or a space
         string += char
@@ -304,7 +306,7 @@ def typing(event,Ctrl_Vars,string):
 """Main Loop end *************************************************************************"""
 
 #Movement Checks vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
+def Player_move(World,Player,Enemies,Drops,HUD):
     def thud():
         sound = pygame.mixer.Sound("SFX/hit_wall.wav")
         pygame.mixer.Sound.play(sound)
@@ -333,7 +335,7 @@ def Player_move(Ctrl_Vars,World,Player,Enemies,Drops,HUD):
         Player.Queue_movement(World,Ctrl_Vars.phase_Frames) #create a line to animate your movement
         Ctrl_Vars.end_turn() #end turn
 
-def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
+def Enemy_move(World,Enemy,Player,Enemies,HUD):
     def collision(col,row):
         if Player.col == col and Player.row == row: #hit player?
             Player.hurt()
@@ -357,7 +359,7 @@ def Enemy_move(Ctrl_Vars,World,Enemy,Player,Enemies,HUD):
         Enemy.Queue_movement(World,Ctrl_Vars.phase_Frames) #make a line
 
 #Checking/Updating
-def check_stairs(World,Player,Ctrl_Vars):
+def check_stairs(World,Player):
     col,row = World.stairs[0],World.stairs[1]
     if Player.col == col and Player.row == row:
         Ctrl_Vars.GameNav.Menu_reset()
@@ -366,21 +368,19 @@ def check_stairs(World,Player,Ctrl_Vars):
 def check_drops(Player,Drops):
     Drops.check_pick_up(Player)
 
-def check_death(Player,Ctrl_Vars):
+def check_death(Player):
     if Player.Stats.Health_Points <= 0:
         Ctrl_Vars.GameNav.Menu_reset()
         Ctrl_Vars.GameNav.Game_Over = True
         sound = pygame.mixer.Sound("SFX/game over.wav")
         pygame.mixer.Sound.play(sound)
 
-def check_tall_block(World,MOB,Ctrl_Vars):
-    """World.Terrain[Ctrl_Vars.foreground_list[0]][Ctrl_Vars.foreground_list[1]].reset_alpha()
-    World.Terrain[MOB.y-2][MOB.x].check_tall_block(MOB,Ctrl_Vars)"""
+def check_tall_block(World,MOB):
     col, row = Ctrl_Vars.foreground_list
     World.Map.data(col,row).reset_alpha()
     World.Map.data(MOB.col,MOB.row-2).check_tall_block(MOB,Ctrl_Vars)
 
-def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
+def end_loading(Settings,World,Player,Enemies,Drops,Camera):
     Ctrl_Vars.GameNav.load_world = False
     Ctrl_Vars.GameNav.Game_active = True
     Camera.Center_Screen()
@@ -391,7 +391,7 @@ def end_loading(Settings,Ctrl_Vars,World,Player,Enemies,Drops,Camera):
 
 ##While loop: Line functions
 def laser_check(args,coords):
-    Ctrl_Vars,World,MOB,Enemies,Drops = args
+    World,MOB,Enemies,Drops = args
     col,row = coords
     if World.Map.data(col,row).elevation <= MOB.elevation:
         World.laser_list.append([col,row])
