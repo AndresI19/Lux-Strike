@@ -55,6 +55,7 @@ class ENEMIES():
         Mx = (0,self.Max_Parameters[0]-1)
         My = (0,self.Max_Parameters[1]-1)
         def compare():
+            #stops spawning collision
             if not player.compare_spawn([col,row]):
                 return False
             for Enemy in self.Group:
@@ -81,6 +82,7 @@ class ENEMIES():
 
     def choose_enemy(self,World,seed,count,col,row):
         def enemy_return(enemy_type):
+            #enemy switch statement: TODO: make into a dictionary, key system
             if enemy_type == 'swanzai':
                 Enemy = swanzai(World,(col,row))
             elif enemy_type == 'nest':
@@ -154,6 +156,7 @@ class enemy(MOB):
         self.init_aware()
 
     def init_aware(self):
+        #animation for becoming aware
         self.aware = False
         images = []
         for i in range(3):
@@ -166,6 +169,7 @@ class enemy(MOB):
         self.exclaimation = Animation(images,3,2)
 
     def check_render(self):
+        #render distance for sprite
         self.render = False
         if self.MOB_rect.bottom >= 0 and self.MOB_rect.top <= ScreenRect.bottom:
             if self.MOB_rect.right >= 0 and self.MOB_rect.left <= ScreenRect.right:
@@ -178,7 +182,7 @@ class enemy(MOB):
         self.Player_location = [Player.col,Player.row]
 
     def choose_direction(self,World):
-        #Zombie AI: simply move to toward the player location
+        #Zombie AI: simply move to toward the player location TODO: use the build in hex grid switch statement
         direction = World.Map.get_direction([self.col,self.row],self.Player_location)
         coords = [self.col,self.row]
         if direction == 'N':
@@ -245,6 +249,7 @@ class swanzai(enemy):
 class nest(enemy):
     def __init__(self,World,Enemies,coordinates,elevation = None):
         enemy.__init__(self,World,coordinates,elevation)
+        """An enemy that serves the purpose of standing still and spawning enemies around it. No limits oother than filling the space around it"""
         self.ID = 1
         self.MOB_image = pygame.image.load('Enemies/Swanzai_nest.png').convert()
         self.MOB_image.set_colorkey((255,0,255))
@@ -255,7 +260,7 @@ class nest(enemy):
         self.Action_speed = 7
         self.Turn_count = 0
         self.jiggle_frame = 0
-        self.jiggle = True
+        self.jiggle = False
         self.spawn_circle = World.Map.get_circle(self.col,self.row,1)
         for point in self.spawn_circle:
             col,row = point
@@ -265,6 +270,7 @@ class nest(enemy):
         self.World = World
 
     def Queue_movement(self,World,n):
+        #doesnt move
         return
 
     def action(self,player):
@@ -331,7 +337,7 @@ class rabbit(enemy):
         self.update_player_location(Player)
 
     def choose_direction(self,World):
-        #Zombie AI: simply move to toward the player location
+        #Reverse Zombie AI: move to away the player location
         direction = World.Map.get_direction([self.col,self.row],self.Player_location)
         coords = [self.col,self.row]
         if direction == 'N':

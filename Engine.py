@@ -239,6 +239,7 @@ def run_menu(Settings,Menu_envelope):
 
 #Menu input engine--------------------------------------------------------------------
 def Menu_check_events(Settings,Buttons):
+    #a different set of event mappings based on being ina menu, mostly to listen to the mouse and hitboxes
     Ctrl_Vars.mouse_down_update()
     check_hover(Settings,Buttons)
     for event in pygame.event.get():
@@ -266,7 +267,7 @@ def Menu_check_events(Settings,Buttons):
                 Ctrl_Vars.LSHIFT_DOWN = False
 
 def check_hover(Settings,Buttons):
-    x,y = pygame.mouse.get_pos()
+    x,y = pygame.mouse.get_pos() #scales mouse movements to resolution
     x *= Settings.mouseX_scaling
     y *= Settings.mouseY_scaling
     for i in range(len(Buttons)):

@@ -300,6 +300,7 @@ class Dialog_box():
 
 class Currency_bar():
     def __init__(self,Stats):
+        #displays the current amount of money accrued, as well as an icon
         self.Stats = Stats
         self.Currency_images = []
         for i in range(17):
@@ -335,6 +336,7 @@ class Currency_bar():
         self.font_rect.centery = self.Currency_rect.centery
 
     def clock(self):
+        #animates the money icon
         if self.frame + 1 >= self.Frames * 5:
             if self.frame2 + 1 >= self.Frames:
                 self.frame = 0
@@ -345,12 +347,14 @@ class Currency_bar():
         self.Currency_image = self.Currency_images[self.frame2//2]
 
     def queue(self):
+        #tells the game what value to animate up to.
         self.value = self.Stats.Money
         differance = self.value - self.display_amount
         self.increment = differance // 5
         self.animate_text = True
 
     def number_animate(self):
+         #runs an animation for when the value goes up. Like a slot machine.
         if self.animate_text:
             if self.display_amount >= self.value:
                 self.display_amount = self.value
@@ -370,6 +374,7 @@ class Combo_meter():
         """---------------------------
         I DO NOT HAVE LICENCE TO USE FONT
         ------------------------------"""
+        #class to display the combo you have
         self.Stats = Stats
         size = 60
         self.color = (255,255,255)
@@ -379,6 +384,7 @@ class Combo_meter():
         self.update()
 
     def color_switch(self):
+        #color changes following similar conventions to smash bros
         if self.Stats.combo < 8:
             x = 255 - self.Stats.combo*64
             y=255
@@ -421,6 +427,7 @@ class Keys():
         """---------------------------
         I DO NOT HAVE LICENCE TO USE FONT
         ------------------------------"""
+        #A simple class to show how many keys the player has
         self.Stats = Stats
         size = 40
         self.font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
@@ -448,8 +455,9 @@ class Keys():
 
 class Laser_Gauge():
     def __init__(self,Stats):
+        #a class that displays laser use
         self.Stats = Stats
-        self.colors = [(0,0,0),(0,255,217),(187,255,0),(255,255,0),(255,115,0),(255,0,42)]
+        self.colors = [(0,0,0),(0,255,217),(187,255,0),(255,255,0),(255,115,0),(255,0,42)] #list of colors used to show intensity
         self.init_images()
         self.init_charge()
         self.frames = 0

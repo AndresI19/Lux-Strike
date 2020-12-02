@@ -1,6 +1,7 @@
 #CAMERA!
 class Camera():
     def __init__(self,World,Player,Enemies,Drops):
+        #a class that is used to control the viewing of the screen
         self.World = World
         self.Player = Player
         self.Enemies = Enemies

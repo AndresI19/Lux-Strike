@@ -3,6 +3,7 @@ from Buttons import *
 from Graphics import word_object,Animation
 from Control_variables import Ctrl_Vars,Screen,ScreenRect
 
+#switch command to instance a new active menu, TODO: turn into a dictionary key call
 def menu_select(Window,Settings):
     if Ctrl_Vars.GameNav.Start_Screen:
         Active_Menu = Start_Envelope(Window,Settings)
@@ -72,6 +73,7 @@ class Start_Envelope():
         self.Background.draw((0,0))
         self.Active_Menu.draw()
 
+#Contains three button folders will all options in it.
 class Title_Menu():
     def __init__(self,settings):
         """These are folders, each contain a few more options within them"""
@@ -86,6 +88,7 @@ class Title_Menu():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
+#allows the player to control the volume
 class Sound_Menu():
     def __init__(self,Settings):
         self.Settings = Settings
@@ -149,6 +152,7 @@ class Sound_Menu():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
+#allows the player to control the resolution or toggle fullscreen
 class Display_Menu():
     def __init__(self,Window,Settings):
         self.init_curtain()     
@@ -174,6 +178,7 @@ class Display_Menu():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
+#just playes music. its not even good
 class Jukebox_Menu():
     def __init__(self):
         self.Ctrl_Vars = Ctrl_Vars
@@ -200,6 +205,7 @@ class Jukebox_Menu():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
+#what you see when you hit pause
 class Pause_Envelope():
     def __init__(self):
         self.text = "Paused"
@@ -230,6 +236,7 @@ class Pause_Envelope():
         for item in self.UI:
             item.draw()
 
+#what you see when you die
 class Game_Over_Envelope():
     def __init__(self):
         self.text = "Death"
@@ -265,6 +272,7 @@ class Game_Over_Envelope():
         for item in self.UI:
             item.draw()
 
+#what you see when you win
 class Game_Win_Envelope():
     def __init__(self):
         self.UI = [
@@ -329,6 +337,7 @@ class Game_Win_Envelope():
         for item in self.UI:
             item.draw()
 
+#used to type digits into CtrlVars for use in whatever
 class Num_Pad():
     #Makes a number pad like on a phone for entering numbers. The functionality of this one can and should be generalized
     def __init__(self):
@@ -392,7 +401,7 @@ class Num_Pad():
         for i in range(len(self.Menus)):
             self.Menus[i].draw()
 
-#TODO: WORLD_LOADING
+#WORLD_LOADING: loads world from file: FIXME: 2 visual glitches, can use some poish as well
 class World_load():
     def __init__(self,Settings):
         self.Settings = Settings
@@ -433,40 +442,7 @@ class World_load():
             self.Menus[i].draw()
         self.World_list.draw()
 
-"""%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-~~~~~~~~~~~~~~~ WORLD CREATOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
-class WC_Pause_Envelope():
-    def __init__(self):
-        self.text = "Paused"
-        self.init_text(100)
-        self.UI = [
-            Quit_Folder([7,1]),
-            Hex_Button([4,3],"Resume",Resume)
-        ]
-
-        self.Curtain()
-
-    def Curtain(self):
-        self.curtain = pygame.Surface((ScreenRect.right,ScreenRect.bottom))
-        self.curtain.fill((0,0,0))
-        self.curtain.set_alpha(255)
-
-    def init_text(self,size):
-        text_color = ((255,255,255))
-        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
-        font.set_bold(True)
-        self.font_image = font.render(self.text,True,text_color,None)
-        self.font_rect = self.font_image.get_rect()
-        self.font_rect.centerx = ScreenRect.centerx
-        self.font_rect.centery = 250
-
-    def draw(self):
-        Screen.blit(self.curtain,ScreenRect)
-        Screen.blit(self.font_image,self.font_rect)
-        for i in range(len(self.UI)):
-            self.UI[i].draw()
-
+#containts a list of all worlds saved in saved world json file
 class world_list():
     def __init__(self):
         self.init_boxes()
@@ -499,6 +475,7 @@ class world_list():
         for item in self.world_names:
             item.draw()
 
+#is a rectangular button that when clicked sets the CtrlVar key to the name of the world
 class list_item():
     def __init__(self,name,order):
         self.name = name
@@ -535,3 +512,39 @@ class list_item():
 
     def draw(self):
         Screen.blit(self.image,self.rect)
+
+"""%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+~~~~~~~~~~~~~~~ WORLD CREATOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
+#pause screen at world creator
+class WC_Pause_Envelope():
+    def __init__(self):
+        self.text = "Paused"
+        self.init_text(100)
+        self.UI = [
+            Quit_Folder([7,1]),
+            Hex_Button([4,3],"Resume",Resume)
+        ]
+
+        self.Curtain()
+
+    def Curtain(self):
+        self.curtain = pygame.Surface((ScreenRect.right,ScreenRect.bottom))
+        self.curtain.fill((0,0,0))
+        self.curtain.set_alpha(255)
+
+    def init_text(self,size):
+        text_color = ((255,255,255))
+        font = pygame.font.Font("galaxy-bt/GalaxyBT.ttf",size)
+        font.set_bold(True)
+        self.font_image = font.render(self.text,True,text_color,None)
+        self.font_rect = self.font_image.get_rect()
+        self.font_rect.centerx = ScreenRect.centerx
+        self.font_rect.centery = 250
+
+    def draw(self):
+        Screen.blit(self.curtain,ScreenRect)
+        Screen.blit(self.font_image,self.font_rect)
+        for i in range(len(self.UI)):
+            self.UI[i].draw()
+

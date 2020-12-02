@@ -22,13 +22,14 @@ class MOB():
 
         self.spawn()
     
-    #spawn player in start location
+    #spawn Mob in start location
     def spawn(self):
         self.col = self.spawn_col
         self.row = self.spawn_row
         self.dx = self.col
         self.dy = self.row
 
+    #makes sure nothing is in this location before spawning
     def compare_spawn(self,coords):
         col,row = coords
         allow = True
@@ -116,18 +117,17 @@ class MOB():
         self.row = self.dy
 
     def update_elevation(self,World):
-        #self.elevation = World.Terrain[self.y][self.x].elevation
         self.elevation = World.Map.data(self.col,self.row).elevation
 
     def glue(self,World):
+        #pastes character or object to tile main spot
         self.Icon.update_coo(self.col,self.row)
         self.track = []
-        #coordinates = World.Terrain[self.y][self.x].get_Character_Spot()
         coordinates = World.Map.data(self.col,self.row).get_Character_Spot()
         self.MOB_rect.centerx,self.MOB_rect.bottom = coordinates
 
-    #Image translation
     def translate(self,x,y):
+        #Image translation
         self.MOB_rect.bottom += y
         self.MOB_rect.centerx += x
         for i in self.track:
@@ -139,8 +139,9 @@ class MOB():
 
     def get_position(self):
         return [self.col,self.row]
-    #Draw functions and animation loops for world entities
+
     def Draw(self):
+        #Draw functions and animation loops for world entities
         Screen.blit(self.MOB_image, self.MOB_rect)
 
 """Class for player character.-----------------------------------------------------------------------------"""
@@ -166,6 +167,7 @@ class Player(MOB):
             self.dx,self.dy = self.col,self.row
     
     def sprite_direction(self,D):
+        #changes sprite according to direction faced
         self.D = D
         self.MOB_image = self.MOB_image = pygame.image.load(
             'Player/{}00.png'.format(D)
@@ -173,6 +175,7 @@ class Player(MOB):
         self.MOB_image.set_colorkey((255,0,255))
 
     def hurt_animation(self,frame):
+        #turns you red
         self.MOB_image = self.MOB_image = pygame.image.load(
             'Player/{}10.png'.format(self.D)
             ).convert()
@@ -189,6 +192,7 @@ class Player(MOB):
             self.MOB_image.set_colorkey((255,0,255))
 
     def hurt(self):
+        #sets variables to hurt the player, and reduce health
         if self.hitstun == False: #dont hurt twice
             self.Stats.Health_Points -= 1
             self.Stats.combo = 0

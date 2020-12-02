@@ -124,6 +124,7 @@ class Hex_Grid():
             return False
 #
     def check_stagger(self,row):
+        #TODO: Make this obsolete
         if row%2 == 0:
             stagger = 1 #True
         else:
@@ -131,7 +132,9 @@ class Hex_Grid():
         return stagger
 
     def get_circle(self,col,row,r=1):
+        #add settings to make it hallow, give diamond or ect.
         def Recursion(Length,Expansion):
+            #No clue how this works. lol
             if Length <= Min_Cond:
                 return
             offset = -Length + 1
@@ -244,8 +247,13 @@ class Hex_Grid():
     def __len__(self):
         return self.total
 
-#print("Hello\nWorld")
+
 """Grid = Hex_Grid(11,17)
 for i in range(len(Grid)):
     Grid[i] = i
-"""
+circle = Grid.get_circle(4,6,3)
+for point in circle:
+    x,y = point
+    Grid.write("",x,y)
+Grid.write([],4,6)
+print(Grid)"""

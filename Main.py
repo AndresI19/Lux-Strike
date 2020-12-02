@@ -44,7 +44,7 @@ Graphics.scale(Window,Screen,Settings)
 pygame.display.flip()
 #--
 
-#initialization swtich menu: Can probobaly move to world module
+#initialization of all game object instances
 def world_init():
     def init_entities(DATA):
         global player,enemies,hud,drops,camera
@@ -80,6 +80,7 @@ def world_init():
         Ctrl_Vars.GameNav.restart_world = False
     init_entities(DATA)
 
+#loop for standard gameplay
 def game_loop():
     Ctrl_Vars.merge_timer()
     if Ctrl_Vars.phase_active: #animation phase
@@ -120,16 +121,17 @@ while True:
         #-------------------------------------------------------------------------------------------*
         """Game loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"""
     else:
-        if Ctrl_Vars.main:
+        if Ctrl_Vars.main: #recognizable game
             game_loop()
             camera.View(Ctrl_Vars)
             Graphics.Display(world,hud,player,enemies,drops)
-        elif Ctrl_Vars.world_creator:
+        elif Ctrl_Vars.world_creator: 
+            #World creator ---------------------------------------------------------
             if not Ctrl_Vars.WC_initialized:
                 hud,Map,Elements,Cursor = WC_Engine.initialization()
                 Ctrl_Vars.WC_initialized = True
             WC_Engine.check_events(Settings,Map,Elements,hud)
             WC_Engine.check_mouse_position(Settings,Map,Elements,hud)
             WC_Engine.Display(Screen,hud,Map,Elements,Cursor)
-    
+    #Scale graphics to resolution.
     Graphics.scale(Window,Screen,Settings)
